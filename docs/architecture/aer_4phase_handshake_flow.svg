@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="960" viewBox="0 0 1400 960" role="img" aria-labelledby="title desc">
+  <title id="title">B0-v1 AER 4-phase handshake flow</title>
+  <desc id="desc">뉴런 5, AER 컨트롤러, 수신기 사이에서 source-side request acknowledgement와 receiver-facing four-phase AER request acknowledgement가 순서대로 오가는 시퀀스 다이어그램</desc>
+
+  <defs>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrow-gray" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#64748b"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-20%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .title { font: 700 34px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 18px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #475569; }
+      .participant { font: 700 22px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
+      .participant-sub { font: 400 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #475569; }
+      .signal { font: 700 18px 'Consolas', 'Noto Sans KR', monospace; fill: #0f172a; }
+      .meaning { font: 400 16px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #334155; }
+      .phase { font: 700 16px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #9a3412; }
+      .phase-detail { font: 400 14px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #7c2d12; }
+      .footer { font: 400 14px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #475569; }
+      .lane { stroke: #cbd5e1; stroke-width: 2; stroke-dasharray: 7 8; }
+      .source-arrow { stroke: #0f766e; stroke-width: 3; fill: none; marker-end: url(#arrow-teal); }
+      .aer-arrow { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .internal-arrow { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrow-gray); }
+    </style>
+  </defs>
+
+  <rect width="1400" height="960" fill="#f8fafc"/>
+
+  <text x="70" y="62" class="title">AER 4-Phase Handshake Flow</text>
+  <text x="70" y="94" class="subtitle">B0-v1 · active-high 신호 · 시간은 위에서 아래로 흐름</text>
+
+  <!-- Participants -->
+  <g filter="url(#shadow)">
+    <rect x="90" y="125" width="280" height="84" rx="16" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+    <rect x="555" y="125" width="290" height="84" rx="16" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+    <rect x="1030" y="125" width="280" height="84" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  </g>
+
+  <text x="230" y="162" text-anchor="middle" class="participant">뉴런 5</text>
+  <text x="230" y="188" text-anchor="middle" class="participant-sub">Event source</text>
+  <text x="700" y="162" text-anchor="middle" class="participant">AER 컨트롤러</text>
+  <text x="700" y="188" text-anchor="middle" class="participant-sub">Arbiter + 4-state FSM</text>
+  <text x="1170" y="162" text-anchor="middle" class="participant">수신기</text>
+  <text x="1170" y="188" text-anchor="middle" class="participant-sub">Event receiver</text>
+
+  <!-- Lifelines -->
+  <line x1="230" y1="209" x2="230" y2="845" class="lane"/>
+  <line x1="700" y1="209" x2="700" y2="845" class="lane"/>
+  <line x1="1170" y1="209" x2="1170" y2="845" class="lane"/>
+
+  <!-- Start event -->
+  <circle cx="230" cy="245" r="9" fill="#0f766e"/>
+  <text x="250" y="251" class="meaning">spike 발생</text>
+
+  <!-- Source request -->
+  <line x1="245" y1="295" x2="680" y2="295" class="source-arrow"/>
+  <text x="462" y="281" text-anchor="middle" class="signal">src_req[5] ↑</text>
+  <text x="462" y="318" text-anchor="middle" class="meaning">“뉴런 5 이벤트를 보내줘”</text>
+
+  <!-- Phase 1 -->
+  <line x1="720" y1="380" x2="1150" y2="380" class="aer-arrow"/>
+  <text x="935" y="363" text-anchor="middle" class="signal">aer_addr = 5, aer_req ↑</text>
+  <text x="935" y="404" text-anchor="middle" class="meaning">주소를 유지하고 전송 요청</text>
+  <g>
+    <rect x="71" y="350" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
+    <text x="133" y="373" text-anchor="middle" class="phase">Phase 1</text>
+    <text x="133" y="394" text-anchor="middle" class="phase-detail">REQ assert</text>
+  </g>
+
+  <!-- Phase 2 -->
+  <line x1="1150" y1="465" x2="720" y2="465" class="aer-arrow"/>
+  <text x="935" y="448" text-anchor="middle" class="signal">aer_ack ↑</text>
+  <text x="935" y="489" text-anchor="middle" class="meaning">“주소 5를 받았어”</text>
+  <g>
+    <rect x="71" y="435" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
+    <text x="133" y="458" text-anchor="middle" class="phase">Phase 2</text>
+    <text x="133" y="479" text-anchor="middle" class="phase-detail">ACK assert</text>
+  </g>
+
+  <!-- Source acknowledge -->
+  <line x1="680" y1="535" x2="250" y2="535" class="source-arrow"/>
+  <text x="465" y="518" text-anchor="middle" class="signal">src_ack[5] ↑</text>
+  <text x="465" y="559" text-anchor="middle" class="meaning">“수신기까지 전달됐어”</text>
+
+  <!-- Source release -->
+  <line x1="250" y1="615" x2="680" y2="615" class="source-arrow"/>
+  <text x="465" y="598" text-anchor="middle" class="signal">src_req[5] ↓</text>
+  <text x="465" y="639" text-anchor="middle" class="meaning">뉴런이 요청을 종료</text>
+
+  <!-- Phase 3, two simultaneous controller outputs -->
+  <line x1="680" y1="700" x2="250" y2="700" class="source-arrow"/>
+  <line x1="720" y1="700" x2="1150" y2="700" class="aer-arrow"/>
+  <text x="465" y="683" text-anchor="middle" class="signal">src_ack[5] ↓</text>
+  <text x="935" y="683" text-anchor="middle" class="signal">aer_req ↓</text>
+  <text x="700" y="728" text-anchor="middle" class="meaning">컨트롤러가 source 응답과 AER 요청을 종료</text>
+  <g>
+    <rect x="71" y="670" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
+    <text x="133" y="693" text-anchor="middle" class="phase">Phase 3</text>
+    <text x="133" y="714" text-anchor="middle" class="phase-detail">REQ release</text>
+  </g>
+
+  <!-- Phase 4 -->
+  <line x1="1150" y1="790" x2="720" y2="790" class="aer-arrow"/>
+  <text x="935" y="773" text-anchor="middle" class="signal">aer_ack ↓</text>
+  <text x="935" y="814" text-anchor="middle" class="meaning">수신기도 정리 완료 → 다음 이벤트 가능</text>
+  <g>
+    <rect x="71" y="760" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
+    <text x="133" y="783" text-anchor="middle" class="phase">Phase 4</text>
+    <text x="133" y="804" text-anchor="middle" class="phase-detail">ACK release</text>
+  </g>
+
+  <!-- Ready line -->
+  <line x1="230" y1="850" x2="1170" y2="850" stroke="#94a3b8" stroke-width="2"/>
+  <rect x="540" y="832" width="320" height="38" rx="19" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="700" y="857" text-anchor="middle" class="meaning">REQ=0, ACK=0 · IDLE 복귀</text>
+
+  <!-- Legend / note -->
+  <line x1="80" y1="910" x2="135" y2="910" class="source-arrow"/>
+  <text x="150" y="916" class="footer">뉴런 ↔ 컨트롤러 source-side handshake</text>
+  <line x1="510" y1="910" x2="565" y2="910" class="aer-arrow"/>
+  <text x="580" y="916" class="footer">컨트롤러 ↔ 수신기 AER 4-phase handshake</text>
+  <text x="1380" y="916" text-anchor="end" class="footer">active-low nREQ/nACK 방식은 ↑/↓가 반대</text>
+</svg>

@@ -1,0 +1,39 @@
+# Workspace-local tools and disposable review/build data
+/tmp/
+/tools/
+
+# Vivado / XSIM generated state
+/.Xil/
+**/.Xil/
+/sim/work/
+**/xsim.dir/
+*.wdb
+*.pb
+*.xpr
+/xvlog.log
+/xelab.log
+/xsim.log
+*.cache/
+*.runs/
+*.gen/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.jou
+*.str
+webtalk*.log
+vivado*.log
+sim/logs/*.backup.log
+
+# Cadence Xcelium / Genus / Innovus generated state
+INCA_libs/
+xcelium.d/
+*.shm/
+*.history
+genus.cmd*
+genus.log*
+innovus.cmd*
+innovus.log*
+
+# Other local simulator products
+*.vvp

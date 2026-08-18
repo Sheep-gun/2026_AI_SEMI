@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/YangGeon/Documents/2026 AI SEMI/rtl/baseline/aer_traditional.sv" into library worklib
+INFO: [VRFC 10-311] analyzing module aer_traditional
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/YangGeon/Documents/2026 AI SEMI/tb/aer_traditional_tb.sv" into library worklib
+INFO: [VRFC 10-311] analyzing module aer_traditional_tb

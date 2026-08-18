@@ -1,0 +1,52 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Tue Aug 18 16:05:55 2026
+# Process ID: 36960
+# Current directory: C:/Users/YangGeon/Documents/2026 AI SEMI/sim/work
+# Command line: xsim.exe -log ../logs/baseline.log -mode tcl -source {xsim.dir/aer_traditional_sim/xsim_script.tcl}
+# Log file: C:/Users/YangGeon/Documents/2026 AI SEMI/sim/work/../logs/baseline.log
+# Journal file: C:/Users/YangGeon/Documents/2026 AI SEMI/sim/work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/aer_traditional_sim/xsim_script.tcl
+# xsim {aer_traditional_sim} -wdb {../waves/aer_traditional.wdb} -autoloadwcfg -tclbatch {../../scripts/xsim_baseline.tcl}
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+source ../../scripts/xsim_baseline.tcl
+## log_wave -recursive *
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## open_vcd ../waves/aer_traditional.vcd
+## log_vcd [get_objects -r /aer_traditional_tb/*]
+INFO: HDL object /aer_traditional_tb/issue_cycle is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_traditional_tb/issue_tail is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_traditional_tb/receive_head is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_traditional_tb/received_by_source is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_traditional_tb/max_latency_by_source is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_traditional_tb/accepted_sequence is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+## run all
+TEST_START single_event
+TEST_START simultaneous_all_sources
+TEST_START burst_source_5
+TEST_START receiver_backpressure
+TEST_START no_stall_saturation
+METRIC saturation_events=128
+METRIC saturation_inter_event_interval_sum_cycles=508
+METRIC saturation_throughput_events_per_cycle_x1000000=250000
+METRIC saturation_min_inter_event_gap_cycles=4
+METRIC saturation_max_inter_event_gap_cycles=4
+TEST_START hotspot_fixed_priority_characterization
+METRIC hotspot_source15_max_latency_cycles=49
+TEST_START held_request_across_reset
+TEST_START long_random_traffic
+METRIC cycles=1762
+METRIC events_issued=431
+METRIC events_received=431
+METRIC avg_latency_cycles_x1000=29658
+METRIC max_latency_cycles=901
+METRIC throughput_events_per_cycle_x1000000=244608
+TEST_PASS baseline issued=431 received=431
+$finish called at time : 17675 ns : File "C:/Users/YangGeon/Documents/2026 AI SEMI/tb/aer_traditional_tb.sv" Line 450
+## close_vcd
+## quit
+INFO: [Common 17-206] Exiting xsim at Tue Aug 18 16:05:57 2026...
