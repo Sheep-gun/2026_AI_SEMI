@@ -38,8 +38,11 @@ Source PDF: `C:\Users\YangGeon\Downloads\2026년 반도체설계경진대회 오
 ## Current Cadence server status
 
 - This public repository does not store the server endpoint, account name, password, or private-key material.
-- A 2026-08-18 read-only non-interactive check reached the configured server but could not authenticate without an approved credential.
-- Library, PVT, LEF, Liberty, and QRC paths remain **unverified**. They must not be guessed. Run `scripts/server_inventory.sh` only after secure authentication is available.
+- A secure interactive read-only inventory succeeded on 2026-08-19.
+- Genus 23.14, Innovus 23.14 and Xcelium 23.09 are available; Genus successfully checked out `Genus_Synthesis` and read the 470-cell typical library.
+- Fast/typical/slow Liberty, active LEF, QRC technology and capacitance-table artifacts were verified.
+- No characterized MUTEX, Muller C-element, or asynchronous arbiter cell was found. Delay cells and ordinary latches/gates exist, but they do not by themselves prove metastability-safe or QDI behavior.
+- Full evidence and scope boundaries are recorded in `reports/environment/CADENCE_ASYNC_LIBRARY_AUDIT_2026-08-19.md`.
 
 No password or private key is stored in this repository or its logs.
 
@@ -80,7 +83,7 @@ The initial comparison is deliberately small enough to finish and explain before
 - [x] Secure non-interactive server connection attempted.
 - [x] Traditional AER comparison baseline defined.
 - [x] Candidate improvement set and recommended architecture recorded.
-- [ ] Cadence libraries and corners inventoried after authentication.
+- [x] Cadence libraries and corners inventoried after secure authentication.
 - [x] Traditional baseline simulation completed (Vivado XSIM, 431/431 events, assertion errors 0).
 - [x] Traditional baseline frozen as `B0-v1`; Vivado structural synthesis sanity passed.
 - [x] All 13 `B0-v1` manifest hashes and byte counts revalidated before and after isolated reproduction.
@@ -88,6 +91,7 @@ The initial comparison is deliberately small enough to finish and explain before
 - [x] Initial local Git snapshot prepared as `feat: establish B0-v1 traditional AER baseline`.
 - [x] Korean public README and architecture guide completed with rendered B0-v1 controller-structure and 4-phase sequence SVGs.
 - [x] Current public-facing files omit the Cadence server endpoint and account identifiers; runtime inventory uses local environment values.
+- [x] Asynchronous-cell audit completed: no project-accessible characterized MUTEX or Muller C-element found.
 - [ ] Proposed RTL and common-traffic comparison completed.
 - [ ] Cadence synthesis, timing, area, and power reports completed.
 

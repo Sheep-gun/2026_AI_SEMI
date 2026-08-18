@@ -81,3 +81,13 @@ All times are Asia/Seoul unless otherwise stated.
 - A GitHub-width review exposed label/arrow collisions in the first controller-structure SVG. Replaced the dense drawing with a sparse three-column datapath (`sources → encoder → grant → output → receiver`) and a separate horizontal FSM state sequence.
 - Kept only architecture-defining labels, moved the four bottlenecks into independent cards, and routed `src_req`, `src_ack`, `aer_ack`, and `state_q` without crossing text or block titles.
 - Rendered the replacement at its native 1500 px width and inside a 1200 px GitHub-style container. Both views were visually inspected for clipping, overlap, signal direction, and FSM order before replacement.
+
+### Cadence asynchronous-cell library audit
+
+- Connected with Windows OpenSSH through a password prompt/standard input only. No credential was written to a file, script, repository, or reported output.
+- Verified Genus 23.14-s090_1, Innovus 23.14-s088_1 and Xcelium 23.09-s013. Genus checked out `Genus_Synthesis`, loaded `typical.lib`, and recognized 470 cells.
+- Verified three project corners: fast 1.98 V/0 °C, typical 1.80 V/25 °C, and slow 1.62 V/125 °C, plus active LEF, QRC technology and capacitance-table artifacts.
+- Searched the project Liberty/LEF/CDB/documentation and relevant installed component material for MUTEX, Muller C-element, asynchronous arbiter and metastability-related cells. No characterized project cell was found.
+- Found `RSLAT*` in Liberty, but Genus reported missing-clock warnings and the corresponding LEF macro blocks are commented out. Found active `DLY1X1`~`DLY4X1`, ordinary transparent latches and combinational gates.
+- Confirmed that installed `CW_arbiter_fcfs` is clocked and `CW_asymfifo_*` means asymmetric data width, not asynchronous operation; both are synchronous components.
+- Recorded the sanitized evidence and design boundary in `reports/environment/CADENCE_ASYNC_LIBRARY_AUDIT_2026-08-19.md`.
