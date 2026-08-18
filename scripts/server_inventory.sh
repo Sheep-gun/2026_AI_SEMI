@@ -3,12 +3,27 @@
 # Read-only environment inventory. Run only after secure authentication.
 # This script does not print environment variables wholesale because they can
 # contain tokens. It prints only selected tool and candidate PDK/library paths.
+# Set AER_CADENCE_ENV only when the environment file is not located at
+# $HOME/control_digi.cshrc. Set AER_CADENCE_ROOT to add a shared tool/library
+# search root. Do not commit either value when it contains private site data.
 
-if (-r /home/aiasic26211/control_digi.cshrc) then
-    source /home/aiasic26211/control_digi.cshrc
+set env_file = "$HOME/control_digi.cshrc"
+if ($?AER_CADENCE_ENV) then
+    set env_file = "$AER_CADENCE_ENV"
+endif
+
+if (-r "$env_file") then
+    source "$env_file"
 else
-    echo "ERROR control_digi.cshrc is not readable"
+    echo "ERROR Cadence environment file is not readable"
     exit 2
+endif
+
+set search_roots = ("$HOME")
+if ($?AER_CADENCE_ROOT) then
+    set search_roots = ("$HOME" "$AER_CADENCE_ROOT")
+else if (-d /home/tools) then
+    set search_roots = ("$HOME" "/home/tools")
 endif
 
 echo "HOST"
@@ -30,20 +45,19 @@ innovus -version
 xrun -version
 
 echo "HOME_TOP_LEVEL"
-find /home/aiasic26211 -mindepth 1 -maxdepth 2 -type d -print
+find "$HOME" -mindepth 1 -maxdepth 2 -type d -print
 
 echo "ENVIRONMENT_PATH_CANDIDATES"
 env | egrep '^(CDS|GENUS|INNOVUS|XCELIUM|PDK|TECH|LIB|QRC|OA)_' | sed -E 's/(TOKEN|PASS|SECRET|KEY)=[^ ]+/<redacted>/g'
 
 echo "LIBERTY_CANDIDATES"
-find /home/aiasic26211 /home/tools -xdev -type f \( -name '*.lib' -o -name '*.lib.gz' \) -print 2>/dev/null | head -n 200
+find $search_roots -xdev -type f \( -name '*.lib' -o -name '*.lib.gz' \) -print 2>/dev/null | head -n 200
 
 echo "LEF_CANDIDATES"
-find /home/aiasic26211 /home/tools -xdev -type f \( -name '*.lef' -o -name '*.tlef' \) -print 2>/dev/null | head -n 200
+find $search_roots -xdev -type f \( -name '*.lef' -o -name '*.tlef' \) -print 2>/dev/null | head -n 200
 
 echo "QRC_CANDIDATES"
-find /home/aiasic26211 /home/tools -xdev -type f \( -name '*qrc*' -o -name '*captable*' -o -name 'qrcTechFile*' \) -print 2>/dev/null | head -n 200
+find $search_roots -xdev -type f \( -name '*qrc*' -o -name '*captable*' -o -name 'qrcTechFile*' \) -print 2>/dev/null | head -n 200
 
 echo "EXAMPLE_TCL_CANDIDATES"
-find /home/aiasic26211 -type f \( -name '*.tcl' -o -name '*.sdc' \) -print 2>/dev/null | head -n 200
-
+find "$HOME" -type f \( -name '*.tcl' -o -name '*.sdc' \) -print 2>/dev/null | head -n 200

@@ -14,9 +14,9 @@ All times are Asia/Seoul unless otherwise stated.
 - A workspace-local Icarus installer was downloaded after the initial tool check, but installation exited unsuccessfully and installed no tool files. The attempt was stopped once the existing Vivado installation was identified. The temporary installer remains only under git-ignored `tmp/` because the host blocked automated deletion.
 - Attempted the following read-only, non-interactive server check:
 
-  `C:\Windows\System32\OpenSSH\ssh.exe -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes aiasic26211@210.126.11.72 hostname`
+  `C:\Windows\System32\OpenSSH\ssh.exe -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=yes <account>@<host> hostname`
 
-  Result: authentication rejected because no public-key credential was available. Host-key validation itself succeeded. No server library or PVT claim has been made.
+  Result: authentication rejected because no approved non-interactive credential was available. The endpoint and account are intentionally omitted from the public repository. No server library or PVT claim has been made.
 
 ### Literature and architecture
 
@@ -61,3 +61,17 @@ All times are Asia/Seoul unless otherwise stated.
 - Initial local snapshot command: `git commit -m "feat: establish B0-v1 traditional AER baseline"`. No remote push is possible until a private remote URL is supplied.
 
 - Next design step after the initial snapshot: implement `B1 round-robin-only` without changing source count, address width, output-lane count, FIFO depth, receiver protocol, traffic, or backpressure trace.
+
+## 2026-08-19
+
+### Korean public repository documentation
+
+- Verified `origin=https://github.com/Sheep-gun/2026_AI_SEMI.git`, the public visibility, and `master` as the default branch using `git remote -v`, `git ls-remote --heads origin`, and the GitHub public repository API.
+- Rewrote `README.md` in Korean around the sequence: project goal and staged comparison plan, traditional AER definition, B0-v1 controller structure, 4-phase handshake, baseline bottlenecks, frozen results, reproduction, and evidence boundaries.
+- Rewrote `docs/architecture/AER_BASELINE_AND_CANDIDATES.md` in Korean while preserving the explicit scope boundary that B0-v1 is one reproducible traditional comparison point, not every historical AER circuit.
+- Added `docs/architecture/aer_baseline_controller_structure.svg` from the actual RTL structure: 16 source requests, fixed-priority encoder, `grant_q`, four-state FSM, one-hot source acknowledge decode, one shared address link, and receiver acknowledgement feedback.
+- Rendered both architecture SVGs to ignored review PNGs with headless Edge and visually inspected them. Corrected the controller diagram's FSM order to `IDLE → WAIT_SINK_ACK → WAIT_SOURCE_RELEASE → WAIT_SINK_RELEASE → IDLE` and corrected `src_ack`/`aer_ack` arrow directions against the RTL.
+- Embedded both the controller-structure SVG and the existing `aer_4phase_handshake_flow.svg` directly in the public README and detailed architecture document.
+- Because the repository is public, removed the Cadence endpoint/account identifiers from current public-facing text and parameterized `scripts/server_inventory.sh` with `$HOME`, `AER_CADENCE_ENV`, and `AER_CADENCE_ROOT`. Passwords and private keys remain forbidden.
+- Validation results before commit: both SVGs parsed as XML, zero broken local Markdown links, original B0-v1 manifest 13/13 pass, zero current operational endpoint/account identifier matches, and `git diff --check` pass.
+- Publish command after commit: `git push -u origin master`.

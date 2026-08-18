@@ -33,18 +33,15 @@ Source PDF: `C:\Users\YangGeon\Downloads\2026년 반도체설계경진대회 오
 - An attempted workspace-local Icarus installation failed before installing files and was abandoned after the existing Vivado installation was identified.
 - Repository hygiene excludes temporary Vivado/Cadence project state, XSIM work products, journals, WDB files, and the abandoned installer. Source, testbench, constraints, scripts, documentation, text logs/reports, the VCD, and the small manifest-bound synthesis checkpoint are retained.
 - A pre-commit credential-pattern scan over all Git candidates found no private-key header, known cloud-token prefix, credential assignment, or credential-bearing URL. This is repository hygiene evidence, not proof about ignored local browser/tool state.
+- Public remote `https://github.com/Sheep-gun/2026_AI_SEMI.git` and default branch `master` were verified through the GitHub public repository API on 2026-08-19.
 
 ## Current Cadence server status
 
-- Host: `210.126.11.72`
-- Account: `aiasic26211`
-- Expected hostname from earlier use: `snu.polaris02` (not re-verified in this run)
-- Environment file: `/home/aiasic26211/control_digi.cshrc`
-- Expected Genus path: `/home/tools/cadence/DDI231/bin/genus` (not re-verified in this run)
-- 2026-08-18 live check: host-key validation succeeded, but non-interactive login failed because no public-key credential was available.
+- This public repository does not store the server endpoint, account name, password, or private-key material.
+- A 2026-08-18 read-only non-interactive check reached the configured server but could not authenticate without an approved credential.
 - Library, PVT, LEF, Liberty, and QRC paths remain **unverified**. They must not be guessed. Run `scripts/server_inventory.sh` only after secure authentication is available.
 
-No password is stored in this repository or its logs.
+No password or private key is stored in this repository or its logs.
 
 ## Frozen first comparison point
 
@@ -76,7 +73,7 @@ The initial comparison is deliberately small enough to finish and explain before
 - Optional two-phase toggle CDC adapter at a genuinely asynchronous neuron boundary; this wrapper is measured separately so CDC cost is not hidden in the core comparison.
 - Two-lane banking and delta/burst compression are stretch experiments, not part of the first frozen comparison.
 
-## Status as of 2026-08-18
+## Status as of 2026-08-19
 
 - [x] Orientation PDF pages 2-3 inspected.
 - [x] Empty/local starting state recorded.
@@ -89,6 +86,8 @@ The initial comparison is deliberately small enough to finish and explain before
 - [x] All 13 `B0-v1` manifest hashes and byte counts revalidated before and after isolated reproduction.
 - [x] Isolated XSIM and Vivado synthesis-sanity reruns reproduced the frozen metrics without overwriting manifest-bound evidence.
 - [x] Initial local Git snapshot prepared as `feat: establish B0-v1 traditional AER baseline`.
+- [x] Korean public README and architecture guide completed with rendered B0-v1 controller-structure and 4-phase sequence SVGs.
+- [x] Current public-facing files omit the Cadence server endpoint and account identifiers; runtime inventory uses local environment values.
 - [ ] Proposed RTL and common-traffic comparison completed.
 - [ ] Cadence synthesis, timing, area, and power reports completed.
 
