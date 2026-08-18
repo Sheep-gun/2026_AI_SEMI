@@ -75,3 +75,9 @@ All times are Asia/Seoul unless otherwise stated.
 - Because the repository is public, removed the Cadence endpoint/account identifiers from current public-facing text and parameterized `scripts/server_inventory.sh` with `$HOME`, `AER_CADENCE_ENV`, and `AER_CADENCE_ROOT`. Passwords and private keys remain forbidden.
 - Validation results before commit: both SVGs parsed as XML, zero broken local Markdown links, original B0-v1 manifest 13/13 pass, zero current operational endpoint/account identifier matches, and `git diff --check` pass.
 - Publish command after commit: `git push -u origin master`.
+
+### Baseline structure diagram readability correction
+
+- A GitHub-width review exposed label/arrow collisions in the first controller-structure SVG. Replaced the dense drawing with a sparse three-column datapath (`sources → encoder → grant → output → receiver`) and a separate horizontal FSM state sequence.
+- Kept only architecture-defining labels, moved the four bottlenecks into independent cards, and routed `src_req`, `src_ack`, `aer_ack`, and `state_q` without crossing text or block titles.
+- Rendered the replacement at its native 1500 px width and inside a 1200 px GitHub-style container. Both views were visually inspected for clipping, overlap, signal direction, and FSM order before replacement.

@@ -1,166 +1,154 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" role="img" aria-labelledby="title desc">
-  <title id="title">B0-v1 전통적 AER baseline 컨트롤러 구조</title>
-  <desc id="desc">16개 이벤트 소스, 고정 우선순위 인코더, grant 레지스터, 4상태 제어 FSM, 출력 디코드, 단일 수신기로 구성된 clock 기반 AER baseline 구조도</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-labelledby="title desc">
+  <title id="title">B0-v1 전통적 AER baseline 구조</title>
+  <desc id="desc">16개 이벤트 소스, fixed-priority encoder, grant register, 4-state FSM, output decode와 단일 receiver로 구성된 간결한 AER baseline 블록도</desc>
 
   <defs>
-    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L12,6 L0,12 Z" fill="#2563eb"/>
+    <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#0f766e"/>
     </marker>
-    <marker id="arrow-teal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L12,6 L0,12 Z" fill="#0f766e"/>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#2563eb"/>
     </marker>
-    <marker id="arrow-orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L12,6 L0,12 Z" fill="#c2410c"/>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#c2410c"/>
     </marker>
-    <marker id="arrow-gray" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L12,6 L0,12 Z" fill="#64748b"/>
+    <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#64748b"/>
     </marker>
-    <filter id="shadow" x="-15%" y="-20%" width="130%" height="145%">
+    <filter id="shadow" x="-12%" y="-18%" width="124%" height="140%">
       <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.12"/>
     </filter>
     <style>
       .title { font: 700 34px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
       .subtitle { font: 400 18px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #475569; }
-      .section { font: 700 23px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
-      .box-title { font: 700 19px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
-      .box-sub { font: 400 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #475569; }
+      .group-title { font: 700 23px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
+      .block-title { font: 700 19px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #0f172a; }
+      .body { font: 400 16px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #334155; }
+      .small { font: 400 14px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #475569; }
       .signal { font: 700 16px Consolas, 'Noto Sans KR', monospace; fill: #0f172a; }
       .state { font: 700 13px Consolas, monospace; fill: #334155; }
-      .note { font: 400 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #334155; }
-      .weakness { font: 700 15px 'Noto Sans KR', 'Malgun Gothic', sans-serif; fill: #9a3412; }
-      .blue-line { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
-      .teal-line { stroke: #0f766e; stroke-width: 3; fill: none; marker-end: url(#arrow-teal); }
-      .orange-line { stroke: #c2410c; stroke-width: 3; fill: none; marker-end: url(#arrow-orange); }
-      .gray-line { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrow-gray); }
-      .bus { stroke-width: 6; }
+      .teal { stroke: #0f766e; stroke-width: 3; fill: none; marker-end: url(#arrow-teal); }
+      .blue { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow-blue); }
+      .orange { stroke: #c2410c; stroke-width: 3; fill: none; marker-end: url(#arrow-orange); }
+      .gray { stroke: #64748b; stroke-width: 2.5; fill: none; marker-end: url(#arrow-gray); }
     </style>
   </defs>
 
-  <rect width="1600" height="1040" fill="#f8fafc"/>
-  <text x="60" y="60" class="title">B0-v1 전통적 AER Baseline 컨트롤러</text>
-  <text x="60" y="94" class="subtitle">16 sources · fixed priority · FIFO 없음 · 단일 공유 주소 버스 · receiver-facing active-high 4-phase handshake</text>
+  <rect width="1500" height="900" fill="#f8fafc"/>
+  <text x="60" y="58" class="title">B0-v1 전통적 AER Baseline</text>
+  <text x="60" y="90" class="subtitle">16 sources · fixed priority · FIFO 없음 · 단일 공유 주소 버스 · active-high 4-phase handshake</text>
 
-  <!-- Event sources -->
+  <!-- Sources -->
   <g filter="url(#shadow)">
-    <rect x="55" y="145" width="345" height="625" rx="20" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+    <rect x="55" y="165" width="275" height="455" rx="20" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
   </g>
-  <text x="227" y="185" text-anchor="middle" class="section">이벤트 소스</text>
-  <text x="227" y="212" text-anchor="middle" class="box-sub">뉴런 16개 · source별 outstanding ≤ 1</text>
+  <text x="192" y="205" text-anchor="middle" class="group-title">이벤트 소스 16개</text>
+  <text x="192" y="232" text-anchor="middle" class="small">요청을 acknowledge까지 유지</text>
 
-  <g>
-    <rect x="95" y="250" width="265" height="62" rx="12" fill="#ffffff" stroke="#5eead4"/>
-    <rect x="95" y="326" width="265" height="62" rx="12" fill="#ffffff" stroke="#5eead4"/>
-    <rect x="95" y="478" width="265" height="62" rx="12" fill="#ffffff" stroke="#5eead4"/>
-    <rect x="95" y="554" width="265" height="62" rx="12" fill="#ffffff" stroke="#5eead4"/>
-    <text x="125" y="288" class="box-title">source 0</text>
-    <text x="335" y="288" text-anchor="end" class="signal">최고 우선순위</text>
-    <text x="125" y="364" class="box-title">source 1</text>
-    <text x="227" y="435" text-anchor="middle" class="section">⋮</text>
-    <text x="125" y="516" class="box-title">source 14</text>
-    <text x="125" y="592" class="box-title">source 15</text>
-    <text x="335" y="592" text-anchor="end" class="signal">최저 우선순위</text>
-  </g>
-  <rect x="87" y="650" width="280" height="76" rx="12" fill="#d1fae5" stroke="#0f766e"/>
-  <text x="227" y="679" text-anchor="middle" class="box-title">소스가 요청을 보관</text>
-  <text x="227" y="705" text-anchor="middle" class="box-sub">src_ack이 올 때까지 src_req 유지</text>
+  <rect x="92" y="270" width="200" height="58" rx="11" fill="#ffffff" stroke="#5eead4"/>
+  <rect x="92" y="342" width="200" height="58" rx="11" fill="#ffffff" stroke="#5eead4"/>
+  <rect x="92" y="472" width="200" height="58" rx="11" fill="#ffffff" stroke="#5eead4"/>
+  <rect x="92" y="544" width="200" height="58" rx="11" fill="#ffffff" stroke="#5eead4"/>
+  <text x="192" y="306" text-anchor="middle" class="block-title">source 0 · highest</text>
+  <text x="192" y="378" text-anchor="middle" class="block-title">source 1</text>
+  <text x="192" y="442" text-anchor="middle" class="group-title">⋮</text>
+  <text x="192" y="508" text-anchor="middle" class="block-title">source 14</text>
+  <text x="192" y="580" text-anchor="middle" class="block-title">source 15 · lowest</text>
 
-  <!-- Controller boundary -->
+  <!-- Controller -->
   <g filter="url(#shadow)">
-    <rect x="485" y="125" width="745" height="680" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="2.5"/>
+    <rect x="405" y="125" width="790" height="570" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="2.5"/>
   </g>
-  <text x="857" y="166" text-anchor="middle" class="section">합성 대상: aer_traditional 컨트롤러</text>
-  <text x="857" y="194" text-anchor="middle" class="box-sub">clock 기반 구현 · 비동기 full-custom AER 회로를 주장하지 않음</text>
+  <text x="800" y="166" text-anchor="middle" class="group-title">합성 대상: aer_traditional 컨트롤러</text>
+  <text x="800" y="193" text-anchor="middle" class="small">clock 기반 4-state FSM · receiver 응답을 source까지 전달</text>
 
-  <!-- Priority encoder -->
-  <rect x="535" y="235" width="285" height="150" rx="16" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
-  <text x="677" y="275" text-anchor="middle" class="box-title">Fixed-priority encoder</text>
-  <text x="677" y="305" text-anchor="middle" class="signal">src_req[15:0]</text>
-  <text x="677" y="334" text-anchor="middle" class="box-sub">가장 작은 source index 선택</text>
-  <text x="677" y="360" text-anchor="middle" class="weakness">source 0이 계속 요청하면 starvation 가능</text>
+  <!-- Controller datapath blocks -->
+  <rect x="455" y="245" width="220" height="130" rx="15" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="565" y="283" text-anchor="middle" class="block-title">Fixed-priority</text>
+  <text x="565" y="307" text-anchor="middle" class="block-title">encoder</text>
+  <text x="565" y="338" text-anchor="middle" class="body">가장 작은 index 선택</text>
+  <text x="565" y="361" text-anchor="middle" class="small">source 0이 최고 우선순위</text>
 
-  <!-- Grant register -->
-  <rect x="890" y="235" width="285" height="150" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-  <text x="1032" y="275" text-anchor="middle" class="box-title">Grant register</text>
-  <text x="1032" y="306" text-anchor="middle" class="signal">grant_q[3:0]</text>
-  <text x="1032" y="335" text-anchor="middle" class="box-sub">IDLE에서 선택 주소 저장</text>
-  <text x="1032" y="360" text-anchor="middle" class="box-sub">거래 종료까지 주소 유지</text>
+  <rect x="735" y="245" width="180" height="130" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="825" y="286" text-anchor="middle" class="block-title">Grant register</text>
+  <text x="825" y="321" text-anchor="middle" class="signal">grant_q[3:0]</text>
+  <text x="825" y="350" text-anchor="middle" class="small">거래 동안 주소 유지</text>
+
+  <rect x="975" y="245" width="170" height="130" rx="15" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
+  <text x="1060" y="283" text-anchor="middle" class="block-title">Output decode</text>
+  <text x="1060" y="316" text-anchor="middle" class="signal">aer_addr</text>
+  <text x="1060" y="341" text-anchor="middle" class="signal">aer_req</text>
+  <text x="1060" y="366" text-anchor="middle" class="signal">src_ack</text>
+
+  <!-- Clean datapath arrows -->
+  <path d="M330 300 H440" class="teal"/>
+  <text x="385" y="283" text-anchor="middle" class="signal">src_req[15:0]</text>
+  <path d="M675 310 H720" class="orange"/>
+  <text x="698" y="292" text-anchor="middle" class="small">index</text>
+  <path d="M915 310 H960" class="blue"/>
+  <text x="938" y="292" text-anchor="middle" class="small">grant</text>
 
   <!-- FSM -->
-  <rect x="535" y="465" width="340" height="260" rx="16" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
-  <text x="705" y="504" text-anchor="middle" class="box-title">4-state control FSM</text>
-  <g>
-    <rect x="565" y="535" width="125" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
-    <rect x="720" y="535" width="125" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
-    <rect x="565" y="626" width="125" height="58" rx="9" fill="#ffffff" stroke="#94a3b8"/>
-    <rect x="720" y="626" width="125" height="58" rx="9" fill="#ffffff" stroke="#94a3b8"/>
-    <text x="627" y="565" text-anchor="middle" class="state">ST_IDLE</text>
-    <text x="782" y="554" text-anchor="middle" class="state">WAIT_</text>
-    <text x="782" y="572" text-anchor="middle" class="state">SINK_ACK</text>
-    <text x="627" y="648" text-anchor="middle" class="state">WAIT_SINK</text>
-    <text x="627" y="668" text-anchor="middle" class="state">_RELEASE</text>
-    <text x="782" y="648" text-anchor="middle" class="state">WAIT_SOURCE</text>
-    <text x="782" y="668" text-anchor="middle" class="state">_RELEASE</text>
-    <path d="M690 559 H712" class="gray-line"/>
-    <path d="M782 583 V615" class="gray-line"/>
-    <path d="M720 655 H700" class="gray-line"/>
-    <path d="M627 626 V596 H545 V559 H557" class="gray-line"/>
-  </g>
-  <text x="705" y="710" text-anchor="middle" class="box-sub">aer_ack과 선택 source의 release를 기다림</text>
+  <rect x="495" y="465" width="610" height="145" rx="16" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="800" y="495" text-anchor="middle" class="block-title">4-state control FSM</text>
 
-  <!-- Output decode -->
-  <rect x="930" y="465" width="245" height="260" rx="16" fill="#eef2ff" stroke="#4f46e5" stroke-width="2"/>
-  <text x="1052" y="504" text-anchor="middle" class="box-title">출력 decode</text>
-  <text x="1052" y="550" text-anchor="middle" class="signal">aer_addr = grant_q</text>
-  <text x="1052" y="589" text-anchor="middle" class="signal">aer_req = f(state_q)</text>
-  <text x="1052" y="628" text-anchor="middle" class="signal">src_ack = one-hot</text>
-  <line x1="960" y1="653" x2="1145" y2="653" stroke="#c7d2fe" stroke-width="2"/>
-  <text x="1052" y="684" text-anchor="middle" class="box-sub">수신 완료 뒤에만 source ack</text>
-  <text x="1052" y="708" text-anchor="middle" class="box-sub">→ end-to-end backpressure</text>
+  <rect x="520" y="520" width="110" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
+  <rect x="665" y="520" width="125" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
+  <rect x="825" y="520" width="125" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
+  <rect x="985" y="520" width="95" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
+  <text x="575" y="549" text-anchor="middle" class="state">IDLE</text>
+  <text x="727" y="541" text-anchor="middle" class="state">WAIT_SINK</text>
+  <text x="727" y="557" text-anchor="middle" class="state">_ACK</text>
+  <text x="887" y="541" text-anchor="middle" class="state">WAIT_SOURCE</text>
+  <text x="887" y="557" text-anchor="middle" class="state">_RELEASE</text>
+  <text x="1032" y="541" text-anchor="middle" class="state">WAIT_SINK</text>
+  <text x="1032" y="557" text-anchor="middle" class="state">_RELEASE</text>
+  <path d="M630 544 H650" class="gray"/>
+  <path d="M790 544 H810" class="gray"/>
+  <path d="M950 544 H970" class="gray"/>
+  <path d="M1032 568 V590 H575 V583" class="gray"/>
 
-  <!-- Source buses -->
-  <path d="M400 300 H520" class="teal-line bus"/>
-  <text x="458" y="282" text-anchor="middle" class="signal">src_req[15:0]</text>
-  <path d="M930 650 H920 V770 H455 V350 H400" class="teal-line"/>
-  <text x="625" y="791" text-anchor="middle" class="signal">src_ack[15:0]</text>
-  <path d="M455 350 V595 H520" class="gray-line"/>
-  <text x="470" y="575" class="signal">src_req[grant_q]</text>
-
-  <!-- Internal controller paths -->
-  <path d="M820 310 H875" class="orange-line"/>
-  <text x="848" y="290" text-anchor="middle" class="signal">idx, valid</text>
-  <path d="M1032 385 V450" class="blue-line"/>
-  <text x="1049" y="426" class="signal">grant_q</text>
-  <path d="M875 575 H915" class="gray-line"/>
-  <text x="895" y="557" text-anchor="middle" class="signal">state_q</text>
-  <circle cx="857" cy="215" r="5" fill="#64748b"/>
-  <path d="M857 215 H1032 V225" class="gray-line"/>
-  <path d="M857 215 H705 V450" class="gray-line"/>
-  <text x="857" y="204" text-anchor="middle" class="signal">clk, rst_n</text>
+  <!-- FSM inputs/control without crossings -->
+  <path d="M385 300 V440 H470 V575 H495" class="teal"/>
+  <text x="435" y="425" text-anchor="middle" class="small">selected source release</text>
+  <path d="M1060 465 V390" class="gray"/>
+  <text x="1080" y="430" class="small">state_q</text>
 
   <!-- Receiver -->
   <g filter="url(#shadow)">
-    <rect x="1310" y="255" width="245" height="350" rx="20" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <rect x="1270" y="225" width="200" height="290" rx="20" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
   </g>
-  <text x="1432" y="300" text-anchor="middle" class="section">수신기</text>
-  <text x="1432" y="328" text-anchor="middle" class="box-sub">testbench model</text>
-  <rect x="1348" y="365" width="169" height="88" rx="12" fill="#ffffff" stroke="#93c5fd"/>
-  <text x="1432" y="399" text-anchor="middle" class="box-title">주소 캡처</text>
-  <text x="1432" y="427" text-anchor="middle" class="signal">aer_addr[3:0]</text>
-  <rect x="1348" y="482" width="169" height="82" rx="12" fill="#ffffff" stroke="#93c5fd"/>
-  <text x="1432" y="515" text-anchor="middle" class="box-title">4-phase 응답</text>
-  <text x="1432" y="541" text-anchor="middle" class="signal">aer_ack</text>
+  <text x="1370" y="267" text-anchor="middle" class="group-title">수신기</text>
+  <text x="1370" y="294" text-anchor="middle" class="small">testbench model</text>
+  <rect x="1300" y="330" width="140" height="62" rx="11" fill="#ffffff" stroke="#93c5fd"/>
+  <rect x="1300" y="420" width="140" height="62" rx="11" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="1370" y="368" text-anchor="middle" class="block-title">주소 캡처</text>
+  <text x="1370" y="458" text-anchor="middle" class="block-title">ACK 응답</text>
 
-  <!-- Receiver-facing shared link -->
-  <path d="M1175 530 H1295" class="blue-line bus"/>
-  <text x="1235" y="507" text-anchor="middle" class="signal">aer_addr[3:0]</text>
-  <path d="M1175 590 H1295" class="blue-line"/>
-  <text x="1235" y="574" text-anchor="middle" class="signal">aer_req</text>
-  <path d="M1310 620 H1260 V745 H900 V690 H875" class="blue-line"/>
-  <text x="1160" y="765" text-anchor="middle" class="signal">aer_ack</text>
+  <!-- Receiver-facing link -->
+  <path d="M1145 285 H1255" class="blue"/>
+  <text x="1200" y="268" text-anchor="middle" class="signal">aer_addr[3:0]</text>
+  <path d="M1145 345 H1255" class="blue"/>
+  <text x="1200" y="328" text-anchor="middle" class="signal">aer_req</text>
+  <path d="M1270 470 H1205 V635 H1130 V575 H1105" class="blue"/>
+  <text x="1185" y="657" text-anchor="middle" class="signal">aer_ack</text>
 
-  <!-- Bottom interpretation -->
-  <rect x="55" y="865" width="1500" height="118" rx="18" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
-  <text x="90" y="905" class="section">이 구조에서 분리해 측정할 병목</text>
-  <text x="90" y="940" class="note">① fixed priority의 공정성/최악 지연  ② return-to-zero 4-phase의 전송 간격  ③ FIFO 부재의 burst 흡수 한계  ④ 단일 수신기 stall의 전체 전파</text>
-  <text x="90" y="968" class="note">B1은 오직 arbiter만 round-robin으로 교체해 공정성 효과를 분리한다. source 수·주소 폭·FIFO 없음·단일 lane·4-phase link·traffic/backpressure는 유지한다.</text>
+  <!-- Source acknowledge return -->
+  <path d="M975 365 V665 H365 V520 H330" class="teal"/>
+  <text x="650" y="687" text-anchor="middle" class="signal">src_ack[15:0]</text>
+
+  <!-- Four concise bottleneck cards -->
+  <text x="60" y="765" class="group-title">B0-v1에서 분리해 측정할 병목</text>
+  <rect x="55" y="790" width="320" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>
+  <rect x="405" y="790" width="320" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>
+  <rect x="755" y="790" width="320" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>
+  <rect x="1105" y="790" width="340" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>
+  <text x="215" y="820" text-anchor="middle" class="block-title">Fixed priority</text>
+  <text x="215" y="846" text-anchor="middle" class="body">낮은 우선순위의 긴 대기</text>
+  <text x="565" y="820" text-anchor="middle" class="block-title">FIFO 없음</text>
+  <text x="565" y="846" text-anchor="middle" class="body">burst 흡수 공간 없음</text>
+  <text x="915" y="820" text-anchor="middle" class="block-title">4-phase return-to-zero</text>
+  <text x="915" y="846" text-anchor="middle" class="body">다음 이벤트 전 bubble</text>
+  <text x="1275" y="820" text-anchor="middle" class="block-title">단일 공유 link</text>
+  <text x="1275" y="846" text-anchor="middle" class="body">receiver stall이 전체에 전파</text>
 </svg>
