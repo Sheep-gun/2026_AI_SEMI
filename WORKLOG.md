@@ -101,3 +101,12 @@ All times are Asia/Seoul unless otherwise stated.
 - Final command `scripts/run_async_baseline.ps1` passed: 139 issued, 139 received, zero loss/duplicate/assertion failures, average TB latency 26.877 ns, maximum 241 ns, and `TEST_PASS async_baseline`.
 - Ran `scripts/run_vivado_synth_async_probe.ps1`. Vivado produced 42 LUTs and six latch primitives with two expected latch-inference warnings, plus 80 no-clock checks, 10 unconstrained internal endpoints and two latch loops. This is a structure probe, not timing/PPA signoff.
 - Froze the evidence as `A0-functional` and recorded its scope, result and SHA-256 manifest. The fixed-priority encoder is not a metastability-safe MUTEX and no such claim is made.
+
+### Custom MUTEX/C-element feasibility audit
+
+- Reconnected through password standard input only and searched the configured custom-IC environment without writing credentials.
+- Confirmed Spectre 23.1.0.275.isr2 is installed. Virtuoso, Liberate, Cadence PVS, Assura, Pegasus and Calibre were not available; `/usr/sbin/pvs` was confirmed to be the Linux LVM utility.
+- Searched project and shared paths for transistor models, GDS/GDSII, CDL, DRC/LVS rule decks, technology libraries and PDK directories. Project-qualified artifacts were not found.
+- `.scs` and `.tf` files under shared tool paths were limited to Cadence product examples/samples/documentation, including generic AMS `gpdk` examples; they are not project foundry PDK evidence.
+- Re-inspected orientation PDF pages 2-3. Digital submission requires RTL/synthesis/timing/area/power/frequency, while analog explicitly includes layout/RC extraction. The document neither permits nor forbids digital custom cells.
+- Recorded the sanitized evidence and required organizer questions in `reports/environment/CADENCE_CUSTOM_CELL_FEASIBILITY_2026-08-19.md`.

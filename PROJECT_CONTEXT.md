@@ -43,6 +43,8 @@ Source PDF: `C:\Users\YangGeon\Downloads\2026년 반도체설계경진대회 오
 - Fast/typical/slow Liberty, active LEF, QRC technology and capacitance-table artifacts were verified.
 - No characterized MUTEX, Muller C-element, or asynchronous arbiter cell was found. Delay cells and ordinary latches/gates exist, but they do not by themselves prove metastability-safe or QDI behavior.
 - Full evidence and scope boundaries are recorded in `reports/environment/CADENCE_ASYNC_LIBRARY_AUDIT_2026-08-19.md`.
+- Custom-cell follow-up found Spectre but no Virtuoso, Liberate, Cadence physical-verification tool, project transistor model, GDS/CDL, or DRC/LVS rule deck. A foundry-qualified custom MUTEX/C-element cannot be completed in the current environment.
+- The orientation PDF does not state whether digital custom cells are permitted; organizer confirmation is required. Evidence is recorded in `reports/environment/CADENCE_CUSTOM_CELL_FEASIBILITY_2026-08-19.md`.
 
 No password or private key is stored in this repository or its logs.
 
@@ -98,6 +100,7 @@ Two implementations are now preserved:
 - [x] Current public-facing files omit the Cadence server endpoint and account identifiers; runtime inventory uses local environment values.
 - [x] Asynchronous-cell audit completed: no project-accessible characterized MUTEX or Muller C-element found.
 - [x] `A0-functional` clockless baseline completed: 139/139 XSIM events, zero assertion failures, Vivado latch-structure probe passed with explicit non-signoff boundary.
+- [x] Custom MUTEX/C-element feasibility audited: Spectre only; required PDK/layout/DRC/LVS/characterization flow unavailable and contest permission unspecified.
 - [ ] Proposed RTL and common-traffic comparison completed.
 - [ ] Cadence synthesis, timing, area, and power reports completed.
 
