@@ -119,3 +119,24 @@ All times are Asia/Seoul unless otherwise stated.
 - Removed six LDCE blocks and 87 unsupported PATHPULSE statements only for diagnosis. Partial LUT/IO SDF annotation succeeded, but the first trial deadlocked with state fixed at IDLE.
 - Ran the post-synthesis functional netlist without SDF. All 84 trials completed zero receiver events, with 84 missing winners, two unknown-output observations and 170 assertion failures.
 - Marked A0 as RTL-only protocol evidence and rejected it as a physical implementation/PPA baseline. Recorded details in `results/ASYNC_RACE_STRESS_2026-08-19.md`.
+
+### T0 structural clockless baseline
+
+- Added `rtl/traditional_async/aer_traditional_structural.sv` with explicit cross-coupled NOR SR storage, fixed-priority request capture, no global clock and no MUTEX.
+- Reused the frozen asynchronous workload through a wrapper. Vivado RTL and post-synthesis functional runs each passed 139/139 events with zero assertions.
+- Ran an 82-trial request-skew sweep for source pairs 0/15 and 3/7. RTL and post-synthesis functional runs completed all trials without loss, duplicate, X output or short request pulses.
+- Back-annotated Vivado SDF after removing unsupported `PATHPULSE` records for the diagnostic copy. All 82 events completed, but 40 trials selected the lower-number fixed-priority source even when the higher-number source arrived 1-20 ps earlier.
+- Vivado synthesized 70 LUT and 0 FF while preserving eight feedback timing loops and six `LUTLP-1` DRC violations.
+- Cadence Xcelium zero-delay simulation did not converge. A simulation-only 1 ps primitive delay exposed repeated address changes while request remained high. Genus mapped 108 cells and area 1,353.845 only by inserting loop breakers; no valid constrained timing/Fmax was available.
+- Classified T0 as the traditional structural baseline and preserved instability as an explicit improvement target.
+
+### P1 buffered round-robin hybrid improvement
+
+- Added `rtl/improved/aer_improved_hybrid.sv`: 16 asynchronous held-request inputs, two-flop request synchronizers, source-local depth-2 queues, round-robin arbitration and a one-entry registered valid/ready output.
+- Main workload passed Vivado RTL, Vivado post-synthesis functional simulation and Cadence Xcelium: 139 offered/accepted/received, assertion 0, saturation gap exactly one cycle, average latency 18.438 cycles and maximum 44 cycles.
+- Added a 192-trial CDC phase sweep covering all 16 sources at 12 request phases from -4.9 ns to +4.9 ns. Vivado RTL, Vivado post-synthesis and Xcelium each delivered 192/192 exactly once with zero errors. The test is labeled digital CDC evidence, not analog metastability proof.
+- Vivado sanity synthesis produced 207 LUT and 89 FF, no feedback loops and no unconstrained internal endpoints. The unplaced 10 ns FPGA estimate was WNS -0.813 ns.
+- Genus 10 ns mapping produced 478 cells, area 11,605.810, worst data path 3.344 ns, slack +6.202 ns and vectorless power 1.66431 mW.
+- Genus 2 ns mapping produced 676 cells, area 15,511.003, worst data path 1.799 ns and zero slack. This is synthesis evidence for a 500 MHz point, not post-layout signoff Fmax.
+- VCD power was 1.33562 mW but internal mapping coverage was incomplete, so it remains auxiliary. A queue-flattening experiment improved signal visibility but regressed FPGA mapping from 207 to 347 LUT and was rejected.
+- Recorded the broad design comparison in `results/T0_P1_COMPARISON_2026-08-19.md`: P1 improves implementation stability, fairness, burst absorption, backpressure decoupling and throughput at an explicit area/power cost.

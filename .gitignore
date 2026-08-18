@@ -9,6 +9,12 @@
 /sim/async_work/
 /sim/async_race_work/
 /sim/async_race_gate_work/
+/sim/traditional_async_work/
+/sim/traditional_async_gate_work/
+/sim/improved_work/
+/sim/improved_gate_work/
+/sim/improved_cdc_phase_rtl_work/
+/sim/improved_cdc_phase_gate_work/
 **/xsim.dir/
 *.wdb
 *.pb
@@ -28,6 +34,9 @@ webtalk*.log
 vivado*.log
 sim/logs/*.backup.log
 sim/logs/async_race_gate*.log
+sim/logs/traditional_structural_gate_compile.log
+sim/logs/traditional_structural_gate_elaborate.log
+sim/logs/traditional_structural_gate_tb_compile.log
 
 # Cadence Xcelium / Genus / Innovus generated state
 INCA_libs/
@@ -38,6 +47,17 @@ genus.cmd*
 genus.log*
 innovus.cmd*
 innovus.log*
+
+# Interactive Cadence transport bundles and unsanitized raw consoles
+/reports/traditional_async/cadence/genus_t0.log
+/reports/improved/cadence/logs/
+/reports/improved/cadence/outputs/
+/reports/improved/cadence/reports/
+/reports/improved/cadence/p1_final_artifacts.tgz
+/reports/improved/cadence/final/logs/
+/reports/improved/cadence/final/reports/sweep_*/
+!/reports/improved/cadence/final/reports/sweep_2p0ns/
+!/reports/improved/cadence/final/reports/sweep_2p0ns/**
 
 # Other local simulator products
 *.vvp

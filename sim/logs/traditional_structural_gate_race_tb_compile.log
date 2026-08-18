@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_traditional_structural_test_wrapper.sv" into library worklib
+INFO: [VRFC 10-311] analyzing module aer_traditional_async
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_traditional_structural_race_tb.sv" into library worklib
+INFO: [VRFC 10-311] analyzing module aer_traditional_structural_race_tb

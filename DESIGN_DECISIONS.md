@@ -72,6 +72,30 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** A future asynchronous baseline must use characterized asynchronous primitives and a validated flow. Otherwise the implementation baseline moves to an H-series structure with explicit asynchronous request capture/synchronization and a synchronous arbiter.
 
+## DD-010: Keep T0 as the unstable traditional structural baseline
+
+**Decision:** Use `T0` as the explicit clockless traditional baseline: structural cross-coupled NOR storage, fixed-priority selection, no FIFO, one address lane and source/receiver 4-phase handshakes. Do not add a synchronous arbiter or hidden synchronizer to T0.
+
+**Why:** The goal of T0 is to expose what the MUTEX-free traditional clockless structure does in the available flow. Vivado functional simulation can pass while Cadence finite-delay simulation oscillates and Genus cannot produce useful constrained timing. Repairing those behaviors inside T0 would erase the baseline problem that P1 is meant to solve.
+
+**Consequence:** T0 area and vectorless power are recorded as tool outputs, but they are not treated as a valid normal-operation PPA point. The lack of usable Fmax and the Xcelium instability remain headline baseline results.
+
+## DD-011: Select P1 for the first-round contest architecture
+
+**Decision:** P1 keeps asynchronous 4-phase source request/acknowledge but crosses requests through two-flop synchronizers into a synchronous buffered core. The core uses a depth-2 queue per source, round-robin scheduling and a one-entry registered valid/ready output.
+
+**Why:** This simultaneously addresses the contest-relevant dimensions of implementation stability, fairness, burst handling, backpressure, throughput and measurable PPA without requiring an unavailable MUTEX cell. Main and CDC-phase tests passed in both Vivado and Xcelium, and Genus produced constrained timing through a 2 ns synthesis point.
+
+**Consequence:** P1 is the main design candidate. Its cost is explicit: 89 sequential cells and 11,605.810 cell area at the 10 ns point. Further work optimizes the 16-way rotating scan and queue allocation without changing the verified interface contract.
+
+## DD-012: Prefer implementation quality over VCD annotation convenience
+
+**Decision:** Retain the multi-dimensional packed source queue representation used by the 207-LUT P1 mapping. Do not flatten it solely to improve VCD queue annotation.
+
+**Why:** A flat 32-bit experiment raised Vivado use from 207 to 347 LUT and worsened 10 ns WNS from -0.813 ns to -1.538 ns. The activity-based result still has incomplete internal mapping, so measurement convenience did not justify the PPA regression.
+
+**Consequence:** Genus vectorless power is the official comparison value. The 1.33562 mW VCD result is auxiliary and is always accompanied by its 15.43% driver-net, 63.63% RTL-driver and 0% MDA-queue coverage.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

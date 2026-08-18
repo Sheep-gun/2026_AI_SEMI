@@ -1,0 +1,7 @@
+purpose=improved FPGA structural synthesis sanity
+vivado_version=2020.2
+part=xc7a35tcpg236-1
+clock_period_ns=10.000
+estimated_setup_slack_ns=-0.813
+estimated_datapath_delay_ns=10.662
+IMPROVED_SYNTH_PASS

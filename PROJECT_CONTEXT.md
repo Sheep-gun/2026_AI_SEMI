@@ -75,13 +75,13 @@ Two implementations are now preserved:
 - `A0-functional`: no global clock; latch state advances from request/acknowledge changes. It is functionally verified but not metastability-safe asynchronous ASIC signoff because the available library lacks characterized MUTEX/C-element cells.
 - Follow-up race testing rejected `A0-functional` as an implementation baseline: RTL passed 84 ps-skew/X-window trials, while the Vivado post-synthesis functional netlist completed 0/84 trials and raised 170 assertion failures.
 
-### Proposed architecture
+### Implemented P1 architecture
 
 - One shared address bus of the same width as baseline.
 - Source-local depth-2 elastic queues.
 - Round-robin arbitration with a registered grant pointer.
 - Registered synchronous `valid/ready` output, capable of one accepted event per cycle when continuously ready.
-- Optional two-phase toggle CDC adapter at a genuinely asynchronous neuron boundary; this wrapper is measured separately so CDC cost is not hidden in the core comparison.
+- Source-facing 4-phase request/acknowledge boundary and two-flop request synchronizers are included in P1 PPA so the asynchronous input cost is not hidden.
 - Two-lane banking and delta/burst compression are stretch experiments, not part of the first frozen comparison.
 
 ## Status as of 2026-08-19
@@ -103,8 +103,11 @@ Two implementations are now preserved:
 - [x] `A0-functional` clockless baseline completed: 139/139 XSIM events, zero assertion failures, Vivado latch-structure probe passed with explicit non-signoff boundary.
 - [x] A0 race/post-synthesis stability tested: RTL 84/84 pass; synthesized netlist 84/84 fail. A0 is retained as RTL-only protocol evidence, not a physical baseline.
 - [x] Custom MUTEX/C-element feasibility audited: Spectre only; required PDK/layout/DRC/LVS/characterization flow unavailable and contest permission unspecified.
-- [ ] Proposed RTL and common-traffic comparison completed.
-- [ ] Cadence synthesis, timing, area, and power reports completed.
+- [x] `T0` structural clockless baseline completed and tested in Vivado and Cadence; finite-delay Xcelium instability and invalid loop-based timing retained as baseline weaknesses.
+- [x] `P1` hybrid improved RTL completed: asynchronous 4-phase source boundary, 2FF CDC, depth-2 per-source queues, round-robin and one-entry elastic output.
+- [x] P1 main workload passed Vivado RTL, Vivado post-synthesis and Cadence Xcelium with 139/139 events and zero assertions.
+- [x] P1 CDC phase sweep passed 192/192 trials in Vivado RTL, Vivado post-synthesis and Cadence Xcelium.
+- [x] Cadence P1 synthesis, timing, area, and power completed: 10 ns area 11,605.810, vectorless power 1.66431 mW, 2 ns synthesis point reached with area 15,511.003.
 
 ## Evidence labels
 

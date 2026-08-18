@@ -1,0 +1,12 @@
+T0_XCELIUM_FINITE_DELAY_RESULT=FAIL
+TEST_START_LINES=2
+ASSERT_FAIL_LINES=2180439
+FIRST_ERRORS
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5
+ASSERT_FAIL time_ns=20 message=aer_addr changed while aer_req high old=0 new=5

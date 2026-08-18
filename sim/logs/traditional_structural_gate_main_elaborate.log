@@ -1,0 +1,33 @@
+Vivado Simulator 2020.2
+Copyright 1986-1999, 2001-2020 Xilinx, Inc. All Rights Reserved.
+Running: C:/Xilinx/Vivado/2020.2/bin/unwrapped/win64.o/xelab.exe worklib.aer_traditional_async_tb worklib.glbl -s traditional_structural_gate_sim --debug typical -L unisims_ver --log C:\Users\YangGeon\Documents\2026_AI_SEMI\sim\logs\traditional_structural_gate_main_elaborate.log 
+Multi-threading is on. Using 30 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module unisims_ver.IBUF
+Compiling module unisims_ver.OBUF
+Compiling module unisims_ver.x_lut2_mux4
+Compiling module unisims_ver.LUT2
+Compiling module unisims_ver.x_lut3_mux8
+Compiling module unisims_ver.LUT3
+Compiling module worklib.aer_async_sr_latch
+Compiling module worklib.aer_async_sr_latch__2
+Compiling module worklib.aer_async_d_latch__1
+Compiling module unisims_ver.LUT6
+Compiling module unisims_ver.LUT5
+Compiling module unisims_ver.LUT4
+Compiling module worklib.aer_async_sr_latch__3
+Compiling module worklib.aer_async_d_latch__2
+Compiling module worklib.aer_async_sr_latch__4
+Compiling module worklib.aer_async_d_latch__3
+Compiling module worklib.aer_async_sr_latch__1
+Compiling module worklib.aer_async_d_latch
+Compiling module worklib.aer_traditional_structural
+Compiling module worklib.aer_traditional_async(ADDR_W=4)
+Compiling module worklib.aer_traditional_async_tb
+Compiling module worklib.glbl
+Built simulation snapshot traditional_structural_gate_sim

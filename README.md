@@ -3,7 +3,7 @@
 팀 **최태원의 검**의 디지털 1차 설계 수행과제 저장소다. Bio-mimic Neuron을 위한 전통적 AER 통신 구조를 분석하고, 병목을 한 단계씩 개선한 뒤 동일 조건에서 기능·성능·PPA를 비교한다.
 
 - 1차 제출일: **2026년 8월 28일**
-- 현재 기준점: **B0-v1 clocked reference**와 **A0-functional clockless reference**
+- 현재 기준점: **T0 전통 clockless baseline**과 **P1 buffered round-robin hybrid 개선본**
 - 합성 대상: AER 컨트롤러 RTL
 - testbench model: 뉴런 event source와 receiver
 - 범위 밖: ECG, SNN ECG Classifier, 이전 ECG SoC의 RTL과 구조
@@ -19,7 +19,8 @@
 | `B1` | arbiter만 round-robin으로 교체 | starvation 제거, 최대 arbitration wait와 latency tail |
 | `B2` | source별 depth-2 FIFO만 추가 | burst 흡수, source-side backpressure 완화 |
 | `B3` | registered elastic `valid/ready` output | 4-phase return-to-zero bubble 제거 |
-| `P1` | round-robin + FIFO + elastic output | 단일 lane 개선 구조의 종합 성능과 PPA |
+| `T0` | 구조적 latch 기반 clockless fixed-priority AER | 전통 구조의 실제 안정성·합성 한계 측정 |
+| `P1` | 비동기 4-phase 입력 + CDC + round-robin + depth-2 queue + elastic output | 안정성·공정성·burst·throughput·PPA 종합 개선 |
 
 단계별 비교에서 source 수, 주소 폭, 단일 output lane, event traffic, receiver backpressure trace와 검증 기준을 고정한다. B1에서는 FIFO나 receiver protocol을 함께 바꾸지 않는다.
 
@@ -142,7 +143,30 @@ Vivado는 latch 구조로 변환했지만 no-clock endpoint, unconstrained endpo
 - Race/post-synthesis 판정: [`results/ASYNC_RACE_STRESS_2026-08-19.md`](results/ASYNC_RACE_STRESS_2026-08-19.md)
 - Race evidence hash: [`results/ASYNC_RACE_MANIFEST_2026-08-19.md`](results/ASYNC_RACE_MANIFEST_2026-08-19.md)
 
-## 7. 재현 방법
+## 7. T0와 P1 최종 비교
+
+`T0`는 MUTEX 없이 구조적 cross-coupled NOR latch로 만든 진짜 clockless baseline이다. Vivado RTL과 post-synthesis functional test는 139/139 event를 통과했지만, Cadence Xcelium finite-delay simulation에서 transaction 중 주소가 반복 전이했고 Genus timing은 feedback loop 때문에 유효한 Fmax를 만들지 못했다. 이 실패는 감추지 않고 전통 baseline의 개선 대상으로 남겼다.
+
+`P1`은 source-facing 비동기 4-phase handshake를 유지하고, 내부를 2-flop synchronizer, source별 depth-2 queue, round-robin scheduler와 registered `valid/ready` output으로 구성한다.
+
+| 항목 | T0 | P1 |
+|---|---:|---:|
+| main event accounting | 139 / 139 | 139 / 139 |
+| Cadence Xcelium | finite-delay 발진 | 139 / 139, assertion 0 |
+| 공정성 | fixed priority | round-robin |
+| burst 저장 | 없음 | source별 depth-2 |
+| no-stall output | 4-phase TB delay 지배 | 1 event/cycle |
+| Genus cell area | 1,353.845 | 11,605.810 |
+| valid synthesis timing | 없음 | 10 ns slack +6.202 ns; 2 ns 도달 |
+
+T0의 작은 area/power는 정상 timing closure가 가능한 동일 기능 구현의 PPA가 아니므로 P1과 단순 비율로 우열을 정하지 않는다. P1은 면적을 더 사용해 일반 standard-cell flow에서 검증 가능한 timing, buffering, fairness와 peak throughput을 얻는다.
+
+- T0 상세: [`results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md`](results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md)
+- P1 상세: [`results/P1_IMPROVED_AER_2026-08-19.md`](results/P1_IMPROVED_AER_2026-08-19.md)
+- 비교표: [`results/T0_P1_COMPARISON_2026-08-19.md`](results/T0_P1_COMPARISON_2026-08-19.md)
+- evidence hash: [`results/T0_P1_MANIFEST_2026-08-19.md`](results/T0_P1_MANIFEST_2026-08-19.md)
+
+## 8. 재현 방법
 
 PowerShell에서 저장소 root를 기준으로 실행한다.
 
@@ -152,6 +176,16 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 .\scripts\run_async_baseline.ps1
 .\scripts\run_vivado_synth_async_probe.ps1
 .\scripts\run_async_race.ps1
+.\scripts\run_traditional_structural.ps1
+.\scripts\run_traditional_structural_race.ps1
+.\scripts\run_vivado_synth_traditional_structural.ps1
+.\scripts\run_traditional_structural_gate.ps1 -Suite main
+.\scripts\run_traditional_structural_gate.ps1 -Suite race
+.\scripts\run_improved.ps1
+.\scripts\run_vivado_synth_improved.ps1
+.\scripts\run_improved_gate.ps1
+.\scripts\run_improved_cdc_phase.ps1 -Mode rtl
+.\scripts\run_improved_cdc_phase.ps1 -Mode gate
 ```
 
 - 시뮬레이션 결과: `sim/logs/`, `sim/waves/`
@@ -162,11 +196,13 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 
 일상적인 재검증은 manifest-bound 원본을 덮어쓰지 않도록 격리 작업공간에서 수행한다. RTL 버그 수정이 필요하면 `B0-v2`와 새 dated manifest를 만든다.
 
-## 8. 저장소 구성
+## 9. 저장소 구성
 
 ```text
 rtl/baseline/       B0-v1 합성 가능 RTL
 rtl/async_baseline/ A0-functional clockless latch RTL
+rtl/traditional_async/ T0 구조적 clockless RTL
+rtl/improved/       P1 hybrid 개선 RTL
 tb/                 self-checking testbench
 scripts/            XSIM·Vivado·Cadence 환경 확인 스크립트
 docs/requirements/  고정 비교 조건과 평가 지표
@@ -178,7 +214,7 @@ reports/            보존할 핵심 text report와 synthesis checkpoint
 
 상세 범위와 확인/미확인 상태는 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md), 설계 선택의 근거는 [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), 실행 이력은 [`WORKLOG.md`](WORKLOG.md)에 기록한다.
 
-## 9. 결과 해석 원칙
+## 10. 결과 해석 원칙
 
 - 확인된 측정값, 설계 결정, 가정, 미확인 사항을 구분한다.
 - simulation 기능 정확도와 synthesis PPA를 섞지 않는다.

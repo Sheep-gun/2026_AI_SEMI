@@ -1,0 +1,7 @@
+purpose=structural clockless FPGA synthesis probe
+vivado_version=2020.2
+part=xc7a35tcpg236-1
+top=aer_traditional_structural
+global_clock=none
+metastability_status=MUTEX_NOT_IMPLEMENTED
+TRADITIONAL_STRUCTURAL_SYNTH_PASS

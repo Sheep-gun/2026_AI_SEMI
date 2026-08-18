@@ -1,0 +1,46 @@
+design=P1 improved hybrid AER
+rtl=aer_improved_hybrid
+library=typical 1.0
+corner=typical
+
+P1_XCELIUM_MAIN=PASS
+events_offered=139
+events_accepted=139
+events_received=139
+assertion_errors=0
+saturation_min_gap_cycles=1
+saturation_max_gap_cycles=1
+hotspot_source15_latency_cycles=4
+average_latency_cycles_x1000=18438
+maximum_latency_cycles=44
+
+P1_XCELIUM_CDC_PHASE=PASS
+cdc_phase_trials=192
+cdc_phase_received=192
+cdc_phase_errors=0
+cdc_phase_range_ps=-4900..+4900
+cdc_phase_zero_excluded=true
+
+P1_GENUS_10NS=PASS
+cell_count=478
+cell_area=11605.810
+sequential_cells=89
+worst_data_path_ps=3344
+worst_slack_ps=6202
+vectorless_power_w=1.66431e-03
+
+P1_GENUS_2NS=PASS
+cell_count_2ns=676
+cell_area_2ns=15511.003
+worst_data_path_2ns_ps=1799
+worst_slack_2ns_ps=0
+synthesis_frequency_lower_bound_mhz=500
+
+P1_VCD_POWER_AUXILIARY=1.33562e-03 W
+vcd_driver_net_coverage_percent=15.43
+vcd_rtl_driver_net_coverage_percent=63.63
+vcd_mda_queue_coverage_percent=0.00
+vcd_power_status=AUXILIARY_ONLY_LOW_INTERNAL_COVERAGE
+
+NOTE=CDC phase simulation verifies digital exactly-once behavior, not analog metastability immunity.
+NOTE=The 2 ns point is synthesis timing only, not post-layout signoff Fmax.
