@@ -121,6 +121,8 @@ src_req[i] ↑
 
 `A0-functional`은 `clk` port가 없고 4-phase handshake 조건이 변할 때 latch state가 다음 단계로 진행한다.
 
+> **현재 판정:** RTL 기능 모델로는 통과했지만 post-synthesis netlist에서 state progression이 보존되지 않아 physical implementation baseline으로는 탈락했다.
+
 | 지표 | A0-functional 결과 |
 |---|---:|
 | issued / received | `139 / 139` |
@@ -137,6 +139,8 @@ Vivado는 latch 구조로 변환했지만 no-clock endpoint, unconstrained endpo
 - RTL: [`rtl/async_baseline/aer_traditional_async.sv`](rtl/async_baseline/aer_traditional_async.sv)
 - 범위와 안전성 경계: [`docs/architecture/ASYNC_BASELINE_SCOPE.md`](docs/architecture/ASYNC_BASELINE_SCOPE.md)
 - 결과: [`results/ASYNC_BASELINE_SIMULATION_2026-08-19.md`](results/ASYNC_BASELINE_SIMULATION_2026-08-19.md)
+- Race/post-synthesis 판정: [`results/ASYNC_RACE_STRESS_2026-08-19.md`](results/ASYNC_RACE_STRESS_2026-08-19.md)
+- Race evidence hash: [`results/ASYNC_RACE_MANIFEST_2026-08-19.md`](results/ASYNC_RACE_MANIFEST_2026-08-19.md)
 
 ## 7. 재현 방법
 
@@ -147,6 +151,7 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 .\scripts\run_vivado_synth_baseline.ps1
 .\scripts\run_async_baseline.ps1
 .\scripts\run_vivado_synth_async_probe.ps1
+.\scripts\run_async_race.ps1
 ```
 
 - 시뮬레이션 결과: `sim/logs/`, `sim/waves/`

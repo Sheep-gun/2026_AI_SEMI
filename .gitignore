@@ -7,6 +7,8 @@
 **/.Xil/
 /sim/work/
 /sim/async_work/
+/sim/async_race_work/
+/sim/async_race_gate_work/
 **/xsim.dir/
 *.wdb
 *.pb
@@ -25,6 +27,7 @@
 webtalk*.log
 vivado*.log
 sim/logs/*.backup.log
+sim/logs/async_race_gate*.log
 
 # Cadence Xcelium / Genus / Innovus generated state
 INCA_libs/

@@ -4,6 +4,8 @@ Identifier: `A0-functional`
 Date: 2026-08-19  
 Purpose: global clock 없이 4-phase AER protocol이 request/acknowledge 변화만으로 진행되는 기능 기준점
 
+Status: **RTL-only functional model; rejected as a post-synthesis implementation baseline**
+
 ## 구현 범위
 
 - 16 event sources, 4-bit implicit source address
@@ -70,6 +72,10 @@ Combinational fixed-priority encoder는 simulation에서 deterministic한 선택
 Testbench는 동작 진행을 위해 receiver acknowledge delay와 source response delay를 명시적으로 부여한다. 측정된 ns 값은 이 testbench environment의 기능 지표이며 cell/library/post-layout 성능이 아니다.
 
 Vivado synthesis probe는 42 LUT와 6 latch primitive를 생성했다. 그러나 no-clock endpoint, unconstrained internal endpoint와 latch loop가 존재하므로 LUT/latch 수 외 timing/PPA를 해석하지 않는다.
+
+추가 race/post-synthesis 검증에서 RTL은 84개 ps-skew trial을 통과했지만 합성 netlist는 84개 trial 모두 receiver event를 완료하지 못했다. 일반 synthesis가 latch feedback의 clockless state 의미를 보존하지 못했으므로 현재 A0 RTL은 physical implementation 후보에서 제외한다.
+
+상세 결과: `results/ASYNC_RACE_STRESS_2026-08-19.md`
 
 ## 다음 단계 조건
 

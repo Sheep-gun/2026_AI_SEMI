@@ -64,6 +64,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** XSIM event accounting and Vivado latch-structure synthesis are valid evidence for `A0-functional`. Its testbench ns values, unconstrained Vivado timing and LUT/latch count are not asynchronous ASIC PPA. Any headline asynchronous arbiter requires a characterized MUTEX/C-element flow or custom-cell evidence first.
 
+## DD-009: Reject A0-functional as a physical implementation baseline
+
+**Decision:** Retain `A0-functional` for protocol education and RTL waveform evidence, but do not use it as the baseline for FPGA/ASIC implementation or PPA.
+
+**Why:** A dedicated ±20 ps request-skew and X-window test passed 84/84 trials at RTL. The same test on the Vivado post-synthesis functional netlist completed no receiver events in 84 trials and produced 170 assertion failures. Partial SDF annotation also deadlocked in the first trial after unsupported latch timing arcs were removed.
+
+**Consequence:** A future asynchronous baseline must use characterized asynchronous primitives and a validated flow. Otherwise the implementation baseline moves to an H-series structure with explicit asynchronous request capture/synchronization and a synchronous arbiter.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

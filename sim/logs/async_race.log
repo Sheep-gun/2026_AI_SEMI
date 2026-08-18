@@ -1,0 +1,38 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Wed Aug 19 03:01:52 2026
+# Process ID: 50928
+# Current directory: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/async_race_work
+# Command line: xsim.exe -log ../logs/async_race.log -mode tcl -source {xsim.dir/aer_traditional_async_race_sim/xsim_script.tcl}
+# Log file: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/async_race_work/../logs/async_race.log
+# Journal file: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/async_race_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/aer_traditional_async_race_sim/xsim_script.tcl
+# xsim {aer_traditional_async_race_sim} -wdb {../waves/aer_traditional_async_race.wdb} -autoloadwcfg -tclbatch {../../scripts/xsim_async_race.tcl}
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+source ../../scripts/xsim_async_race.tcl
+## log_wave -recursive *
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## open_vcd ../waves/aer_traditional_async_race.vcd
+## log_vcd [get_objects -r /aer_traditional_async_race_tb/*]
+INFO: HDL object /aer_traditional_async_race_tb/trial_addr is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+## run all
+TEST_START async_race_skew_sweep
+TEST_START async_race_x_window
+METRIC x_window_pair=0,15 first_grant=15
+METRIC x_window_pair=3,7 first_grant=7
+METRIC race_trials=84
+METRIC race_first_wins_earlier_or_low_path=42
+METRIC race_first_wins_other_path=42
+METRIC race_unexpected_first_count=0
+METRIC race_output_unknown_count=0
+METRIC race_short_req_pulse_count=0
+METRIC race_errors=0
+RACE_TEST_PASS digital_model trials=84
+$finish called at time : 67568 ps : File "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_traditional_async_race_tb.sv" Line 309
+## close_vcd
+## quit
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 03:01:54 2026...

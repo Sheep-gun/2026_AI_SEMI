@@ -65,3 +65,9 @@ Configuration: 16 sources, 4-bit address, no global clock, fixed priority, one 4
 ## Claim boundary
 
 이 run은 global clock 없는 4-phase protocol progress와 기능적 event accounting을 증명한다. Characterized MUTEX/C-element 부재로 인해 near-simultaneous physical arbitration의 metastability safety와 asynchronous ASIC signoff는 증명하지 않는다.
+
+## Post-synthesis addendum
+
+후속 ps-skew race test에서 RTL은 84/84 trial을 통과했다. 그러나 동일 testbench의 Vivado post-synthesis functional netlist는 84/84 trial에서 receiver event를 완료하지 못하고 170개 assertion failure를 발생시켰다. 따라서 `A0-functional`은 RTL-only protocol model이며 implementation baseline으로 사용하지 않는다.
+
+상세 결과: `results/ASYNC_RACE_STRESS_2026-08-19.md`

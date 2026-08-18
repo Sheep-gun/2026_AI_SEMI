@@ -110,3 +110,12 @@ All times are Asia/Seoul unless otherwise stated.
 - `.scs` and `.tf` files under shared tool paths were limited to Cadence product examples/samples/documentation, including generic AMS `gpdk` examples; they are not project foundry PDK evidence.
 - Re-inspected orientation PDF pages 2-3. Digital submission requires RTL/synthesis/timing/area/power/frequency, while analog explicitly includes layout/RC extraction. The document neither permits nor forbids digital custom cells.
 - Recorded the sanitized evidence and required organizer questions in `reports/environment/CADENCE_CUSTOM_CELL_FEASIBILITY_2026-08-19.md`.
+
+### A0 race and post-synthesis stability test
+
+- Added `tb/aer_traditional_async_race_tb.sv` and `scripts/run_async_race.ps1` for source pairs `0/15` and `3/7`, request skew from -20 ps to +20 ps, exact simultaneous requests and two 1 ps X-window cases.
+- RTL result: 84 trials, zero loss/duplicate/deadlock, zero unknown output, zero short pulse, and `RACE_TEST_PASS digital_model trials=84`.
+- Exported the Vivado post-synthesis LUT/latch netlist and SDF. Full SDF annotation failed because LDCE latch timing arcs could not map to the simulator primitive model.
+- Removed six LDCE blocks and 87 unsupported PATHPULSE statements only for diagnosis. Partial LUT/IO SDF annotation succeeded, but the first trial deadlocked with state fixed at IDLE.
+- Ran the post-synthesis functional netlist without SDF. All 84 trials completed zero receiver events, with 84 missing winners, two unknown-output observations and 170 assertion failures.
+- Marked A0 as RTL-only protocol evidence and rejected it as a physical implementation/PPA baseline. Recorded details in `results/ASYNC_RACE_STRESS_2026-08-19.md`.

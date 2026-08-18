@@ -73,6 +73,7 @@ Two implementations are now preserved:
 
 - `B0-v1`: clocked four-state FSM used for reproducible synchronous PPA comparison.
 - `A0-functional`: no global clock; latch state advances from request/acknowledge changes. It is functionally verified but not metastability-safe asynchronous ASIC signoff because the available library lacks characterized MUTEX/C-element cells.
+- Follow-up race testing rejected `A0-functional` as an implementation baseline: RTL passed 84 ps-skew/X-window trials, while the Vivado post-synthesis functional netlist completed 0/84 trials and raised 170 assertion failures.
 
 ### Proposed architecture
 
@@ -100,6 +101,7 @@ Two implementations are now preserved:
 - [x] Current public-facing files omit the Cadence server endpoint and account identifiers; runtime inventory uses local environment values.
 - [x] Asynchronous-cell audit completed: no project-accessible characterized MUTEX or Muller C-element found.
 - [x] `A0-functional` clockless baseline completed: 139/139 XSIM events, zero assertion failures, Vivado latch-structure probe passed with explicit non-signoff boundary.
+- [x] A0 race/post-synthesis stability tested: RTL 84/84 pass; synthesized netlist 84/84 fail. A0 is retained as RTL-only protocol evidence, not a physical baseline.
 - [x] Custom MUTEX/C-element feasibility audited: Spectre only; required PDK/layout/DRC/LVS/characterization flow unavailable and contest permission unspecified.
 - [ ] Proposed RTL and common-traffic comparison completed.
 - [ ] Cadence synthesis, timing, area, and power reports completed.
