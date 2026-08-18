@@ -67,6 +67,11 @@ The initial comparison is deliberately small enough to finish and explain before
 - No input FIFO; every source may hold at most one pending request until acknowledged.
 - End-to-end backpressure: source acknowledge is withheld until receiver acknowledge.
 
+Two implementations are now preserved:
+
+- `B0-v1`: clocked four-state FSM used for reproducible synchronous PPA comparison.
+- `A0-functional`: no global clock; latch state advances from request/acknowledge changes. It is functionally verified but not metastability-safe asynchronous ASIC signoff because the available library lacks characterized MUTEX/C-element cells.
+
 ### Proposed architecture
 
 - One shared address bus of the same width as baseline.
@@ -92,6 +97,7 @@ The initial comparison is deliberately small enough to finish and explain before
 - [x] Korean public README and architecture guide completed with rendered B0-v1 controller-structure and 4-phase sequence SVGs.
 - [x] Current public-facing files omit the Cadence server endpoint and account identifiers; runtime inventory uses local environment values.
 - [x] Asynchronous-cell audit completed: no project-accessible characterized MUTEX or Muller C-element found.
+- [x] `A0-functional` clockless baseline completed: 139/139 XSIM events, zero assertion failures, Vivado latch-structure probe passed with explicit non-signoff boundary.
 - [ ] Proposed RTL and common-traffic comparison completed.
 - [ ] Cadence synthesis, timing, area, and power reports completed.
 

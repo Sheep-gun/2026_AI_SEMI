@@ -91,3 +91,13 @@ All times are Asia/Seoul unless otherwise stated.
 - Found `RSLAT*` in Liberty, but Genus reported missing-clock warnings and the corresponding LEF macro blocks are commented out. Found active `DLY1X1`~`DLY4X1`, ordinary transparent latches and combinational gates.
 - Confirmed that installed `CW_arbiter_fcfs` is clocked and `CW_asymfifo_*` means asymmetric data width, not asynchronous operation; both are synchronous components.
 - Recorded the sanitized evidence and design boundary in `reports/environment/CADENCE_ASYNC_LIBRARY_AUDIT_2026-08-19.md`.
+
+### A0-functional clockless baseline
+
+- Added `rtl/async_baseline/aer_traditional_async.sv` with no `clk` port. Fixed-priority grant and four-phase state progress are driven by source/receiver handshake changes and latch state.
+- Added a self-checking asynchronous testbench covering single, simultaneous-16, burst, receiver delay, saturation, fixed-priority hotspot, held request across reset and 16 independent streams.
+- The first XSIM run exposed a delta-cycle request glitch between two request-high states and Vivado task sensitivity limits. Replaced multi-assignment outputs with single continuous expressions and used explicit source-model response delay.
+- The second run exposed that `always_latch` did not re-enter after its own IDLE state update when requests were already high. Replaced it with an explicit clockless event sensitivity including `state_q`, allowing an already-pending request to launch immediately after link release.
+- Final command `scripts/run_async_baseline.ps1` passed: 139 issued, 139 received, zero loss/duplicate/assertion failures, average TB latency 26.877 ns, maximum 241 ns, and `TEST_PASS async_baseline`.
+- Ran `scripts/run_vivado_synth_async_probe.ps1`. Vivado produced 42 LUTs and six latch primitives with two expected latch-inference warnings, plus 80 no-clock checks, 10 unconstrained internal endpoints and two latch loops. This is a structure probe, not timing/PPA signoff.
+- Froze the evidence as `A0-functional` and recorded its scope, result and SHA-256 manifest. The fixed-priority encoder is not a metastability-safe MUTEX and no such claim is made.

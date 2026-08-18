@@ -6,6 +6,7 @@
 /.Xil/
 **/.Xil/
 /sim/work/
+/sim/async_work/
 **/xsim.dir/
 *.wdb
 *.pb

@@ -56,6 +56,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** A recheck compares pass markers and named metrics against the frozen result, then revalidates the original manifest. Any intentional replacement of frozen evidence requires a new dated manifest; an RTL bug fix also requires a new baseline identifier such as `B0-v2`.
 
+## DD-008: Add a clockless functional baseline without overstating signoff
+
+**Decision:** Preserve `B0-v1` unchanged and add `A0-functional` as a separate clockless four-phase baseline. `A0-functional` has no `clk` port; latch state advances from request, acknowledge and state changes. Its fixed-priority encoder remains a functional selection model rather than a physical MUTEX.
+
+**Why:** A clocked FSM alone does not demonstrate self-timed protocol progress. A separate clockless RTL and asynchronous testbench expose the real control behavior while retaining the reproducible synchronous reference. The Cadence audit found no characterized MUTEX or Muller C-element, so claiming a metastability-safe fully asynchronous ASIC would exceed available evidence.
+
+**Consequence:** XSIM event accounting and Vivado latch-structure synthesis are valid evidence for `A0-functional`. Its testbench ns values, unconstrained Vivado timing and LUT/latch count are not asynchronous ASIC PPA. Any headline asynchronous arbiter requires a characterized MUTEX/C-element flow or custom-cell evidence first.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

@@ -3,7 +3,7 @@
 팀 **최태원의 검**의 디지털 1차 설계 수행과제 저장소다. Bio-mimic Neuron을 위한 전통적 AER 통신 구조를 분석하고, 병목을 한 단계씩 개선한 뒤 동일 조건에서 기능·성능·PPA를 비교한다.
 
 - 1차 제출일: **2026년 8월 28일**
-- 현재 기준점: **B0-v1 Traditional AER baseline**
+- 현재 기준점: **B0-v1 clocked reference**와 **A0-functional clockless reference**
 - 합성 대상: AER 컨트롤러 RTL
 - testbench model: 뉴런 event source와 receiver
 - 범위 밖: ECG, SNN ECG Classifier, 이전 ECG SoC의 RTL과 구조
@@ -15,6 +15,7 @@
 | 단계 | 변경점 | 확인할 핵심 효과 |
 |---|---|---|
 | `B0-v1` | fixed priority + FIFO 없음 + 4-phase link | 전통적 기준점과 병목 측정 |
+| `A0-functional` | 같은 4-phase 동작을 global clock 없이 진행 | Clockless protocol 기능과 async signoff 경계 확인 |
 | `B1` | arbiter만 round-robin으로 교체 | starvation 제거, 최대 arbitration wait와 latency tail |
 | `B2` | source별 depth-2 FIFO만 추가 | burst 흡수, source-side backpressure 완화 |
 | `B3` | registered elastic `valid/ready` output | 4-phase return-to-zero bubble 제거 |
@@ -39,7 +40,8 @@
 - source-side `src_req/src_ack`
 - receiver-facing active-high 4-phase `aer_req/aer_ack`
 - receiver 응답이 source acknowledge까지 직접 전달되는 end-to-end backpressure
-- 일반적인 standard-cell flow에서 재현할 수 있는 clock 기반 합성 RTL
+- `B0-v1`: 일반적인 standard-cell flow에서 재현할 수 있는 clock 기반 RTL
+- `A0-functional`: request/acknowledge 변화로 진행하는 clockless latch RTL
 
 ## 3. B0-v1 baseline 컨트롤러 구조
 
@@ -115,6 +117,27 @@ src_req[i] ↑
 
 위 수치는 FPGA 구조 합성 확인용이며 대회 최종 ASIC area·power·timing·Fmax로 사용하지 않는다.
 
+### A0-functional clockless baseline
+
+`A0-functional`은 `clk` port가 없고 4-phase handshake 조건이 변할 때 latch state가 다음 단계로 진행한다.
+
+| 지표 | A0-functional 결과 |
+|---|---:|
+| issued / received | `139 / 139` |
+| loss / duplicate / assertion failure | `0 / 0 / 0` |
+| average latency | `26.877 ns` |
+| worst latency | `241 ns` |
+| XSIM marker | `TEST_PASS async_baseline issued=139 received=139` |
+| Vivado structural probe | 42 LUT, latch primitive 6개 |
+
+Latency와 event gap의 ns 값은 testbench가 부여한 receiver/source delay에 의해 결정된 기능 지표다. ASIC 성능이나 maximum events/s가 아니다.
+
+Vivado는 latch 구조로 변환했지만 no-clock endpoint, unconstrained endpoint와 latch loop를 보고했다. 또한 현재 Cadence library에 characterized MUTEX/C-element가 없으므로 near-simultaneous physical request의 metastability-safe arbitration과 asynchronous ASIC signoff는 주장하지 않는다.
+
+- RTL: [`rtl/async_baseline/aer_traditional_async.sv`](rtl/async_baseline/aer_traditional_async.sv)
+- 범위와 안전성 경계: [`docs/architecture/ASYNC_BASELINE_SCOPE.md`](docs/architecture/ASYNC_BASELINE_SCOPE.md)
+- 결과: [`results/ASYNC_BASELINE_SIMULATION_2026-08-19.md`](results/ASYNC_BASELINE_SIMULATION_2026-08-19.md)
+
 ## 7. 재현 방법
 
 PowerShell에서 저장소 root를 기준으로 실행한다.
@@ -122,12 +145,15 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 ```powershell
 .\scripts\run_baseline.ps1
 .\scripts\run_vivado_synth_baseline.ps1
+.\scripts\run_async_baseline.ps1
+.\scripts\run_vivado_synth_async_probe.ps1
 ```
 
 - 시뮬레이션 결과: `sim/logs/`, `sim/waves/`
 - Vivado sanity report: `reports/baseline/vivado_sanity/`
 - 결과 요약: [`results/BASELINE_SIMULATION_2026-08-18.md`](results/BASELINE_SIMULATION_2026-08-18.md)
 - 동결 hash: [`results/BASELINE_MANIFEST_2026-08-18.md`](results/BASELINE_MANIFEST_2026-08-18.md)
+- A0-functional 동결 hash: [`results/ASYNC_BASELINE_MANIFEST_2026-08-19.md`](results/ASYNC_BASELINE_MANIFEST_2026-08-19.md)
 
 일상적인 재검증은 manifest-bound 원본을 덮어쓰지 않도록 격리 작업공간에서 수행한다. RTL 버그 수정이 필요하면 `B0-v2`와 새 dated manifest를 만든다.
 
@@ -135,6 +161,7 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 
 ```text
 rtl/baseline/       B0-v1 합성 가능 RTL
+rtl/async_baseline/ A0-functional clockless latch RTL
 tb/                 self-checking testbench
 scripts/            XSIM·Vivado·Cadence 환경 확인 스크립트
 docs/requirements/  고정 비교 조건과 평가 지표
