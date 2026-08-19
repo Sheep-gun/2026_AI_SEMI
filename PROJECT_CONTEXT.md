@@ -126,6 +126,9 @@ Two implementations are now preserved:
 - [ ] Foundry GDS stream-out, signoff DRC/LVS/antenna/metal fill and post-route gate simulation remain blocked by missing standard-cell GDS/CDL, rule decks and cell simulation models.
 - [x] B0-v1 was completed through the same scan-free 180 nm Genus/Innovus physical flow: 94 cells, area 1,573.387 µm², setup +6.704 ns, hold +0.103 ns, route DRC/connectivity problems 0.
 - [x] Fair physical comparison completed: P2 provides 4× throughput and major latency/fairness gains at 7.51× cell area and 13.90× default-activity power versus B0-v1.
+- [x] P3 depth-1 pending-buffer optimization completed: all RTL/post-synthesis/Xcelium regressions passed with 1 event/cycle, average latency 16.517 cycles and maximum latency 29 cycles.
+- [x] P3 matched 180 nm P&R completed: 311 cells, area 8,981.280 µm², setup +3.131 ns, hold +0.027 ns, power 0.924919 mW, DRC/connectivity problems 0.
+- [x] P3 replaces P2 as the current balanced main design, reducing P2 post-route area 24.0% and power 19.7% while preserving throughput and fairness.
 
 ## Evidence labels
 

@@ -128,6 +128,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P2 is no longer described as a universal PPA improvement. At matched 100 MHz post-route conditions it delivers 4× throughput and much lower latency/starvation risk, but uses 7.51× cell area and 13.90× default-activity power. Future work must reduce queue and CDC overhead.
 
+## DD-017: Replace P2 depth-2 counts with P3 single pending bits
+
+**Decision:** Retain P2's 2FF CDC, hierarchical round-robin and elastic output, but reduce each source queue from a two-bit count with capacity two to one pending bit with capacity one.
+
+**Why:** Four-phase sources hold requests until acknowledged, so a full pending slot can apply lossless backpressure instead of requiring a second internal slot. P3 passed the complete functional, CDC, burst, stall and order regressions while reducing P2 post-route cells by 34.7%, area by 24.0% and default-activity power by 19.7%.
+
+**Consequence:** P3 replaces P2 as the balanced main design. Total queued capacity falls from 32 to 16 events, an explicit trade-off. A queue-free variant may be smaller but would remove receiver-stall decoupling and is not the same robustness point.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

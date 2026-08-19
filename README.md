@@ -3,7 +3,7 @@
 팀 **최태원의 검**의 디지털 1차 설계 수행과제 저장소다. Bio-mimic Neuron을 위한 전통적 AER 통신 구조를 분석하고, 병목을 한 단계씩 개선한 뒤 동일 조건에서 기능·성능·PPA를 비교한다.
 
 - 1차 제출일: **2026년 8월 28일**
-- 현재 기준점: **T0 전통 clockless baseline**과 **P2 계층형 buffered round-robin 개선본**
+- 현재 기준점: **B0-v1 physical reference**, **T0 clockless failure baseline**, **P3 depth-1 개선본**
 - 합성 대상: AER 컨트롤러 RTL
 - testbench model: 뉴런 event source와 receiver
 - 범위 밖: ECG, SNN ECG Classifier, 이전 ECG SoC의 RTL과 구조
@@ -22,6 +22,7 @@
 | `T0` | 구조적 latch 기반 clockless fixed-priority AER | 전통 구조의 실제 안정성·합성 한계 측정 |
 | `P1` | 비동기 4-phase 입력 + CDC + round-robin + depth-2 queue + elastic output | 안정성·공정성·burst·throughput·PPA 종합 개선 |
 | `P2` | P1의 flat 16-way scheduler를 병렬 4×4 계층형으로 교체 | 기능 유지, arbiter timing·area 최적화 |
+| `P3` | P2의 source별 depth-2 queue를 1-bit pending buffer로 축소 | throughput 유지, register·area·power 감소 |
 
 단계별 비교에서 source 수, 주소 폭, 단일 output lane, event traffic, receiver backpressure trace와 검증 기준을 고정한다. B1에서는 FIFO나 receiver protocol을 함께 바꾸지 않는다.
 
@@ -188,9 +189,29 @@ P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area
 - P1/P2 비교: [`results/P1_P2_COMPARISON_2026-08-19.md`](results/P1_P2_COMPARISON_2026-08-19.md)
 - P2 evidence hash: [`results/P2_MANIFEST_2026-08-19.md`](results/P2_MANIFEST_2026-08-19.md)
 
-## 9. TSMC 180 nm physical implementation
+## 9. P3 depth-1 queue 최적화
 
-대회 서버의 Liberty header에서 `TSMC 0.18um`, typical `1.8 V / 25°C`를 확인했고, Metal1~Metal6 LEF와 `t018` QRC kit로 P2 core를 Innovus 배치배선했다.
+4-phase source가 acknowledge까지 request를 유지한다는 점을 이용해, source별 queue를 2 events에서 1 event로 줄였다. slot이 차면 event를 버리는 대신 source가 기다린다.
+
+| 항목 | P2 | P3 |
+|---|---:|---:|
+| throughput | 1 event/cycle | 1 event/cycle |
+| average / max latency | 18.438 / 44 cycles | 16.517 / 29 cycles |
+| FPGA LUT / FF | 148 / 95 | 70 / 79 |
+| post-route cells | 476 | 311 |
+| post-route area | 11,812.046 µm² | 8,981.280 µm² |
+| post-route power | 1.151400 mW | 0.924919 mW |
+| setup / hold slack | +2.721 / +0.033 ns | +3.131 / +0.027 ns |
+
+P3는 P2의 throughput·fairness·CDC 안정성을 유지하면서 area 24.0%, power 19.7%를 줄여 현재 주 설계 후보로 채택했다.
+
+- P3 상세: [`results/P3_DEPTH1_AER_2026-08-19.md`](results/P3_DEPTH1_AER_2026-08-19.md)
+- B0/P2/P3 비교: [`results/B0_P2_P3_180NM_COMPARISON_2026-08-19.md`](results/B0_P2_P3_180NM_COMPARISON_2026-08-19.md)
+- P3 evidence hash: [`results/P3_MANIFEST_2026-08-19.md`](results/P3_MANIFEST_2026-08-19.md)
+
+## 10. TSMC 180 nm physical implementation
+
+대회 서버의 Liberty header에서 `TSMC 0.18um`, typical `1.8 V / 25°C`를 확인했고, Metal1~Metal6 LEF와 `t018` QRC kit로 B0, P2, P3 core를 동일 조건에서 Innovus 배치배선했다.
 
 | 항목 | 결과 |
 |---|---:|
@@ -207,17 +228,17 @@ P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area
 
 ![P2 TSMC 180 nm Innovus native post-route layout](docs/architecture/p2_180nm_innovus_native.png)
 
-### 동일 physical flow의 B0-v1 비교
+### 동일 physical flow 비교
 
-| 항목 | B0-v1 | P2 |
-|---|---:|---:|
-| cell area | 1,573.387 µm² | 11,812.046 µm² |
-| default-activity power | 0.082858 mW | 1.151400 mW |
-| setup / hold slack | +6.704 / +0.103 ns | +2.721 / +0.033 ns |
-| peak throughput | 0.25 event/cycle | 1 event/cycle |
-| maximum latency | 901 cycles | 44 cycles |
+| 항목 | B0-v1 | P2 | P3 |
+|---|---:|---:|---:|
+| cell area | 1,573.387 µm² | 11,812.046 µm² | 8,981.280 µm² |
+| default-activity power | 0.082858 mW | 1.151400 mW | 0.924919 mW |
+| setup / hold slack | +6.704 / +0.103 ns | +2.721 / +0.033 ns | +3.131 / +0.027 ns |
+| peak throughput | 0.25 event/cycle | 1 | 1 event/cycle |
+| maximum latency | 901 cycles | 44 cycles | 29 cycles |
 
-P2는 throughput·fairness·latency·buffering을 개선하는 대신 area와 power를 지불한다. 따라서 “PPA가 전부 좋아졌다”가 아니라 “성능과 강건성을 위한 명시적 trade-off”로 해석한다.
+P3는 B0보다 area와 power를 더 사용하지만 throughput·fairness·latency·16-event buffering을 얻는다. P2 대비로는 기능을 유지하면서 area와 power를 모두 줄였다.
 
 - 상세 결과: [`results/P2_180NM_PNR_2026-08-19.md`](results/P2_180NM_PNR_2026-08-19.md)
 - sanitized summary: [`reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt`](reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt)
@@ -225,7 +246,7 @@ P2는 throughput·fairness·latency·buffering을 개선하는 대신 area와 po
 - B0/P2 physical 비교: [`results/B0_P2_180NM_PHYSICAL_COMPARISON_2026-08-19.md`](results/B0_P2_180NM_PHYSICAL_COMPARISON_2026-08-19.md)
 - B0 physical evidence hash: [`results/B0_180NM_PNR_MANIFEST_2026-08-19.md`](results/B0_180NM_PNR_MANIFEST_2026-08-19.md)
 
-## 10. 재현 방법
+## 11. 재현 방법
 
 PowerShell에서 저장소 root를 기준으로 실행한다.
 
@@ -252,6 +273,11 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 .\scripts\run_improved_hierarchical_cdc_phase.ps1 -Mode gate
 .\scripts\run_improved_hierarchical_order.ps1 -Mode rtl
 .\scripts\run_improved_hierarchical_order.ps1 -Mode gate
+.\scripts\run_improved_depth1.ps1
+.\scripts\run_vivado_synth_improved_depth1.ps1
+.\scripts\run_improved_depth1_gate.ps1
+.\scripts\run_improved_depth1_cdc_phase.ps1 -Mode rtl
+.\scripts\run_improved_depth1_cdc_phase.ps1 -Mode gate
 ```
 
 Cadence 서버의 180 nm physical flow:
@@ -259,6 +285,8 @@ Cadence 서버의 180 nm physical flow:
 ```text
 genus -batch -files scripts/p2_genus_pnr.tcl
 innovus -no_gui -batch -files scripts/p2_innovus.tcl
+genus -batch -files scripts/p3_genus_pnr.tcl
+innovus -no_gui -batch -files scripts/p3_innovus.tcl
 ```
 
 - 시뮬레이션 결과: `sim/logs/`, `sim/waves/`
@@ -269,7 +297,7 @@ innovus -no_gui -batch -files scripts/p2_innovus.tcl
 
 일상적인 재검증은 manifest-bound 원본을 덮어쓰지 않도록 격리 작업공간에서 수행한다. RTL 버그 수정이 필요하면 `B0-v2`와 새 dated manifest를 만든다.
 
-## 11. 저장소 구성
+## 12. 저장소 구성
 
 ```text
 rtl/baseline/       B0-v1 합성 가능 RTL
@@ -288,7 +316,7 @@ reports/            보존할 핵심 text report와 synthesis checkpoint
 
 상세 범위와 확인/미확인 상태는 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md), 설계 선택의 근거는 [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), 실행 이력은 [`WORKLOG.md`](WORKLOG.md)에 기록한다.
 
-## 12. 결과 해석 원칙
+## 13. 결과 해석 원칙
 
 - 확인된 측정값, 설계 결정, 가정, 미확인 사항을 구분한다.
 - simulation 기능 정확도와 synthesis PPA를 섞지 않는다.

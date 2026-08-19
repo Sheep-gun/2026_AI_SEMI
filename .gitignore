@@ -21,6 +21,12 @@
 /sim/improved_hierarchical_cdc_gate_work/
 /sim/improved_hierarchical_order_rtl_work/
 /sim/improved_hierarchical_order_gate_work/
+/sim/improved_depth1_work/
+/sim/improved_depth1_gate_work/
+/sim/improved_depth1_cdc_rtl_work/
+/sim/improved_depth1_cdc_gate_work/
+/sim/improved_depth1_order_rtl_work/
+/sim/improved_depth1_order_gate_work/
 **/xsim.dir/
 *.wdb
 *.pb
@@ -68,6 +74,7 @@ innovus.log*
 /reports/improved_hierarchical/cadence/final/logs/
 /reports/improved_hierarchical/cadence/pnr_180nm/raw/
 /reports/baseline/cadence/pnr_180nm/raw/
+/reports/improved_depth1/cadence/pnr_180nm/raw/
 
 # Other local simulator products
 *.vvp

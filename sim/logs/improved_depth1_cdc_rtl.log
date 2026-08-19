@@ -1,0 +1,26 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Wed Aug 19 15:35:37 2026
+# Process ID: 49788
+# Current directory: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/improved_depth1_cdc_rtl_work
+# Command line: xsim.exe -log C:\Users\YangGeon\Documents\2026_AI_SEMI\sim\logs\improved_depth1_cdc_rtl.log -mode tcl -source {xsim.dir/improved_depth1_cdc_rtl_sim/xsim_script.tcl}
+# Log file: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/logs/improved_depth1_cdc_rtl.log
+# Journal file: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/improved_depth1_cdc_rtl_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/improved_depth1_cdc_rtl_sim/xsim_script.tcl
+# xsim {improved_depth1_cdc_rtl_sim} -autoloadwcfg -tclbatch {../../scripts/xsim_improved_cdc_phase.tcl}
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+source ../../scripts/xsim_improved_cdc_phase.tcl
+## log_wave -recursive *
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## run all
+METRIC improved_cdc_phase_trials=192
+METRIC improved_cdc_phase_received=192
+METRIC improved_cdc_phase_errors=0
+CDC_PHASE_TEST_PASS trials=192
+$finish called at time : 21235001 ps : File "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_improved_cdc_phase_tb.sv" Line 178
+## quit
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 15:35:42 2026...

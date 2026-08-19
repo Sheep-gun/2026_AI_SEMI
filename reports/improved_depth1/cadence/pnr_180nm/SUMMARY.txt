@@ -1,0 +1,50 @@
+design=P3 depth-1 hierarchical round-robin AER
+flow=scan-free Genus plus Innovus core place-and-route
+process=TSMC 0.18um Artisan standard cells
+clock_period_ns=10.000
+clock_uncertainty_ns=0.200
+
+rtl_events_offered=139
+rtl_events_received=139
+rtl_assertion_errors=0
+rtl_average_latency_cycles=16.517
+rtl_max_latency_cycles=29
+rtl_hotspot_source15_latency_cycles=4
+rtl_peak_throughput_events_per_cycle=1
+cdc_phase_trials=192
+cdc_phase_errors=0
+order_events=16
+order_errors=0
+
+vivado_luts=70
+vivado_ffs=79
+vivado_10ns_wns_ns=2.546
+vivado_data_path_ns=4.016
+
+genus_10ns_cells=293
+genus_10ns_area=8675.251
+genus_10ns_data_path_ps=3132
+genus_10ns_slack_ps=6645
+genus_10ns_vectorless_power_mw=1.13497
+genus_2ns_cells=354
+genus_2ns_area=9942.610
+genus_1p8ns_cells=363
+genus_1p8ns_area=9999.158
+
+die_width_um=165.660
+die_height_um=156.240
+core_width_um=124.740
+core_height_um=115.920
+postroute_cells=311
+postroute_cell_area_um2=8981.280
+placement_density_percent=62.11
+routing_overflow_percent=0.00
+postroute_setup_slack_ns=3.131
+postroute_hold_slack_ns=0.027
+postroute_power_mw=0.92491907
+postroute_spef_d_net_count=354
+postroute_drc_violations=0
+postroute_connectivity_problems=0
+
+NOTE=P3 halves per-source queue capacity from two to one event and preserves lossless held-request backpressure in the verified protocol.
+NOTE=P3 replaces P2 as the balanced main design candidate.

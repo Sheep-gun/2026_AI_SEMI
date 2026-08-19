@@ -174,3 +174,12 @@ All times are Asia/Seoul unless otherwise stated.
 - B0 Genus produced 94 cells, area 1,573.387 and worst data path 0.940 ns. Innovus completed with setup +6.704 ns, hold +0.103 ns, route DRC 0 and connectivity problems 0.
 - B0 post-route used 94 cells, cell area 1,573.387 µm², density 59.87%, default-activity power 0.08285847 mW and 113 SPEF nets.
 - Matched comparison showed P2 at 7.51× area and 13.90× default-activity power, while improving peak throughput 4×, average latency 37.8%, maximum latency 95.1% and source-15 hotspot latency 91.8%.
+
+### P3 depth-1 pending-buffer optimization
+
+- Replaced P2's sixteen 2-bit queue counters with sixteen 1-bit pending slots while preserving 2FF CDC, hierarchical round-robin, source acknowledgements and the elastic output.
+- Vivado RTL, post-synthesis, Xcelium, 192-phase CDC and 16-source order regressions all passed. Throughput remained 1 event/cycle; average latency improved from 18.438 to 16.517 cycles and maximum latency from 44 to 29 cycles.
+- Vivado mapping fell from 148 LUT/95 FF to 70 LUT/79 FF and WNS improved from +1.735 to +2.546 ns.
+- Scan-free Genus 10 ns mapping produced 293 cells, area 8,675.251, data path 3.132 ns and vectorless power 1.13497 mW. The 2 ns and 1.8 ns areas were 9,942.610 and 9,999.158.
+- Innovus completed at 311 cells, area 8,981.280 µm², density 62.11%, setup +3.131 ns, hold +0.027 ns, default-activity power 0.92491907 mW, DRC 0 and connectivity problems 0.
+- P3 reduced P2 post-route cells 34.7%, area 24.0%, power 19.7% and SPEF nets 29.8%, so it replaced P2 as the main design candidate.
