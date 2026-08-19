@@ -183,3 +183,5 @@ All times are Asia/Seoul unless otherwise stated.
 - Scan-free Genus 10 ns mapping produced 293 cells, area 8,675.251, data path 3.132 ns and vectorless power 1.13497 mW. The 2 ns and 1.8 ns areas were 9,942.610 and 9,999.158.
 - Innovus completed at 311 cells, area 8,981.280 µm², density 62.11%, setup +3.131 ns, hold +0.027 ns, default-activity power 0.92491907 mW, DRC 0 and connectivity problems 0.
 - P3 reduced P2 post-route cells 34.7%, area 24.0%, power 19.7% and SPEF nets 29.8%, so it replaced P2 as the main design candidate.
+- Implemented a functionally equivalent P3-flat experiment with one 4-bit pointer. It passed 139/139 events but used 171 LUT and had a 9.033 ns data path versus hierarchical P3's 70 LUT and 4.016 ns. It was rejected before Cadence P&R.
+- Rejected complete pending-bit removal from the equal-function comparison because it prevents early source acknowledgement during receiver stalls and removes the verified 16-event decoupling capacity.

@@ -205,9 +205,12 @@ P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area
 
 P3는 P2의 throughput·fairness·CDC 안정성을 유지하면서 area 24.0%, power 19.7%를 줄여 현재 주 설계 후보로 채택했다.
 
+추가 flat-pointer 후보는 FF 6개를 줄였지만 LUT가 70→171로 증가하고 data path가 4.016→9.033 ns로 악화되어 탈락했다. queue-free 후보는 receiver-stall decoupling을 잃어 동일 기능 비교에서 제외했다.
+
 - P3 상세: [`results/P3_DEPTH1_AER_2026-08-19.md`](results/P3_DEPTH1_AER_2026-08-19.md)
 - B0/P2/P3 비교: [`results/B0_P2_P3_180NM_COMPARISON_2026-08-19.md`](results/B0_P2_P3_180NM_COMPARISON_2026-08-19.md)
 - P3 evidence hash: [`results/P3_MANIFEST_2026-08-19.md`](results/P3_MANIFEST_2026-08-19.md)
+- 추가 최적화 탐색: [`results/P3_FURTHER_OPTIMIZATION_SEARCH_2026-08-19.md`](results/P3_FURTHER_OPTIMIZATION_SEARCH_2026-08-19.md)
 
 ## 10. TSMC 180 nm physical implementation
 

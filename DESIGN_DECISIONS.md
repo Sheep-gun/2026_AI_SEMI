@@ -136,6 +136,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P3 replaces P2 as the balanced main design. Total queued capacity falls from 32 to 16 events, an explicit trade-off. A queue-free variant may be smaller but would remove receiver-stall decoupling and is not the same robustness point.
 
+## DD-018: Keep P3 hierarchical arbitration after rejecting flat and queue-free reductions
+
+**Decision:** Retain P3's parallel 4x4 hierarchical round-robin and one pending bit per source.
+
+**Why:** A functionally equivalent flat-pointer candidate saved six FF but increased Vivado LUTs from 70 to 171 and data-path delay from 4.016 to 9.033 ns. Removing the pending bits would eliminate receiver-stall decoupling and change the robustness contract rather than optimize the same design.
+
+**Consequence:** P3 is the current smallest verified balance under the fixed functionality. Further reductions require an explicit interface or buffering trade-off and must be reported as a different operating point, not a free PPA improvement.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |
