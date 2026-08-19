@@ -1,91 +1,101 @@
-# Bio-mimic Neuron을 위한 비동기 AER baseline 및 P3 개선 컨트롤러
+# 뉴런의 발화 신호를 빠르고 공정하게 전달하는 AER 컨트롤러
 
-이 저장소는 16개 뉴런 source의 spike를 하나의 4-bit 주소 버스로 전달하는 전통적 clockless AER 컨트롤러를 분석하고, 공정성·동시 event 처리·receiver stall·물리 구현 안정성을 개선한 P3 RTL과 TSMC 180 nm 검증 근거를 보존한다.
+이 프로젝트는 여러 뉴런이 제각각 발생시키는 발화 신호를 **하나의 주소 통로**로 모아 전달하는 회로를 설계한다. 먼저 공통 clock 없이 움직이는 전통적 AER 구조 **T0**를 구현해 한계를 확인하고, 그 문제를 보완한 **P3**를 최종 설계로 제안한다.
 
-[통합 기술보고서](reports/AER_COMPETITION_REPORT_KR.md)는 T0 baseline의 구조와 실패 원인, P3 개선 구조, 기능 검증 및 180 nm 물리 설계 결과를 대회 제출 관점에서 정리한 기준 문서다.
+> 한 문장 요약: T0는 먼저 보이는 요청 하나를 즉시 전달하는 단순한 구조이고, P3는 요청을 안전하게 받아 잠시 보관한 뒤 모든 뉴런에 차례가 돌아가도록 전송하는 구조다.
 
-> T0와 P3 모두 source 16개, 주소 폭 4-bit, 출력 주소 버스 1개를 사용한다. P3의 처리율 개선은 버스 수나 폭을 늘린 결과가 아니다.
+자세한 설계 과정과 검증 결과는 [대회 보고서](reports/AER_COMPETITION_REPORT_KR.md)에 정리했다.
 
-## 핵심 아이디어
+## AER은 무엇인가?
 
-전통적 T0는 fixed-priority와 FIFO 없는 4-phase 공유 버스를 사용한다. 구조는 단순하지만 동시 요청에서 낮은 우선순위 source가 계속 밀릴 수 있고, receiver stall이 전체 link로 전파되며, MUTEX가 없는 cross-coupled latch 구조는 일반 standard-cell 물리 설계에서 안정적으로 검증되지 않았다.
+뉴런 16개가 각각 전용선을 사용하면 선이 너무 많이 필요하다. AER(Address-Event Representation)은 발화한 뉴런의 번호만 주소로 바꾸어 하나의 통로로 전달한다.
 
-P3는 source-facing 4-phase interface를 유지하면서 2FF CDC, source별 1-bit pending buffer, 병렬 4×4 hierarchical round-robin과 elastic `valid/ready` 출력을 결합한다. 이를 통해 하나의 주소 버스에서 ready 상태 기준 1 event/cycle을 전송한다.
-
-## 구현 범위
+예를 들어 5번 뉴런이 발화하면 데이터 값 대신 `주소 5`를 보낸다. 16개 뉴런의 번호는 4-bit로 표현할 수 있으므로 T0와 P3 모두 **4-bit 주소 버스 1개**만 사용한다.
 
 ```text
-16 asynchronous neuron sources
-  → source request synchronization
-  → event capture and arbitration
-  → one 4-bit AER address bus
-  → receiver / second-stage coordinate mapper
+5번 뉴런 발화 → AER 컨트롤러 → 주소 5 전송 → 수신기가 5번 뉴런의 발화로 해석
 ```
 
-- T0 baseline: global clock 없음, structural SR/D latch, fixed priority, FIFO 없음, 4-phase source/receiver handshake
-- P3 개선본: 2FF CDC, source별 1-bit pending, hierarchical round-robin, single-lane elastic output
-- 검증: Vivado RTL/post-synthesis, Cadence Xcelium, Genus, Innovus
-- 공정: Artisan TSMC 0.18 µm, 1.8 V standard cells, Metal1~Metal6
+## 전통적 AER의 4단계 요청·응답
 
-## T0 비동기 baseline
+전통적 비동기 AER은 공통 clock을 기다리지 않는다. 송신기와 수신기가 요청과 응답 신호를 차례로 바꾸면서 한 번의 전송을 완료한다.
 
-T0는 request와 acknowledge 변화만으로 상태가 진행되는 clockless 구조다. Vivado RTL과 post-synthesis functional simulation에서는 139/139 events를 전달했지만, Cadence Xcelium finite-delay simulation에서 `aer_req=1`인 동안 주소가 반복 전이했다. Genus는 feedback loop를 끊는 loop breaker를 삽입해야 했으며 유효한 STA/Fmax를 산출하지 못했다.
+1. 컨트롤러가 주소를 올려두고 “받아 달라”고 요청한다.
+2. 수신기가 주소를 읽고 “받았다”고 응답한다.
+3. 컨트롤러가 요청을 내린다.
+4. 수신기도 응답을 내리면 다음 전송이 가능해진다.
 
-따라서 T0는 전통적 AER의 동작과 한계를 보여주는 baseline으로 보존하지만, 정상적인 ASIC physical PPA 기준점으로 사용하지 않는다.
+![전통적 AER의 4단계 요청·응답](docs/architecture/aer_4phase_handshake_flow.svg)
 
-## P3 개선 컨트롤러
+## T0: 전통적 비동기 baseline
 
-```text
-async src_req[15:0]
-  → 2FF synchronizer
-  → 1-bit pending/source
-  → four parallel local 4-way arbiters
-  → one global 4-way round-robin arbiter
-  → registered valid/ready output
-```
+T0에는 전체 회로를 움직이는 공통 clock이 없다. 뉴런의 요청이 들어오면 번호가 작은 뉴런부터 확인하여 하나를 고르고, 그 주소를 비동기 래치에 기억한다. 수신기와 4단계 요청·응답을 마치면 다음 요청을 처리한다.
 
-- fixed priority를 hierarchical round-robin으로 바꾸어 starvation 위험을 완화했다.
-- source별 pending bit가 동시 event와 receiver stall 중 event를 보존한다.
-- elastic output은 return-to-zero bubble 없이 1 event/cycle을 유지한다.
-- source ID는 2차 과제에서 pixel `(x,y)` 좌표로 decode하여 world-memory mapper의 입력으로 사용할 수 있다.
+![T0 전통적 비동기 AER 구조](docs/architecture/aer_baseline_controller_structure.svg)
 
-## 최종 결과
+이 구조는 단순하지만 네 가지 문제가 있다.
 
-| 항목 | T0 clockless baseline | P3 개선본 | 주장 범위 |
+- **처리 순서가 고정된다.** 0번 요청이 계속 들어오면 15번 요청은 오래 기다릴 수 있다.
+- **요청을 보관할 공간이 없다.** 여러 뉴런이 동시에 발화하면 현재 선택되지 않은 요청은 각 뉴런이 계속 붙잡고 있어야 한다.
+- **한 번 보낼 때마다 신호를 원위치로 돌려야 한다.** 다음 이벤트를 바로 이어 보내기 어렵다.
+- **실제 칩 구현에서 불안정했다.** 동시에 변하는 요청을 안전하게 중재하는 전용 소자가 없는 일반 셀 환경에서는 회로 내부의 되먹임이 흔들렸다.
+
+RTL 기능 시험에서는 139개 이벤트가 모두 전달됐다. 그러나 실제 게이트 지연을 넣은 Cadence 시험에서는 전송 도중 주소가 반복해서 바뀌었다. 따라서 T0는 전통 구조의 원리와 한계를 보여주는 비교 기준이며, 안정적으로 제작 가능한 최종안으로 보지는 않는다.
+
+## P3: 요청을 보관하고 순번대로 처리하는 개선안
+
+P3는 뉴런 쪽의 비동기 요청 방식은 유지하되, 컨트롤러 내부는 검증과 칩 제작에 적합한 clock 기반 구조로 바꿨다.
+
+![P3 개선 AER 컨트롤러 구조](docs/architecture/aer_p3_improved_controller_structure.svg)
+
+P3의 동작은 접수 창구에 비유할 수 있다.
+
+1. **입구 안정화:** 제각각 도착하는 뉴런 요청을 두 단계 회로로 받아 내부 clock 기준에 맞춘다.
+2. **이벤트 보관:** 뉴런마다 대기칸 하나를 두어, 동시에 들어온 요청을 잊지 않는다.
+3. **공정한 선택:** 마지막으로 처리한 위치의 다음부터 돌아가며 확인한다. 특정 뉴런만 계속 먼저 처리되는 일을 막는다.
+4. **연속 출력:** 수신기가 준비되어 있으면 매 clock마다 주소 하나를 보낸다.
+
+P3도 출력 버스는 여전히 4-bit 1개다. 통로를 여러 개로 늘려 성능을 얻은 것이 아니라, **통로가 비는 시간을 줄이고 요청을 고르는 방식을 개선**했다.
+
+## 검증 결과
+
+| 확인 항목 | T0 | P3 | 쉽게 말하면 |
 |---|---:|---:|---|
-| 출력 bus | 1×4-bit | 1×4-bit | 동일 single lane |
-| arbitration | fixed priority | hierarchical round-robin | 구조 비교 |
-| RTL event accounting | 139/139 | 139/139 | loss·duplicate 0 |
-| Cadence finite-delay 기능 | FAIL | PASS | T0 발진, P3 안정 동작 |
-| CDC phase sweep | 해당 없음 | 192/192 | digital exactly-once 검증 |
-| no-stall throughput | 유효 physical 수치 없음 | 1 event/cycle | P3 ready 상태 |
-| average / maximum latency | 유효 동기 기준 없음 | 16.517 / 29 cycles | P3 workload 결과 |
-| FPGA synthesis | feedback 구조 probe | 70 LUT, 79 FF | Vivado 2020.2 |
-| 180 nm post-route | 정상 STA 불가 | 311 cells, 8,981.280 µm² | core-only Innovus |
-| post-route timing | 유효 Fmax 없음 | setup +3.131 ns, hold +0.027 ns | 10 ns constraint |
-| post-route power | 직접 비교 불가 | 0.924919 mW | slow 1.62 V, default activity |
-| route DRC / connectivity | 미완료 | 0 / 0 | Innovus routing check |
+| 요청한 이벤트 / 받은 이벤트 | 139 / 139 | 139 / 139 | 기능 시험에서는 둘 다 분실 없음 |
+| 실제 게이트 지연을 넣은 시험 | 실패 | 통과 | T0 주소는 흔들렸고 P3는 안정적 |
+| 여러 도착 시점 반복 시험 | 해당 없음 | 192 / 192 통과 | 요청 시점이 달라도 한 번씩만 처리 |
+| 최대 전송 속도 | 신뢰할 수 있는 수치 없음 | clock당 1개 | 수신기가 준비된 경우의 최고 속도 |
+| 평균 / 최대 대기 시간 | 비교 불가 | 16.517 / 29 clock | 시험 입력에서 요청 후 전송까지 걸린 시간 |
+| 칩 배치 후 셀 수 | 정상 계산 불가 | 311개 | P3를 구성하는 표준 논리 셀 수 |
+| 칩 내부 회로 면적 | 정상 계산 불가 | 8,981.280 µm² | 입출력 패드를 제외한 셀 면적 합계 |
+| 배선 오류 / 연결 오류 | 미완료 | 0 / 0 | 자동 배치·배선 검사 통과 |
 
-## 평가 원칙
+## 실제 Innovus 배치·배선 결과
 
-- T0의 RTL 통과를 metastability-safe asynchronous ASIC 증거로 해석하지 않는다.
-- T0는 정상 physical flow를 완료하지 못했으므로 P3와 숫자만으로 area·power 우위를 주장하지 않는다.
-- P3 CDC phase simulation은 analog metastability MTBF를 증명하지 않는다.
-- vectorless/default-activity power와 실제 traffic VCD power를 구분한다.
-- 1 event/cycle은 receiver가 계속 ready이고 pending event가 존재할 때의 peak 값이다.
+아래 이미지는 그림을 새로 그린 것이 아니라, P3의 최종 배치·배선 데이터베이스를 **Cadence Innovus에서 다시 열어 직접 출력한 화면**이다. 가운데의 작은 사각형들은 논리 셀이고, 여러 색의 선은 전원선과 신호 배선이다.
 
-## 저장소 안내
+![P3 TSMC 180 nm Innovus 실제 post-route 화면](docs/architecture/p3_180nm_innovus_postroute.png)
 
-| 목적 | 경로 |
+P3는 TSMC 180 nm 표준 셀 조건에서 논리 합성부터 배치·배선, 배선 저항·용량 반영, 동작 시간 검사까지 완료했다. 목표 clock 주기는 10 ns였으며 가장 느린 조건에서 3.131 ns, 가장 빠른 조건에서 0.027 ns의 시간 여유를 확보했다.
+
+## 어디까지 완료했는가?
+
+현재 완료 범위는 **디지털 코어의 RTL 설계부터 칩 내부 배치·배선까지**다. 실제 반도체를 제작한 것은 아니며, 입출력 패드 배치, 패키지 설계, 제조용 최종 검증과 실리콘 측정은 남아 있다.
+
+## 주요 파일
+
+| 내용 | 경로 |
 |---|---|
-| 대회 기준 보고서 | [reports/AER_COMPETITION_REPORT_KR.md](reports/AER_COMPETITION_REPORT_KR.md) |
+| 대회 보고서 | [reports/AER_COMPETITION_REPORT_KR.md](reports/AER_COMPETITION_REPORT_KR.md) |
 | T0 RTL | [rtl/traditional_async/aer_traditional_structural.sv](rtl/traditional_async/aer_traditional_structural.sv) |
 | P3 RTL | [rtl/improved/aer_improved_depth1.sv](rtl/improved/aer_improved_depth1.sv) |
-| P3 결과 | [results/P3_DEPTH1_AER_2026-08-19.md](results/P3_DEPTH1_AER_2026-08-19.md) |
-| P3 180 nm summary | [reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt](reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt) |
-| P3 evidence hash | [results/P3_MANIFEST_2026-08-19.md](results/P3_MANIFEST_2026-08-19.md) |
-| 재현 스크립트 | [scripts/](scripts/) |
+| P3 검증 결과 | [results/P3_DEPTH1_AER_2026-08-19.md](results/P3_DEPTH1_AER_2026-08-19.md) |
+| P3 180 nm 결과 요약 | [reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt](reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt) |
+| Innovus 화면 추출 스크립트 | [scripts/cadence/p3_innovus_capture.tcl](scripts/cadence/p3_innovus_capture.tcl) |
 
-## 중요한 검증 범위 구분
+## 결과 해석 시 주의점
 
-P3는 RTL-to-post-route digital core 구현까지 완료했다. Pad ring, semiconductor package, foundry GDS stream-out, signoff DRC/LVS, fabricated silicon과 post-route gate simulation은 수행하지 않았다. 본 결과는 제조 완료나 tapeout signoff를 의미하지 않는다.
+- T0의 RTL 통과는 실제 비동기 칩의 안정성을 증명하지 않는다.
+- P3의 192회 시험은 디지털 시뮬레이션 결과이며, 물리적인 준안정성 확률을 직접 측정한 값은 아니다.
+- P3의 전력 수치는 기본 신호 활동률을 사용한 도구 추정값이다. 실제 뉴런 발화 패턴에서 측정한 소비전력과는 구분해야 한다.
+- `clock당 1개`는 수신기가 계속 준비되어 있고 보낼 이벤트가 남아 있을 때의 최고 처리율이다.

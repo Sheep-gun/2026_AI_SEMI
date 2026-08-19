@@ -185,3 +185,5 @@ All times are Asia/Seoul unless otherwise stated.
 - P3 reduced P2 post-route cells 34.7%, area 24.0%, power 19.7% and SPEF nets 29.8%, so it replaced P2 as the main design candidate.
 - Implemented a functionally equivalent P3-flat experiment with one 4-bit pointer. It passed 139/139 events but used 171 LUT and had a 9.033 ns data path versus hierarchical P3's 70 LUT and 4.016 ns. It was rejected before Cadence P&R.
 - Rejected complete pending-bit removal from the equal-function comparison because it prevents early source acknowledgement during receiver stalls and removes the verified 16-event decoupling capacity.
+- Reopened the saved P3 RC-preserving Innovus database under Xvfb and exported a native 1800×1400 post-route PNG with `gui_dump_picture`; the image and capture script are now recorded in the P3 evidence manifest.
+- Rewrote the public README and competition report around plain-language T0/P3 explanations, corrected the baseline SVG to match the clockless T0 structure, localized the four-phase flow, and added a dedicated P3 architecture SVG.

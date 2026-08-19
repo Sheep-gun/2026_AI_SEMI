@@ -1,194 +1,267 @@
-# Bio-mimic Neuron용 AER 통신 구조 분석 및 P3 개선 설계
+# Bio-mimic Neuron용 AER 컨트롤러 설계 보고서
 
-## 1. 설계 목표
+## 1. 연구 목적
 
-뉴런은 서로 독립적으로 spike를 발생시키므로 모든 뉴런에 전용 데이터 선을 연결하면 배선 비용이 빠르게 증가한다. Address-Event Representation(AER)은 spike 자체의 값 대신 이벤트가 발생한 뉴런의 주소를 하나의 공유 버스로 전송한다.
+뉴런 회로는 자극을 받는 순간마다 발화 이벤트를 만든다. 여러 뉴런이 동시에 동작하더라도 각 뉴런에 전용 데이터선을 연결하면 회로 면적과 배선 수가 빠르게 증가한다.
 
-본 설계는 16개 asynchronous neuron source와 하나의 4-bit 주소 버스를 기준으로 전통적 clockless AER 컨트롤러 T0를 구성하고, 구조적 문제를 분석한 뒤 동일한 bus 수와 폭을 유지하는 P3 개선 컨트롤러를 설계하는 것을 목표로 한다.
+AER(Address-Event Representation)은 발화한 뉴런의 **번호만 주소로 변환해 하나의 공용 통로로 전달**하는 방식이다. 본 설계에서는 16개 뉴런을 사용하므로 주소는 4-bit면 충분하다.
 
-## 2. T0 전통적 clockless AER baseline
+본 연구의 목표는 다음과 같다.
 
-### 2.1 구조
+1. 공통 clock 없이 동작하는 전통적 AER 컨트롤러 T0를 직접 구현한다.
+2. 기능 시험뿐 아니라 실제 게이트 지연을 모사한 환경에서 T0의 한계를 확인한다.
+3. 요청 손실, 처리 순서의 불공정성, 낮은 처리 속도와 물리 구현 문제를 보완한 P3를 설계한다.
+4. P3를 TSMC 180 nm 표준 셀로 배치·배선하여 칩 내부에 실제로 구현 가능한지 확인한다.
 
-T0는 global clock을 사용하지 않는다. source request가 들어오면 fixed-priority encoder가 가장 낮은 번호의 source를 선택하고, structural cross-coupled NOR latch가 선택 주소와 busy 상태를 보존한다.
+T0와 P3는 모두 16개의 입력과 **4-bit 출력 버스 1개**를 사용한다. 따라서 P3의 성능 향상은 출력 통로를 추가한 결과가 아니라 컨트롤러 내부 구조를 개선한 결과다.
 
-```text
-16 source requests
-  → fixed-priority encoder
-  → structural grant latch
-  → one 4-bit address bus
-  → four-phase receiver request/acknowledge
-```
+## 2. AER의 기본 동작
 
-source와 receiver는 다음 4-phase 순서로 transaction을 완료한다.
+예를 들어 5번 뉴런이 발화하면 컨트롤러는 `주소 5`를 수신기로 보낸다. 수신기는 주소를 보고 5번 뉴런에서 이벤트가 발생했음을 알아낸다.
 
 ```text
-REQ↑ → ACK↑ → REQ↓ → ACK↓
+5번 뉴런 발화
+    → 5번 뉴런이 전송 요청
+    → AER 컨트롤러가 주소 5를 선택
+    → 수신기가 주소 5를 읽음
+    → 전송 완료 응답
 ```
 
-source별 FIFO는 없으며 source는 acknowledge가 올 때까지 하나의 request를 유지한다.
+### 2.1 전통적 4단계 요청·응답
 
-### 2.2 baseline 검증
+전통적 비동기 AER은 송신기와 수신기가 같은 clock을 공유하지 않아도 동작할 수 있다. 대신 요청 신호와 응답 신호를 다음 순서로 주고받는다.
 
-| 검증 | 결과 |
-|---|---:|
-| Vivado RTL workload | 139 issued / 139 received / error 0 |
-| Vivado post-synthesis functional | 139 / 139 / error 0 |
-| request-skew sweep | 82/82 completed |
-| SDF winner shift | 40/82 |
-| Cadence Xcelium finite-delay | FAIL |
-| Genus valid STA/Fmax | 산출 불가 |
+1. **요청 올림:** 컨트롤러가 주소를 고정하고 요청 신호를 1로 만든다.
+2. **응답 올림:** 수신기가 주소를 읽은 뒤 응답 신호를 1로 만든다.
+3. **요청 내림:** 컨트롤러가 전송 요청을 종료한다.
+4. **응답 내림:** 수신기도 응답을 종료한다. 두 신호가 모두 0이 되면 다음 이벤트를 보낼 수 있다.
 
-Vivado의 digital model에서는 event loss가 발생하지 않았다. 그러나 SDF가 반영되면 높은 번호 source가 1~20 ps 먼저 요청해도 낮은 번호 source가 먼저 선택되는 winner shift가 관측됐다.
+![전통적 AER의 4단계 요청·응답](../docs/architecture/aer_4phase_handshake_flow.svg)
 
-Cadence Xcelium에서는 gate delay를 반영했을 때 `aer_req`가 high인 transaction 중 주소가 반복적으로 변했다. Genus는 combinational feedback을 처리하기 위해 loop breaker를 삽입했으며 유효한 timing path와 Fmax를 만들지 못했다.
+이 방식의 장점은 불필요하게 매 clock을 기다리지 않고, 상대 회로의 실제 응답 속도에 맞춰 진행할 수 있다는 점이다. 반면 한 번 전송할 때마다 두 신호를 올렸다가 다시 내려야 하므로 이벤트가 계속 몰릴 때 통로가 비는 시간이 생긴다.
 
-따라서 T0는 AER protocol 설명과 문제점 측정을 위한 baseline이지만, metastability-safe asynchronous ASIC 또는 정상 physical PPA 결과로 주장하지 않는다.
+## 3. T0: 전통적 비동기 AER baseline
 
-## 3. T0에서 확인한 문제
+### 3.1 구조
 
-### Fixed-priority starvation
+T0는 전체 회로를 움직이는 공통 clock을 사용하지 않는다. 입력 요청과 수신기의 응답이 변하면 그 변화가 다음 동작을 일으킨다.
 
-source 0과 같은 높은 우선순위 요청이 반복되면 source 15가 계속 밀릴 수 있다. 실제 fixed-priority workload에서도 긴 latency tail이 발생했다.
+![T0 전통적 비동기 AER 구조](../docs/architecture/aer_baseline_controller_structure.svg)
 
-### Burst 저장 부재
+T0의 처리 과정은 다음과 같다.
 
-source별 event storage가 없어 receiver가 느릴 때 backpressure가 source까지 직접 전달된다.
+1. 16개 뉴런의 요청을 확인한다.
+2. 여러 요청이 동시에 있으면 번호가 가장 작은 뉴런을 선택한다.
+3. 선택된 주소를 비동기 래치에 기억한다.
+4. 주소와 요청 신호를 수신기에 보낸다.
+5. 수신기의 응답과 뉴런의 요청이 모두 원위치로 돌아오면 다음 요청을 처리한다.
 
-### Four-phase turnaround
+여기서 래치는 clock 없이 신호 상태를 기억하는 작은 저장 회로다. T0는 교차 연결된 NOR 게이트로 주소와 전송 중 상태를 보관했다.
 
-새 transaction을 시작하려면 REQ와 ACK가 모두 0으로 돌아와야 한다. 공유 버스가 비어 있어도 return-to-zero 과정이 전송 간격을 만든다.
+### 3.2 확인된 한계
 
-### 일반 ASIC flow와의 충돌
+#### 처리 순서가 공정하지 않다
 
-MUTEX가 없는 cross-coupled feedback 구조는 zero-delay와 finite-delay simulation 결과가 달랐으며 conventional STA, CTS와 place-and-route flow로 검증할 수 없었다.
+T0는 항상 번호가 작은 뉴런부터 확인한다. 예를 들어 0번 뉴런이 계속 요청하면 15번 뉴런은 요청을 먼저 했더라도 오랫동안 선택되지 않을 수 있다. 이를 기아 상태라고 한다.
 
-## 4. P3 개선 구조
+#### 동시에 들어온 요청을 따로 보관하지 않는다
 
-P3는 asynchronous source interface를 유지하고, 복잡한 선택·저장·출력 제어는 하나의 synchronous core에서 수행한다.
+선택되지 않은 뉴런은 자신의 요청을 계속 유지해야 한다. 뉴런이 짧은 순간만 요청하고 바로 내리면 이벤트가 사라질 수 있다.
 
-```text
-async src_req[15:0]
-  → source별 2FF synchronizer
-  → source별 1-bit pending buffer
-  → local 4-way arbiter × 4
-  → global 4-way round-robin
-  → one-entry elastic valid/ready output
-  → one 4-bit address bus
-```
+#### 한 번의 전송에 네 번의 신호 변화가 필요하다
 
-### 2FF CDC
+수신기가 이벤트를 받은 뒤에도 요청과 응답을 모두 0으로 되돌려야 한다. 이 정리 시간이 끝나기 전에는 다음 이벤트를 보낼 수 없다.
 
-각 request는 두 개의 flip-flop을 거쳐 controller clock domain으로 들어온다. 이는 metastability 발생 확률을 낮추고 일반적인 digital synthesis와 timing flow를 사용할 수 있게 한다.
+#### 일반적인 칩 설계 도구와 셀만으로 안정성을 보장하기 어렵다
 
-### 1-bit pending buffer
+서로 거의 동시에 들어온 요청 중 하나를 물리적으로 안전하게 선택하려면 비동기 중재 전용 회로가 필요하다. 현재 제공된 180 nm 표준 셀에는 해당 전용 셀이 없었다. T0는 일반 NOR 게이트 래치로 원리를 구현했지만, 배선과 게이트 지연이 생기자 내부 되먹임 회로가 안정적으로 수렴하지 않았다.
 
-각 source는 최대 한 개의 event를 controller 내부에 보관한다. slot이 차면 event를 버리지 않고 source가 request를 유지하며 기다린다. 하나의 pending bit만 사용하여 register, area와 clock power를 절감했다.
+### 3.3 T0 검증 결과
 
-### Hierarchical round-robin
+| 시험 | 결과 | 해석 |
+|---|---:|---|
+| Vivado RTL 기능 시험 | 139 / 139 전달 | 지연이 없는 논리 수준에서는 정상 동작 |
+| Vivado 합성 후 기능 시험 | 139 / 139 전달 | 기능만 확인하는 합성 netlist에서도 전달 완료 |
+| 요청 도착 시점 변화 시험 | 82 / 82 전달 | 기능상 이벤트 수는 일치 |
+| 지연 반영 후 선택 결과 | 82회 중 40회 선택 변화 | 작은 지연 차이만으로 먼저 선택되는 뉴런이 달라짐 |
+| Cadence 유한 지연 시험 | 실패 | 한 전송 중 주소가 반복해서 변함 |
+| Genus 논리 합성 | 제한적 완료 | 되먹임을 끊는 보조 장치가 필요해 정상 동작 시간 계산 불가 |
 
-16개 source를 4개 group으로 나누고 각 group의 local winner를 병렬 계산한다. Global arbiter는 valid group을 순환 선택한다. Fixed priority와 달리 지속적으로 요청하는 낮은 번호 source가 버스를 독점하지 않는다.
+T0의 RTL 기능 통과만 보면 정상 회로처럼 보인다. 그러나 실제 회로에는 반드시 배선과 게이트 지연이 존재한다. 이 지연을 모사했을 때 주소가 흔들렸으므로 T0를 제작 가능한 최종안으로 판단할 수 없다.
 
-### Elastic output
+따라서 T0는 **전통적 AER이 어떻게 동작하고 어디에서 문제가 생기는지를 보여주는 비교 기준**으로 사용한다. T0의 면적과 전력은 정상적인 물리 설계 결과가 아니므로 P3와 숫자로 직접 비교하지 않는다.
 
-출력은 `out_addr`, `out_valid`, `out_ready`를 사용한다. 현재 event가 전송되는 cycle에 다음 event를 output register에 채울 수 있으므로 receiver가 ready일 때 1 event/cycle을 유지한다.
+## 4. P3: 안정성·공정성·처리 속도 개선안
+
+P3는 뉴런이 원하는 순간에 요청한다는 특성은 그대로 받아들인다. 다만 요청을 컨트롤러 안으로 들여온 뒤에는 clock에 맞춰 안정적으로 저장하고 처리한다. 즉, **외부는 비동기 요청, 내부는 검증 가능한 동기식 회로**인 혼합 구조다.
+
+![P3 개선 AER 컨트롤러 구조](../docs/architecture/aer_p3_improved_controller_structure.svg)
+
+### 4.1 비동기 요청을 안전하게 받는 입구
+
+뉴런 요청은 내부 clock과 관계없는 순간에 바뀐다. 이 신호를 바로 계산에 사용하면 0인지 1인지 잠시 결정되지 않는 상태가 생길 수 있다.
+
+P3는 각 요청을 플립플롭 두 개에 차례로 통과시킨다. 첫 번째 단계에서 불안정 가능성을 받아내고, 두 번째 단계의 안정된 값만 컨트롤러가 사용한다. 전문 용어로는 2단 동기화기(2FF synchronizer)라고 한다.
+
+### 4.2 뉴런마다 이벤트 하나를 보관
+
+각 뉴런에 1-bit 대기칸을 둔다. 요청이 들어오면 해당 칸을 1로 만들어 “이 뉴런의 이벤트가 기다리고 있음”을 기억한다.
+
+수신기가 잠시 멈추거나 여러 뉴런이 동시에 요청해도 각 뉴런의 첫 이벤트는 대기칸에 남는다. 이미 칸이 차 있으면 뉴런에 완료 응답을 보내지 않아 다음 이벤트가 덮어쓰는 것을 막는다.
+
+전체 저장 용량은 뉴런 16개 × 1개로 총 16개 이벤트다. 같은 뉴런에서 매우 빠르게 연속 발생하는 두 번째 이벤트는 첫 번째 칸이 비워질 때까지 기다려야 한다.
+
+### 4.3 모든 뉴런에 차례가 돌아가는 선택 방식
+
+T0는 항상 0번부터 확인했지만 P3는 마지막으로 처리한 위치의 다음부터 확인한다. 한 번 선택된 위치는 다음 차례에 뒤로 밀리므로 특정 뉴런이 통로를 계속 독점하기 어렵다. 이를 순환 우선순위 방식(round-robin)이라고 한다.
+
+16개를 한 번에 길게 비교하면 회로가 느리고 커질 수 있다. P3는 다음 두 단계로 나누었다.
+
+1. 4개 뉴런으로 이루어진 그룹 네 개에서 각각 후보를 고른다.
+2. 후보가 있는 그룹들 사이에서 최종 그룹 하나를 고른다.
+
+네 그룹의 후보 찾기는 동시에 진행된다. 따라서 16개를 처음부터 끝까지 순서대로 훑는 구조보다 논리 경로가 짧다.
+
+### 4.4 수신기가 준비되면 매 clock 연속 전송
+
+P3의 출력에는 주소 하나를 보관하는 대기칸이 있다. 수신기가 준비됐다는 신호를 보내면 현재 주소를 넘기면서 바로 다음 주소를 채울 수 있다.
+
+전통적 4단계 방식처럼 매 이벤트마다 요청과 응답을 0으로 되돌리는 빈 시간이 없으므로, 보낼 이벤트가 계속 있고 수신기가 준비된 상태에서는 **매 clock마다 이벤트 하나**를 전달한다.
 
 ## 5. 검증 방법
 
-두 설계의 기능 검증에는 single event, 16-source simultaneous event, single-source burst, receiver stall, saturation, hotspot, reset-held request와 independent stream을 사용했다.
+기능만 맞는지 보는 시험과 실제 칩으로 구현 가능한지 보는 시험을 구분했다.
 
-P3에는 추가로 다음 검증을 수행했다.
+### 5.1 기능 검증
 
-- clock edge 기준 -4.9 ns~+4.9 ns request phase sweep 192회
-- 16-source hierarchical order 검증
-- Vivado RTL 및 post-synthesis functional simulation
-- Cadence Xcelium RTL simulation
-- Vivado FPGA synthesis sanity
-- TSMC 0.18 µm Genus synthesis
-- Innovus floorplan, power grid, placement, CTS, routing, RC extraction
-- slow setup / fast hold timing, route DRC와 connectivity 검사
+- 139개 이벤트가 요청·접수·출력 과정에서 빠지거나 중복되는지 확인
+- 여러 뉴런이 동시에 요청하는 상황 확인
+- 수신기가 중간에 멈추는 상황 확인
+- 요청이 clock 직전과 직후에 들어오는 192가지 시점 변화 확인
+- 16개 뉴런이 동시에 기다릴 때 처리 순서 확인
 
-## 6. P3 기능 결과
+### 5.2 논리 합성과 물리 설계
 
-| 항목 | 결과 |
-|---|---:|
-| main workload | 139/139, error 0 |
-| CDC phase sweep | 192/192, error 0 |
-| hierarchical order | 16/16, error 0 |
-| no-stall throughput | 1 event/cycle |
-| average latency | 16.517 cycles |
-| maximum latency | 29 cycles |
-| source-15 hotspot latency | 4 cycles |
+- Vivado: RTL 기능, 합성 후 기능, FPGA 자원과 동작 시간 확인
+- Cadence Xcelium: 별도의 시뮬레이터에서 기능 재확인
+- Cadence Genus: RTL을 TSMC 180 nm 표준 논리 셀로 변환
+- Cadence Innovus: 셀 배치, clock 배선, 신호 배선, 배선 저항·용량 추출
+- 배치·배선 후 동작 시간, 전력, 배선 오류와 연결 오류 확인
 
-P3는 하나의 주소 버스에서 처리율을 높였으며 bus lane이나 address width를 증가시키지 않았다.
+## 6. P3 기능 검증 결과
 
-## 7. TSMC 180 nm 구현 결과
-
-대회 서버의 Liberty header는 Artisan `TSMC 0.18um`, typical 1.8 V/25°C를 명시한다. Physical flow는 Metal1~Metal6 LEF와 `t018` QRC 자료를 사용했다.
-
-| 항목 | 결과 | 조건 |
+| 항목 | 결과 | 의미 |
 |---|---:|---|
-| Vivado synthesis | 70 LUT, 79 FF | Artix-7 sanity only |
-| Genus 10 ns | 293 cells, area 8,675.251 | typical 1.8 V |
-| Genus vectorless power | 1.13497 mW | typical default activity |
-| Innovus post-route | 311 cells, 8,981.280 µm² | core-only |
-| placement density | 62.11% | target 약 60% |
-| setup slack | +3.131 ns | slow 1.62 V, 125°C |
-| hold slack | +0.027 ns | fast 1.98 V, 0°C |
-| post-route power | 0.924919 mW | slow view, default activity |
-| SPEF nets | 354 | coupled RC |
-| route DRC / connectivity | 0 / 0 | Innovus check |
+| 요청한 이벤트 | 139개 | 시험이 컨트롤러에 보낸 총 이벤트 |
+| 출력된 이벤트 | 139개 | 손실과 중복 없이 모두 전달 |
+| 기능 오류 | 0개 | 주소와 전송 횟수 일치 |
+| 요청 시점 변화 시험 | 192 / 192 통과 | clock과 다른 시점의 요청도 한 번씩 처리 |
+| 동시 요청 순서 시험 | 16 / 16 통과 | 16개 뉴런 모두 처리 |
+| 최고 처리율 | clock당 1개 | 수신기가 준비된 상태 |
+| 평균 대기 시간 | 16.517 clock | 시험 입력에서 요청부터 출력까지의 평균 |
+| 최대 대기 시간 | 29 clock | 시험 입력에서 가장 오래 기다린 이벤트 |
+| 반복 요청이 많았던 15번 뉴런 | 최대 4 clock | 순환 선택이 낮은 번호에만 치우치지 않음 |
 
-Genus와 Innovus power는 실제 동일 event traffic에 대한 energy/event가 아니라 tool의 default/vectorless activity 결과다. 절대적인 실사용 전력으로 해석하지 않는다.
+이 시험은 P3가 설계한 디지털 규칙에 따라 이벤트를 한 번씩 처리함을 보여준다. 다만 192회 시험만으로 실제 실리콘의 준안정성 발생 확률을 직접 증명하는 것은 아니다.
 
-## 8. T0와 P3의 핵심 비교
+## 7. TSMC 180 nm 물리 설계 결과
 
-| 구분 | T0 | P3 |
+P3는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀과 Metal1~Metal6 배선 조건을 사용했다. 목표 clock 주기는 10 ns로 설정했다.
+
+### 7.1 논리 합성 결과
+
+| 항목 | 결과 | 설명 |
+|---|---:|---|
+| 표준 셀 수 | 293개 | 배치 전 Genus 결과 |
+| 셀 면적 합계 | 8,675.251 µm² | 입출력 패드를 제외한 논리 셀 면적 |
+| 가장 긴 계산 경로 | 3.132 ns | 한 clock 안에서 가장 오래 걸린 조합논리 |
+| 시간 여유 | 6.645 ns | 10 ns 목표에서 남은 여유 |
+| 추정 전력 | 1.13497 mW | 기본 신호 활동률을 사용한 도구 추정 |
+
+### 7.2 배치·배선 결과
+
+| 항목 | 결과 | 설명 |
+|---|---:|---|
+| 칩 내부 영역 | 124.740 × 115.920 µm | 논리 셀이 배치되는 core 크기 |
+| 전체 외곽 크기 | 165.660 × 156.240 µm | 입출력 패드는 포함하지 않은 설계 외곽 |
+| 배치 후 셀 수 | 311개 | clock과 배선 보정을 위한 셀 포함 |
+| 셀 면적 합계 | 8,981.280 µm² | 배치 후 표준 셀 면적 |
+| 셀 배치 밀도 | 62.11% | core 중 셀이 차지한 비율 |
+| 배선 혼잡 초과 | 0.00% | 도구가 보고한 배선 용량 초과 없음 |
+| 느린 조건 시간 여유 | +3.131 ns | 저전압·고온 조건에서도 10 ns 만족 |
+| 빠른 조건 시간 여유 | +0.027 ns | 너무 빠른 신호로 인한 hold 문제 없음 |
+| 배치 후 추정 전력 | 0.924919 mW | 실제 발화 파형이 아닌 기본 활동률 사용 |
+| 배선 오류 | 0개 | Innovus 배선 규칙 검사 |
+| 연결 오류 | 0개 | 끊기거나 잘못 연결된 신호 없음 |
+
+### 7.3 Innovus 실제 화면
+
+아래 이미지는 도식화한 예상도가 아니다. P3의 최종 배치·배선 데이터베이스를 Cadence Innovus에서 복원한 뒤 `gui_dump_picture` 기능으로 직접 출력했다.
+
+![P3 TSMC 180 nm Innovus 실제 post-route 화면](../docs/architecture/p3_180nm_innovus_postroute.png)
+
+화면 가운데 모여 있는 작은 사각형들이 표준 논리 셀이다. 가로와 세로로 지나가는 여러 색의 선은 전원망과 Metal1~Metal6 신호 배선이며, 외곽으로 뻗은 선은 모듈 입출력 연결이다.
+
+이 결과는 RTL 코드가 논리식으로만 존재하는 단계를 넘어, **실제 공정의 셀 크기와 배선 규칙을 적용해 칩 내부에 배치할 수 있는 단계**까지 진행됐음을 뜻한다.
+
+## 8. T0와 P3 비교
+
+| 비교 항목 | T0 전통적 비동기 구조 | P3 개선 구조 |
 |---|---|---|
-| global clock | 없음 | core clock 사용 |
-| source input | asynchronous 4-phase | asynchronous 4-phase + 2FF CDC |
-| arbitration | fixed priority | hierarchical round-robin |
-| input storage | 없음 | source별 1 pending event |
-| receiver output | 4-phase | valid/ready elastic |
-| address bus | 1×4-bit | 1×4-bit |
-| finite-delay stability | 실패 | 통과 |
-| physical implementation | 유효 STA 불가 | 180 nm post-route 완료 |
+| 외부 뉴런 요청 | 비동기 | 비동기 |
+| 컨트롤러 내부 | 요청·응답 변화로 직접 동작 | clock에 맞춰 저장·처리 |
+| 동시 요청 선택 | 항상 작은 번호 우선 | 처리 순번을 돌려가며 선택 |
+| 이벤트 저장 | 없음 | 뉴런마다 1개 |
+| 출력 방식 | 매번 4단계 신호 복귀 | 준비/유효 신호로 연속 전달 |
+| 출력 버스 | 4-bit 1개 | 4-bit 1개 |
+| 게이트 지연 반영 기능 | 주소가 흔들려 실패 | 정상 동작 |
+| 최고 처리율 | 유효한 물리 수치 없음 | clock당 1개 |
+| 180 nm 배치·배선 | 정상 완료 불가 | 오류 없이 완료 |
 
-P3는 T0보다 회로 상태와 clocked register를 더 사용한다. 대신 fairness, event buffering, 1 event/cycle output과 conventional ASIC physical verification을 얻는다. T0가 정상 physical flow를 완료하지 못했으므로 두 구조 사이의 area·power 수치를 직접 나누어 P3의 물리 PPA 개선율로 주장하지 않는다.
+P3의 핵심 개선은 버스를 늘린 것이 아니다. **비동기 요청을 안전하게 받는 입구, 이벤트를 기억하는 대기칸, 공정하게 순번을 돌리는 선택기, 빈 시간을 줄인 출력 구조**를 추가했다.
 
 ## 9. 2차 과제 연계
 
-P3의 `out_addr`는 이벤트가 발생한 source ID다. 4×4 sensor를 가정하면 source ID를 pixel `(x,y)`로 decode할 수 있다.
+P3가 출력하는 4-bit 주소는 “어느 뉴런이 발화했는가”를 나타낸다. 2차 과제에서는 이 주소를 다음과 같이 확장할 수 있다.
 
 ```text
-P3 out_addr
-  → source ID to pixel (x,y)
-  → sensor direction 반영
-  → pixel-to-world coordinate transform
-  → N×M world-memory write
+뉴런 주소
+  → 센서 위의 위치 (x, y)로 변환
+  → 이동 방향 또는 경계 방향 계산
+  → N×M 공간 기억 장치의 해당 위치 갱신
 ```
 
-따라서 P3는 2차 과제의 event collection 및 transport front-end로 재사용할 수 있다. Sensor 크기가 커지면 source 수, address width, group 수와 group 크기를 parameter화해야 한다.
+P3의 역할은 여러 뉴런에서 발생한 이벤트를 손실 없이 한 줄로 정리해 다음 단계에 공급하는 것이다. 주소를 좌표나 방향으로 바꾸는 계산은 P3 뒤에 연결되는 별도 모듈이 담당한다.
 
 ## 10. 결론
 
-T0는 전통적 clockless AER의 단순성과 함께 fixed-priority, buffering 부재, four-phase turnaround 및 물리 구현 불안정성을 보여주었다.
+T0를 통해 공통 clock 없이 요청과 응답만으로 동작하는 전통적 AER의 원리를 구현했다. 동시에 고정된 처리 순서, 이벤트 저장 공간 부재, 4단계 신호 복귀에 따른 빈 시간과 일반 표준 셀 환경에서의 불안정성을 확인했다.
 
-P3는 단일 주소 버스를 유지하면서 asynchronous request를 안전하게 수용하고, event를 한 개씩 보존하며, hierarchical round-robin으로 공정하게 선택하고, ready 상태에서 매 cycle 연속 전송한다. RTL, post-synthesis, Xcelium과 TSMC 180 nm post-route 검증을 모두 통과했으므로 현재 대회 주 설계로 채택한다.
+P3는 비동기 요청을 두 단계로 안정화하고, 뉴런마다 이벤트 하나를 기억하며, 모든 뉴런에 차례가 돌아가는 선택 방식을 사용한다. 수신기가 준비된 동안에는 하나의 4-bit 버스로 매 clock마다 이벤트 하나를 전송한다.
 
-## 11. 한계
+기능 시험에서는 139개 이벤트를 손실과 중복 없이 전달했고, 192가지 요청 시점 시험을 모두 통과했다. TSMC 180 nm 배치·배선에서도 동작 시간 조건을 만족했으며 배선과 연결 오류가 발견되지 않았다. 따라서 P3를 본 과제의 최종 AER 컨트롤러로 채택한다.
 
-- P3 CDC simulation은 analog metastability MTBF를 증명하지 않는다.
-- Source별 capacity는 한 event이며 무한 burst를 내부에서 모두 저장할 수 없다.
-- 전체 발화 시간순 FCFS가 아니라 round-robin 순서다.
-- Pad ring, package, foundry GDS, signoff DRC/LVS와 fabricated silicon은 범위 밖이다.
-- Post-route power는 실제 workload 측정값이 아니다.
+## 11. 완료 범위와 한계
 
-## 12. 주요 근거
+완료한 범위는 RTL 설계, 기능 시뮬레이션, 논리 합성, TSMC 180 nm 표준 셀 배치·배선과 배치 후 동작 시간 분석이다.
+
+다음 항목은 아직 수행하지 않았다.
+
+- 실제 반도체 제작과 실리콘 측정
+- 입출력 패드와 패드 링 설계
+- 반도체 패키지 설계
+- 제조용 최종 GDS 출력과 foundry signoff DRC/LVS
+- 실제 뉴런 발화 파형을 사용한 배치 후 전력 측정
+- 배치 후 gate-level 기능 시뮬레이션
+
+또한 P3의 순환 선택은 모든 뉴런에 처리 기회를 주지만, 요청이 들어온 실제 시간 순서를 완벽히 보존하는 선착순 방식은 아니다. 같은 뉴런의 대기칸에는 이벤트 하나만 저장되므로 더 큰 burst를 처리하려면 추가 저장 공간이 필요하다.
+
+## 12. 주요 근거 파일
 
 - T0 RTL: [`rtl/traditional_async/aer_traditional_structural.sv`](../rtl/traditional_async/aer_traditional_structural.sv)
+- T0 검증 결과: [`results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md`](../results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md)
 - P3 RTL: [`rtl/improved/aer_improved_depth1.sv`](../rtl/improved/aer_improved_depth1.sv)
-- T0 결과: [`results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md`](../results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md)
-- P3 결과: [`results/P3_DEPTH1_AER_2026-08-19.md`](../results/P3_DEPTH1_AER_2026-08-19.md)
-- P3 180 nm summary: [`reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt`](improved_depth1/cadence/pnr_180nm/SUMMARY.txt)
-- P3 manifest: [`results/P3_MANIFEST_2026-08-19.md`](../results/P3_MANIFEST_2026-08-19.md)
+- P3 기능 및 비교 결과: [`results/P3_DEPTH1_AER_2026-08-19.md`](../results/P3_DEPTH1_AER_2026-08-19.md)
+- P3 180 nm 요약: [`reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt`](improved_depth1/cadence/pnr_180nm/SUMMARY.txt)
+- P3 증거 목록: [`results/P3_MANIFEST_2026-08-19.md`](../results/P3_MANIFEST_2026-08-19.md)
+- Innovus 화면 추출 스크립트: [`scripts/cadence/p3_innovus_capture.tcl`](../scripts/cadence/p3_innovus_capture.tcl)
