@@ -205,7 +205,7 @@ P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area
 
 이 결과는 core-only physical implementation이다. pad ring/package, foundry GDS stream-out, signoff DRC/LVS와 post-route gate simulation은 현재 제공 자료만으로 완료하지 못했다.
 
-![P2 TSMC 180 nm post-route layout](docs/architecture/p2_180nm_postroute_layout.png)
+![P2 TSMC 180 nm Innovus native post-route layout](docs/architecture/p2_180nm_innovus_native.png)
 
 - 상세 결과: [`results/P2_180NM_PNR_2026-08-19.md`](results/P2_180NM_PNR_2026-08-19.md)
 - sanitized summary: [`reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt`](reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt)

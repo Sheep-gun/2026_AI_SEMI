@@ -165,3 +165,4 @@ All times are Asia/Seoul unless otherwise stated.
 - Post-route default-activity power was 1.15140032 mW in the slow 1.62 V setup view. It is not compared directly with the previous typical-corner Genus/VCD values.
 - Recorded the boundary: this is digital core P&R, not pad/package or foundry GDS/DRC/LVS signoff. Required GDS/CDL, stream-out map, rule decks and standard-cell Verilog models were not found.
 - Rendered two reviewable PNGs directly from the final DEF: placement/power-grid view and full Metal1-Metal6 post-route view. The renderer verifies that all 476 components are present before writing images.
+- Restored the final RC-preserving Innovus database under Xvfb and used Innovus `gui_dump_picture` directly to export a native 1800×1400 post-route screenshot.
