@@ -120,6 +120,10 @@ Two implementations are now preserved:
 - [x] P2 Vivado sanity improved from 207 to 148 LUT and from WNS -0.813 ns to +1.735 ns while preserving 1 event/cycle.
 - [x] P2 Genus 10 ns produced area 11,386.267 and vectorless power 1.64037 mW; the 2 ns area fell to 13,229.093 and a 1.8 ns synthesis point was reached.
 - [x] P2 selected as the current main design; equal-capacity shared FIFO rejected as a non-competitive standard-cell storage representation.
+- [x] Server Liberty header verified as Artisan `TSMC 0.18um`; LEF provides Metal1-Metal6 and QRC uses the `t018` extraction kit.
+- [x] P2 scan-free physical netlist completed and routed in Innovus with a VDD/VSS core ring, CTS, post-CTS hold fixing and post-route coupled RC extraction.
+- [x] 180 nm post-route result: 476 cells, area 11,812.046 µm², setup +2.721 ns, hold +0.033 ns, route DRC 0, connectivity problems 0, SPEF 504 nets.
+- [ ] Foundry GDS stream-out, signoff DRC/LVS/antenna/metal fill and post-route gate simulation remain blocked by missing standard-cell GDS/CDL, rule decks and cell simulation models.
 
 ## Evidence labels
 

@@ -66,6 +66,7 @@ innovus.log*
 !/reports/improved/cadence/final/reports/sweep_2p0ns/**
 /reports/improved_hierarchical/cadence/p2_final_artifacts.tgz
 /reports/improved_hierarchical/cadence/final/logs/
+/reports/improved_hierarchical/cadence/pnr_180nm/raw/
 
 # Other local simulator products
 *.vvp

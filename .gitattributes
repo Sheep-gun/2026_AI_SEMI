@@ -16,6 +16,8 @@
 *.vcd -whitespace
 *.sdf -whitespace
 *.v -whitespace
+*.def -whitespace
+*.spef -whitespace
 
 # Preserve existing manifest-bound source/script EOF bytes.
 *.sv whitespace=-blank-at-eof

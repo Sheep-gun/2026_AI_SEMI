@@ -1,0 +1,51 @@
+design=P2 parallel 4x4 hierarchical round-robin AER
+flow=core-only Genus plus Innovus place-and-route
+process=TSMC 0.18um Artisan standard cells
+metal_stack=Metal1..Metal6
+site=tsm3site
+innovus_version=23.14-s088_1
+genus_version=23.14-s090_1
+
+written_organizer_180nm_requirement=NOT_FOUND
+server_kit_process_header=TSMC 0.18um
+digital_180nm_flow_status=PASS_CORE_ONLY
+
+physical_netlist_scan_cells=0
+genus_pnr_cells=458
+genus_pnr_area=11506.018
+genus_pnr_worst_data_path_ps=3324
+genus_pnr_worst_slack_ps=6454
+
+die_width_um=182.160
+die_height_um=176.400
+core_width_um=141.240
+core_height_um=136.080
+postroute_cells=476
+postroute_cell_area_um2=11812.046
+placement_density_percent=61.45
+routing_overflow_horizontal_percent=0.00
+routing_overflow_vertical_percent=0.00
+
+clock_period_ns=10.000
+clock_uncertainty_ns=0.200
+setup_corner=slow_1.62V_125C
+postroute_setup_slack_ns=2.721
+hold_corner=fast_1.98V_0C
+postroute_hold_slack_ns=0.033
+
+power_view=slow_1.62V_default_activity_0.2
+postroute_power_mw=1.15140032
+power_status=NOT_ACTIVITY_MATCHED_TO_GENUS_OR_VCD
+
+postroute_spef_d_net_count=504
+postroute_drc_violations=0
+postroute_connectivity_problems=0
+power_ground_ring=VDD_VSS_CORE_RING
+rcdb_saved=true
+
+outputs=DEF,SDF,SPEF,postroute_Verilog,scan_free_Genus_Verilog
+
+LIMITATION=Core-only physical implementation; no pad ring or semiconductor package.
+LIMITATION=Innovus route DRC is not foundry signoff DRC/LVS.
+LIMITATION=No standard-cell GDS/CDL, stream-out map, foundry DRC/LVS deck, or metal-fill signoff was available.
+LIMITATION=No post-route gate simulation was run because a matching standard-cell Verilog simulation library was not found.

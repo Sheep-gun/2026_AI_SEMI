@@ -112,6 +112,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** Shared FIFO is reconsidered only with an SRAM macro or a workload contract that justifies lower total occupancy. It is not presented as an area improvement under the current standard-cell constraints.
 
+## DD-015: Treat the supplied TSMC 0.18um kit as the digital physical target, not a complete tapeout PDK
+
+**Decision:** Use the contest server's Artisan TSMC 0.18um Liberty, six-metal LEF and `t018` QRC files for P2 core place-and-route. Report DEF/SDF/SPEF, MMMC timing, route DRC and connectivity, while explicitly withholding GDS/tapeout signoff claims.
+
+**Why:** Official written notices do not state the 180 nm requirement, but the provided Liberty header explicitly names TSMC 0.18um and the kit contains a working Innovus training flow. The available subset is sufficient for digital core synthesis, CTS, routing and RC extraction. It lacks standard-cell GDS/CDL, stream-out mapping, foundry DRC/LVS decks and matching simulation models.
+
+**Consequence:** P2 now has a verified 180 nm physical implementation point. It is not a pad-ring/package design and Innovus route DRC 0 is not represented as foundry signoff. Missing PDK collateral is a concrete organizer follow-up item.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

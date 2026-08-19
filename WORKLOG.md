@@ -152,3 +152,15 @@ All times are Asia/Seoul unless otherwise stated.
 - Final Genus 2 ns result: 510 cells, area 13,229.093, data path 1.542 ns and zero slack. P2 also reached a 1.8 ns synthesis point with area 14,177.117.
 - VCD auxiliary power was 1.70590 mW with only 15.56% driver-net and 0% queue-MDA coverage. It is retained as a possible switching warning, not an absolute power claim.
 - Rejected an equal-capacity shared FIFO because explicit 4-bit addresses require at least four times the event-storage bits of implicit per-source counts before pointers and arbitration.
+
+### TSMC 180 nm PDK verification and P2 physical implementation
+
+- Rechecked the official competition notice, OT material and the published 1st Q&A question-list PDF. No written 180 nm requirement or common PVT answer was found; the Q&A document contains participant questions but not organizer answers.
+- Read the supplied Liberty header directly. It identifies `SAGE-Modeler TSMC 0.18um`, typical 1.8 V/25°C. The LEF provides `tsm3site` and Metal1-Metal6; the extraction kit uses `t018s6mm.tch` and `t018s6mlv.capTbl`.
+- Added a physical-only Genus flow that avoids 52 scan-cell types. The clean netlist contains 458 cells, area 11,506.018 and no SDFF cells.
+- Added an MMMC Innovus flow with slow setup and fast hold views, 10 ns clock, 0.2 ns uncertainty, 60% target utilization, signal pin placement, VDD/VSS core ring, CTS, hold optimization and post-route coupled extraction.
+- Final floorplan: die 182.160×176.400 µm, core 141.240×136.080 µm. Final design: 476 placed cells, area 11,812.046 µm², density 61.45% and routing overflow 0%.
+- Final post-route setup slack was +2.721 ns at slow 1.62 V/125°C. An initial -34 ps fast-corner hold violation on the CDC synchronizer path was fixed with post-CTS hold optimization; final hold slack was +33 ps.
+- Generated 504-net coupled SPEF plus DEF, SDF, post-route Verilog and an RC-preserving Innovus database. Innovus route DRC reported zero violations and connectivity reported zero problems including the core power nets.
+- Post-route default-activity power was 1.15140032 mW in the slow 1.62 V setup view. It is not compared directly with the previous typical-corner Genus/VCD values.
+- Recorded the boundary: this is digital core P&R, not pad/package or foundry GDS/DRC/LVS signoff. Required GDS/CDL, stream-out map, rule decks and standard-cell Verilog models were not found.

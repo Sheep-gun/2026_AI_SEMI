@@ -188,7 +188,28 @@ P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area
 - P1/P2 비교: [`results/P1_P2_COMPARISON_2026-08-19.md`](results/P1_P2_COMPARISON_2026-08-19.md)
 - P2 evidence hash: [`results/P2_MANIFEST_2026-08-19.md`](results/P2_MANIFEST_2026-08-19.md)
 
-## 9. 재현 방법
+## 9. TSMC 180 nm physical implementation
+
+대회 서버의 Liberty header에서 `TSMC 0.18um`, typical `1.8 V / 25°C`를 확인했고, Metal1~Metal6 LEF와 `t018` QRC kit로 P2 core를 Innovus 배치배선했다.
+
+| 항목 | 결과 |
+|---|---:|
+| placed cells / cell area | 476 / 11,812.046 µm² |
+| die / core | 182.160×176.400 / 141.240×136.080 µm |
+| placement density | 61.45% |
+| routing overflow | 0.00% |
+| slow-corner setup slack | +2.721 ns |
+| fast-corner hold slack | +0.033 ns |
+| coupled SPEF nets | 504 |
+| Innovus route DRC / connectivity problem | 0 / 0 |
+
+이 결과는 core-only physical implementation이다. pad ring/package, foundry GDS stream-out, signoff DRC/LVS와 post-route gate simulation은 현재 제공 자료만으로 완료하지 못했다.
+
+- 상세 결과: [`results/P2_180NM_PNR_2026-08-19.md`](results/P2_180NM_PNR_2026-08-19.md)
+- sanitized summary: [`reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt`](reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt)
+- evidence hash: [`results/P2_180NM_PNR_MANIFEST_2026-08-19.md`](results/P2_180NM_PNR_MANIFEST_2026-08-19.md)
+
+## 10. 재현 방법
 
 PowerShell에서 저장소 root를 기준으로 실행한다.
 
@@ -217,6 +238,13 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 .\scripts\run_improved_hierarchical_order.ps1 -Mode gate
 ```
 
+Cadence 서버의 180 nm physical flow:
+
+```text
+genus -batch -files scripts/p2_genus_pnr.tcl
+innovus -no_gui -batch -files scripts/p2_innovus.tcl
+```
+
 - 시뮬레이션 결과: `sim/logs/`, `sim/waves/`
 - Vivado sanity report: `reports/baseline/vivado_sanity/`
 - 결과 요약: [`results/BASELINE_SIMULATION_2026-08-18.md`](results/BASELINE_SIMULATION_2026-08-18.md)
@@ -225,7 +253,7 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 
 일상적인 재검증은 manifest-bound 원본을 덮어쓰지 않도록 격리 작업공간에서 수행한다. RTL 버그 수정이 필요하면 `B0-v2`와 새 dated manifest를 만든다.
 
-## 10. 저장소 구성
+## 11. 저장소 구성
 
 ```text
 rtl/baseline/       B0-v1 합성 가능 RTL
@@ -244,7 +272,7 @@ reports/            보존할 핵심 text report와 synthesis checkpoint
 
 상세 범위와 확인/미확인 상태는 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md), 설계 선택의 근거는 [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), 실행 이력은 [`WORKLOG.md`](WORKLOG.md)에 기록한다.
 
-## 11. 결과 해석 원칙
+## 12. 결과 해석 원칙
 
 - 확인된 측정값, 설계 결정, 가정, 미확인 사항을 구분한다.
 - simulation 기능 정확도와 synthesis PPA를 섞지 않는다.
