@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-labelledby="title desc">
-  <title id="title">T0 전통적 비동기 AER baseline 구조</title>
-  <desc id="desc">16개 이벤트 소스 중 하나를 고정 우선순위로 고르고, 비동기 래치에 주소를 보관한 뒤, 요청과 응답 신호만으로 수신기에 전달하는 clockless AER baseline 블록도</desc>
+  <title id="title">T0-PPA 전통적 비동기 AER baseline 구조</title>
+  <desc id="desc">16개 이벤트 소스 중 하나를 고정 우선순위로 고르고, characterized latch에 주소를 보관하며, delay cell로 bundled-data margin을 확보한 clockless AER baseline 블록도</desc>
 
   <defs>
     <marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
@@ -35,8 +35,8 @@
   </defs>
 
   <rect width="1500" height="900" fill="#f8fafc"/>
-  <text x="60" y="58" class="title">T0 전통적 비동기 AER Baseline</text>
-  <text x="60" y="90" class="subtitle">공통 clock 없음 · 고정 우선순위 · 이벤트 저장 공간 없음 · 4단계 요청/응답</text>
+  <text x="60" y="58" class="title">T0-PPA 전통적 비동기 AER Baseline</text>
+  <text x="60" y="90" class="subtitle">공통 clock 없음 · TLAT latch · DLY4 relative delay · 고정 우선순위 · 4-phase handshake</text>
 
   <!-- Sources -->
   <g filter="url(#shadow)">
@@ -60,8 +60,8 @@
   <g filter="url(#shadow)">
     <rect x="405" y="125" width="790" height="570" rx="22" fill="#ffffff" stroke="#64748b" stroke-width="2.5"/>
   </g>
-  <text x="800" y="166" text-anchor="middle" class="group-title">T0 clockless AER 컨트롤러</text>
-  <text x="800" y="193" text-anchor="middle" class="small">clock 대신 요청과 응답 신호의 변화만으로 다음 단계 진행</text>
+  <text x="800" y="166" text-anchor="middle" class="group-title">T0-PPA clockless AER 컨트롤러</text>
+  <text x="800" y="193" text-anchor="middle" class="small">characterized latch/delay cell · 요청과 응답 신호의 변화로 다음 단계 진행</text>
 
   <!-- Controller datapath blocks -->
   <rect x="455" y="245" width="220" height="130" rx="15" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
@@ -71,7 +71,7 @@
   <text x="565" y="361" text-anchor="middle" class="small">동시 요청 시 source 0부터 확인</text>
 
   <rect x="735" y="245" width="180" height="130" rx="15" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-  <text x="825" y="286" text-anchor="middle" class="block-title">비동기 주소 래치</text>
+  <text x="825" y="286" text-anchor="middle" class="block-title">TLAT 주소 래치</text>
   <text x="825" y="321" text-anchor="middle" class="signal">grant_q[3:0]</text>
   <text x="825" y="350" text-anchor="middle" class="small">전송이 끝날 때까지 주소 기억</text>
 
@@ -91,7 +91,7 @@
 
   <!-- Clockless handshake control -->
   <rect x="495" y="465" width="610" height="145" rx="16" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
-  <text x="800" y="495" text-anchor="middle" class="block-title">clock 없는 4단계 전송 제어</text>
+  <text x="800" y="495" text-anchor="middle" class="block-title">DLY4 margin을 둔 clockless 4-phase 제어</text>
 
   <rect x="520" y="520" width="110" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
   <rect x="665" y="520" width="125" height="48" rx="9" fill="#ffffff" stroke="#94a3b8"/>
@@ -139,7 +139,7 @@
   <text x="650" y="687" text-anchor="middle" class="signal">src_ack[15:0]</text>
 
   <!-- Four concise bottleneck cards -->
-  <text x="60" y="765" class="group-title">T0에서 확인할 네 가지 한계</text>
+  <text x="60" y="765" class="group-title">T0-PPA에 남겨 둔 전통적 한계</text>
   <rect x="55" y="790" width="320" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>
   <rect x="405" y="790" width="320" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>
   <rect x="755" y="790" width="320" height="72" rx="13" fill="#fff7ed" stroke="#fb923c"/>

@@ -8,12 +8,12 @@ AER(Address-Event Representation)은 발화한 뉴런의 **번호만 주소로 �
 
 본 연구의 목표는 다음과 같다.
 
-1. 공통 clock 없이 동작하는 전통적 AER 컨트롤러 T0를 직접 구현한다.
-2. 기능 시험뿐 아니라 실제 게이트 지연을 모사한 환경에서 T0의 한계를 확인한다.
+1. 공통 clock 없이 동작하는 전통적 AER 컨트롤러 T0-PPA를 직접 구현한다.
+2. 기능, 합성 등가성, bundled-data relative timing과 180 nm 물리 구현을 검증하고 유효 조건을 명시한다.
 3. 요청 손실, 처리 순서의 불공정성, 낮은 처리 속도와 물리 구현 문제를 보완한 P3를 설계한다.
-4. P3를 TSMC 180 nm 표준 셀로 배치·배선하여 칩 내부에 실제로 구현 가능한지 확인한다.
+4. T0-PPA와 P3를 같은 TSMC 180 nm core flow로 배치·배선하여 정량 비교한다.
 
-T0와 P3는 모두 16개의 입력과 **4-bit 출력 버스 1개**를 사용한다. 따라서 P3의 성능 향상은 출력 통로를 추가한 결과가 아니라 컨트롤러 내부 구조를 개선한 결과다.
+T0-PPA와 P3는 모두 16개의 입력과 **4-bit 출력 버스 1개**를 사용한다. 따라서 P3의 성능 향상은 출력 통로를 추가한 결과가 아니라 컨트롤러 내부 구조를 개선한 결과다.
 
 ## 2. AER의 기본 동작
 
@@ -63,7 +63,7 @@ T0에서는 source와 컨트롤러 사이, 컨트롤러와 수신기 사이에 �
 
 1. **Request assert:** 컨트롤러가 `aer_addr`를 먼저 안정시킨 뒤 `aer_req`를 0에서 1로 바꾼다. 수신 완료 전까지 주소는 유지되어야 한다.
 2. **Acknowledge assert:** 수신기가 `aer_req=1`을 감지해 주소를 capture한 다음 `aer_ack`를 0에서 1로 바꾼다. 이 전이는 현재 주소의 수신 완료를 의미한다.
-3. **Request release:** 컨트롤러가 `aer_ack=1`을 확인한 뒤 `aer_req`를 1에서 0으로 내린다. T0는 내부 grant를 유지해 transaction 중 주소 전이를 막는다.
+3. **Request release:** 컨트롤러가 `aer_ack=1`을 확인한 뒤 `aer_req`를 1에서 0으로 내린다. T0-PPA는 내부 grant를 유지해 transaction 중 주소 전이를 막는다.
 4. **Acknowledge release:** 수신기가 `aer_req=0`을 확인한 뒤 `aer_ack`를 1에서 0으로 내린다. 두 신호가 모두 0이 되면 link가 idle로 복귀한다.
 
 ![전통적 AER의 4단계 요청·응답](../docs/architecture/aer_4phase_handshake_flow.svg)
@@ -82,56 +82,70 @@ T0에서는 source와 컨트롤러 사이, 컨트롤러와 수신기 사이에 �
 
 반면 한 이벤트마다 `REQ↑ → ACK↑ → REQ↓ → ACK↓` 네 번의 전이가 필요하다. 다음 이벤트는 link가 idle로 돌아온 뒤에야 시작할 수 있으므로 연속 traffic에서는 return-to-zero 시간이 처리율을 제한한다. 또한 handshake가 transaction의 완료를 보장한다고 해서 동시 요청을 선택하는 arbiter까지 자동으로 안전해지는 것은 아니다.
 
-## 3. T0: 전통적 비동기 AER baseline
+## 3. T0-PPA: 물리 비교 가능한 전통적 비동기 baseline
 
-### 3.1 구조
+### 3.1 전통적 구조의 유지
 
-T0는 전체 회로를 움직이는 공통 clock을 사용하지 않는다. 입력 요청과 수신기의 응답이 변하면 그 변화가 다음 동작을 일으킨다.
+T0-PPA는 전체 회로를 움직이는 global clock을 사용하지 않는다. 입력 요청과 수신기 응답의 전이가 상태를 진행시키며 다음 특성을 유지한다.
+
+- 16 source와 4-bit 공유 주소 bus 1개
+- source 0이 최고인 fixed-priority arbitration
+- source별 FIFO 또는 pending storage 없음
+- receiver-facing active-high 4-phase return-to-zero handshake
+- 한 source당 outstanding event 최대 1개
 
 ![T0 전통적 비동기 AER 구조](../docs/architecture/aer_baseline_controller_structure.svg)
 
-T0의 처리 과정은 다음과 같다.
+### 3.2 초기 T0의 문제와 T0-PPA의 수정
 
-1. 16개 뉴런의 요청을 확인한다.
-2. 여러 요청이 동시에 있으면 번호가 가장 작은 뉴런을 선택한다.
-3. 선택된 주소를 비동기 래치에 기억한다.
-4. 주소와 요청 신호를 수신기에 보낸다.
-5. 수신기의 응답과 뉴런의 요청이 모두 원위치로 돌아오면 다음 요청을 처리한다.
+초기 structural T0는 교차 결합 NOR gate로 busy와 grant를 저장했다. 기능 RTL에서는 139개 이벤트를 전달했지만 Genus는 이를 sequential storage가 아닌 combinational feedback loop로 판단해 7개의 loop breaker를 삽입했고, Xcelium finite-delay simulation에서는 transaction 중 주소가 흔들렸다.
 
-여기서 래치는 clock 없이 신호 상태를 기억하는 작은 저장 회로다. T0는 교차 연결된 NOR 게이트로 주소와 전송 중 상태를 보관했다.
+T0-PPA는 handshake 방식과 fixed priority는 바꾸지 않고 저장 구현만 다음과 같이 물리 library에 맞췄다.
 
-### 3.2 확인된 한계
+- `TLATRX1`/`TLATNRX1` characterized latch 5개: grant address 4-bit와 busy 1-bit 저장
+- `DLY4X1` characterized delay cell 5개: priority data가 settle된 뒤 busy capture 시작
+- 추가 `DLY4X1` 1개: grant latch가 닫힌 뒤 `aer_req` assertion
+- Genus와 Innovus에서 delay cell을 dont-touch로 보호
 
-#### 처리 순서가 공정하지 않다
+이 구조는 일반 gate를 교차 연결해 저장소를 흉내 낸 것이 아니라 Liberty에 setup, hold, pulse-width, power와 PVT arc가 정의된 실제 latch macro를 사용한다. 따라서 synthesis와 physical tool이 상태 경계를 인식하며 loop breaker가 필요하지 않다.
 
-T0는 항상 번호가 작은 뉴런부터 확인한다. 예를 들어 0번 뉴런이 계속 요청하면 15번 뉴런은 요청을 먼저 했더라도 오랫동안 선택되지 않을 수 있다. 이를 기아 상태라고 한다.
+### 3.3 Bundled-data relative timing
 
-#### 동시에 들어온 요청을 따로 보관하지 않는다
+전통적 bundled-data AER에서는 주소 data path가 request control path보다 먼저 안정되어야 한다. T0-PPA는 post-route RC를 반영한 뒤 가장 불리한 조합을 비교했다.
 
-선택되지 않은 뉴런은 자신의 요청을 계속 유지해야 한다. 뉴런이 짧은 순간만 요청하고 바로 내리면 이벤트가 사라질 수 있다.
+| 경로 | 측정값 |
+|---|---:|
+| source request → grant latch D, latest slow | 1.915 ns |
+| source request → busy latch D, earliest fast | 2.591 ns |
+| conservative relative margin | **+0.676 ns** |
+| busy latch Q → `aer_req`, earliest fast | 0.380 ns |
 
-#### 한 번의 전송에 네 번의 신호 변화가 필요하다
+가장 느린 주소 계산이 끝난 뒤 최소 0.676 ns가 지나 capture control이 도착하며, 그 뒤에도 busy latch와 request delay stage가 남는다. 따라서 명시한 PVT 범위에서 주소가 먼저 안정되고 요청이 나중에 올라가는 순서를 만족한다.
 
-수신기가 이벤트를 받은 뒤에도 요청과 응답을 모두 0으로 되돌려야 한다. 이 정리 시간이 끝나기 전에는 다음 이벤트를 보낼 수 없다.
-
-#### 일반적인 칩 설계 도구와 셀만으로 안정성을 보장하기 어렵다
-
-서로 거의 동시에 들어온 요청 중 하나를 물리적으로 안전하게 선택하려면 비동기 중재 전용 회로가 필요하다. 현재 제공된 180 nm 표준 셀에는 해당 전용 셀이 없었다. T0는 일반 NOR 게이트 래치로 원리를 구현했지만, 배선과 게이트 지연이 생기자 내부 되먹임 회로가 안정적으로 수렴하지 않았다.
-
-### 3.3 T0 검증 결과
+### 3.4 기능·등가성·물리 검증
 
 | 시험 | 결과 | 해석 |
 |---|---:|---|
-| Vivado RTL 기능 시험 | 139 / 139 전달 | 지연이 없는 논리 수준에서는 정상 동작 |
-| Vivado 합성 후 기능 시험 | 139 / 139 전달 | 기능만 확인하는 합성 netlist에서도 전달 완료 |
-| 요청 도착 시점 변화 시험 | 82 / 82 전달 | 기능상 이벤트 수는 일치 |
-| 지연 반영 후 선택 결과 | 82회 중 40회 선택 변화 | 작은 지연 차이만으로 먼저 선택되는 뉴런이 달라짐 |
-| Cadence 유한 지연 시험 | 실패 | 한 전송 중 주소가 반복해서 변함 |
-| Genus 논리 합성 | 제한적 완료 | 되먹임을 끊는 보조 장치가 필요해 정상 동작 시간 계산 불가 |
+| Xcelium main workload | 139 / 139, error 0 | event loss·duplicate 없음 |
+| 경합 stress | 84 trials, error 0 | X 전파·short pulse·event loss 없음 |
+| first-winner shift | 42 / 84 | 먼저 도착한 요청보다 낮은 source 번호가 선택될 수 있음 |
+| Conformal LEC | 26 / 26 equivalent | RTL 21 outputs와 5 state points 모두 합성 netlist와 등가 |
+| Genus loop breaker | 0 | latch가 정상 sequential cell로 인식됨 |
+| Innovus route DRC / connectivity | 0 / 0 | 배선과 연결 검사 통과 |
 
-T0의 RTL 기능 통과만 보면 정상 회로처럼 보인다. 그러나 실제 회로에는 반드시 배선과 게이트 지연이 존재한다. 이 지연을 모사했을 때 주소가 흔들렸으므로 T0를 제작 가능한 최종안으로 판단할 수 없다.
+경합 시험의 winner shift는 오류가 아니라 fixed priority가 FCFS가 아님을 보여준다. 이 결과는 digital model에서 deterministic selection을 확인한 것이며 analog metastability MTBF를 증명하지 않는다.
 
-따라서 T0는 **전통적 AER이 어떻게 동작하고 어디에서 문제가 생기는지를 보여주는 비교 기준**으로 사용한다. T0의 면적과 전력은 정상적인 물리 설계 결과가 아니므로 P3와 숫자로 직접 비교하지 않는다.
+### 3.5 T0-PPA의 유효 범위
+
+T0-PPA의 PPA는 다음 operating contract에서 유효하다.
+
+1. source는 `src_ack`까지 `src_req`를 유지한다.
+2. request set은 delayed grant-capture aperture 동안 안정되어야 한다.
+3. receiver는 주소 capture 후 `aer_ack`를 올린다.
+
+현재 library에 characterized MUTEX가 없으므로 arbitrary near-simultaneous request edge에 대한 metastability-safe arbitration은 주장하지 않는다. 이 한계는 숨기거나 동기식으로 대체하지 않고 전통 baseline의 개선 대상에 남긴다.
+
+그럼에도 T0-PPA는 기능, RTL↔netlist 등가성, latch/delay physical mapping, post-route relative timing, DRC와 connectivity를 완료했으므로 **조건이 명시된 전통적 AER PPA 비교 기준**으로 사용할 수 있다.
 
 ## 4. P3: 안정성·공정성·처리 속도 개선안
 
@@ -155,7 +169,7 @@ P3는 각 요청을 플립플롭 두 개에 차례로 통과시킨다. 첫 번�
 
 ### 4.3 모든 뉴런에 차례가 돌아가는 선택 방식
 
-T0는 항상 0번부터 확인했지만 P3는 마지막으로 처리한 위치의 다음부터 확인한다. 한 번 선택된 위치는 다음 차례에 뒤로 밀리므로 특정 뉴런이 통로를 계속 독점하기 어렵다. 이를 순환 우선순위 방식(round-robin)이라고 한다.
+T0-PPA는 항상 0번부터 확인했지만 P3는 마지막으로 처리한 위치의 다음부터 확인한다. 한 번 선택된 위치는 다음 차례에 뒤로 밀리므로 특정 뉴런이 통로를 계속 독점하기 어렵다. 이를 순환 우선순위 방식(round-robin)이라고 한다.
 
 16개를 한 번에 길게 비교하면 회로가 느리고 커질 수 있다. P3는 다음 두 단계로 나누었다.
 
@@ -208,9 +222,25 @@ P3의 출력에는 주소 하나를 보관하는 대기칸이 있다. 수신기�
 
 ## 7. TSMC 180 nm 물리 설계 결과
 
-P3는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀과 Metal1~Metal6 배선 조건을 사용했다. 목표 clock 주기는 10 ns로 설정했다.
+T0-PPA와 P3 모두 Artisan TSMC 0.18 µm, 1.8 V 표준 셀, Metal1~Metal6, 60% target utilization과 동일한 core ring 조건을 사용했다. T0-PPA는 self-timed relative timing, P3는 10 ns clock setup/hold STA로 평가했다.
 
-### 7.1 논리 합성 결과
+### 7.1 T0-PPA post-route 결과
+
+| 항목 | 결과 | 설명 |
+|---|---:|---|
+| die / core | 92.400 × 85.680 / 51.480 × 45.360 µm | core-only floorplan |
+| post-route cells | 100개 | latch 5개와 delay cell 6개 포함 |
+| cell area | 1,397.088 µm² | 입출력 pad 제외 |
+| placement density | 59.82% | 동일 target utilization |
+| routing overflow | 0.00% | routing resource 초과 없음 |
+| post-route power | 0.03483881 mW | slow 1.62 V, default activity |
+| bundled-data margin | +0.676 ns | slow data 대 fast control 보수 비교 |
+| extracted SPEF nets | 120개 | post-route coupled RC |
+| route DRC / connectivity | 0 / 0 | 배선·연결 검사 통과 |
+
+![T0-PPA TSMC 180 nm Innovus 실제 post-route 화면](../docs/architecture/t0_paa_180nm_innovus_postroute.png)
+
+### 7.2 P3 논리 합성 결과
 
 | 항목 | 결과 | 설명 |
 |---|---:|---|
@@ -220,7 +250,7 @@ P3는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀과 Metal1~Metal6 배선 조건을 
 | 시간 여유 | 6.645 ns | 10 ns 목표에서 남은 여유 |
 | 추정 전력 | 1.13497 mW | 기본 신호 활동률을 사용한 도구 추정 |
 
-### 7.2 배치·배선 결과
+### 7.3 P3 배치·배선 결과
 
 | 항목 | 결과 | 설명 |
 |---|---:|---|
@@ -236,7 +266,7 @@ P3는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀과 Metal1~Metal6 배선 조건을 
 | 배선 오류 | 0개 | Innovus 배선 규칙 검사 |
 | 연결 오류 | 0개 | 끊기거나 잘못 연결된 신호 없음 |
 
-### 7.3 Innovus 실제 화면
+### 7.4 P3 Innovus 실제 화면
 
 아래 이미지는 도식화한 예상도가 아니다. P3의 최종 배치·배선 데이터베이스를 Cadence Innovus에서 복원한 뒤 `gui_dump_picture` 기능으로 직접 출력했다.
 
@@ -248,7 +278,7 @@ P3는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀과 Metal1~Metal6 배선 조건을 
 
 ## 8. T0와 P3 비교
 
-| 비교 항목 | T0 전통적 비동기 구조 | P3 개선 구조 |
+| 비교 항목 | T0-PPA 전통적 비동기 구조 | P3 개선 구조 |
 |---|---|---|
 | 외부 뉴런 요청 | 비동기 | 비동기 |
 | 컨트롤러 내부 | 요청·응답 변화로 직접 동작 | clock에 맞춰 저장·처리 |
@@ -256,11 +286,17 @@ P3는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀과 Metal1~Metal6 배선 조건을 
 | 이벤트 저장 | 없음 | 뉴런마다 1개 |
 | 출력 방식 | 매번 4단계 신호 복귀 | 준비/유효 신호로 연속 전달 |
 | 출력 버스 | 4-bit 1개 | 4-bit 1개 |
-| 게이트 지연 반영 기능 | 주소가 흔들려 실패 | 정상 동작 |
-| 최고 처리율 | 유효한 물리 수치 없음 | clock당 1개 |
-| 180 nm 배치·배선 | 정상 완료 불가 | 오류 없이 완료 |
+| 합성 기능 보존 | Conformal 26/26 equivalent | RTL·gate regression pass |
+| 물리 timing 기준 | bundled-data margin +0.676 ns | setup +3.131 ns, hold +0.027 ns |
+| 최고 처리율 표현 | self-timed, receiver 응답 의존 | ready 시 clock당 1개 |
+| post-route cells | 100 | 311 |
+| post-route cell area | 1,397.088 µm² | 8,981.280 µm² |
+| post-route default power | 0.03483881 mW | 0.924919 mW |
+| 180 nm DRC / connectivity | 0 / 0 | 0 / 0 |
 
-P3의 핵심 개선은 버스를 늘린 것이 아니다. **비동기 요청을 안전하게 받는 입구, 이벤트를 기억하는 대기칸, 공정하게 순번을 돌리는 선택기, 빈 시간을 줄인 출력 구조**를 추가했다.
+P3는 T0-PPA보다 3.11배 많은 cell과 6.43배 큰 cell area를 사용한다. 그 비용으로 **비동기 요청을 내부 clock domain으로 넘기는 입구, 16-event decoupling storage, starvation을 막는 순환 중재와 bubble 없는 출력**을 제공한다.
+
+두 power 값은 같은 slow/default-activity 조건의 tool estimate이므로 물리 복잡도 비교에는 참고할 수 있지만, 실제 spike traffic의 energy/event나 26.55배의 실사용 전력 차이로 단정하지 않는다. 또한 T0-PPA에는 global clock이 없으므로 P3의 Fmax와 동일한 축으로 비교하지 않고 handshake cycle time과 receiver 조건을 함께 제시해야 한다.
 
 ## 9. 2차 과제 연계
 
@@ -277,15 +313,17 @@ P3의 역할은 여러 뉴런에서 발생한 이벤트를 손실 없이 한 줄
 
 ## 10. 결론
 
-T0를 통해 공통 clock 없이 요청과 응답만으로 동작하는 전통적 AER의 원리를 구현했다. 동시에 고정된 처리 순서, 이벤트 저장 공간 부재, 4단계 신호 복귀에 따른 빈 시간과 일반 표준 셀 환경에서의 불안정성을 확인했다.
+T0-PPA는 공통 clock 없이 요청과 응답만으로 진행하는 전통적 AER를 characterized latch와 delay cell로 구현했다. 139개 event accounting, 26개 LEC compare point, post-route bundled-data margin +0.676 ns, DRC와 connectivity 0을 확보해 명시한 request-stability contract 안에서 유효한 물리 비교 기준을 만들었다.
 
 P3는 비동기 요청을 두 단계로 안정화하고, 뉴런마다 이벤트 하나를 기억하며, 모든 뉴런에 차례가 돌아가는 선택 방식을 사용한다. 수신기가 준비된 동안에는 하나의 4-bit 버스로 매 clock마다 이벤트 하나를 전송한다.
 
-기능 시험에서는 139개 이벤트를 손실과 중복 없이 전달했고, 192가지 요청 시점 시험을 모두 통과했다. TSMC 180 nm 배치·배선에서도 동작 시간 조건을 만족했으며 배선과 연결 오류가 발견되지 않았다. 따라서 P3를 본 과제의 최종 AER 컨트롤러로 채택한다.
+P3 기능 시험에서는 139개 이벤트를 손실과 중복 없이 전달했고, 192가지 요청 시점 시험을 모두 통과했다. TSMC 180 nm 배치·배선에서도 동작 시간 조건을 만족했으며 배선과 연결 오류가 발견되지 않았다. T0-PPA보다 큰 area/power 비용은 발생하지만 CDC, event storage, fairness와 연속 출력이라는 개선 효과가 분명하므로 P3를 본 과제의 최종 AER 컨트롤러로 채택한다.
 
 ## 11. 완료 범위와 한계
 
 완료한 범위는 RTL 설계, 기능 시뮬레이션, 논리 합성, TSMC 180 nm 표준 셀 배치·배선과 배치 후 동작 시간 분석이다.
+
+T0-PPA는 request set이 grant-capture aperture 동안 안정되어 있다는 조건이 필요하며, characterized MUTEX가 없으므로 임의의 near-simultaneous edge에 대한 metastability signoff는 완료하지 않았다. 이것은 baseline의 비교 조건이자 P3에서 clock-domain crossing 구조를 선택한 이유다.
 
 다음 항목은 아직 수행하지 않았다.
 
@@ -300,8 +338,10 @@ P3는 비동기 요청을 두 단계로 안정화하고, 뉴런마다 이벤트 
 
 ## 12. 주요 근거 파일
 
-- T0 RTL: [`rtl/traditional_async/aer_traditional_structural.sv`](../rtl/traditional_async/aer_traditional_structural.sv)
-- T0 검증 결과: [`results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md`](../results/TRADITIONAL_STRUCTURAL_T0_2026-08-19.md)
+- T0-PPA RTL: [`rtl/traditional_async/aer_traditional_latch_paa.sv`](../rtl/traditional_async/aer_traditional_latch_paa.sv)
+- T0-PPA 검증 결과: [`results/T0_PAA_TRADITIONAL_AER_2026-08-19.md`](../results/T0_PAA_TRADITIONAL_AER_2026-08-19.md)
+- T0-PAA 180 nm 요약: [`reports/traditional_latch_paa/cadence/pnr_180nm/SUMMARY.txt`](traditional_latch_paa/cadence/pnr_180nm/SUMMARY.txt)
+- T0-PAA 증거 목록: [`results/T0_PAA_MANIFEST_2026-08-19.md`](../results/T0_PAA_MANIFEST_2026-08-19.md)
 - P3 RTL: [`rtl/improved/aer_improved_depth1.sv`](../rtl/improved/aer_improved_depth1.sv)
 - P3 기능 및 비교 결과: [`results/P3_DEPTH1_AER_2026-08-19.md`](../results/P3_DEPTH1_AER_2026-08-19.md)
 - P3 180 nm 요약: [`reports/improved_depth1/cadence/pnr_180nm/SUMMARY.txt`](improved_depth1/cadence/pnr_180nm/SUMMARY.txt)

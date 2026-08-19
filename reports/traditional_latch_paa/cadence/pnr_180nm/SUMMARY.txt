@@ -1,0 +1,66 @@
+design=T0-PPA traditional latch-based clockless AER baseline
+flow=explicit characterized latch/delay cells plus Genus Conformal Innovus
+process=TSMC 0.18um Artisan standard cells
+global_clock=none
+arbitration=fixed priority source 0 highest
+event_storage=none
+output_bus=one 4-bit AER address bus
+receiver_protocol=active-high four-phase return-to-zero
+
+operating_contract=source request held until acknowledge
+operating_contract=request set stable through delayed grant-capture aperture
+metastability_boundary=no characterized MUTEX; arbitrary near-simultaneous request safety not claimed
+
+xcelium_events_offered=139
+xcelium_events_received=139
+xcelium_assertion_errors=0
+xcelium_average_latency_ns=33.935
+xcelium_max_latency_ns=302
+xcelium_saturation_min_gap_ns=5
+xcelium_saturation_max_gap_ns=5
+xcelium_hotspot_source15_latency_ns=62
+
+race_trials=84
+race_errors=0
+race_output_unknown_count=0
+race_short_request_pulse_count=0
+race_first_winner_shift_count=42
+race_interpretation=fixed priority is deterministic but not FCFS
+
+lec_compare_points=26
+lec_equivalent_points=26
+lec_nonequivalent_points=0
+lec_abort_points=0
+lec_unknown_points=0
+
+genus_cells=100
+genus_cell_area_um2=1397.088
+genus_vectorless_power_mw=0.0451046
+genus_delay_cells=6
+genus_latches=5
+genus_loop_breakers=0
+
+die_width_um=92.400
+die_height_um=85.680
+core_width_um=51.480
+core_height_um=45.360
+postroute_cells=100
+postroute_cell_area_um2=1397.088
+placement_density_percent=59.82
+routing_overflow_percent=0.00
+postroute_power_mw=0.03483881
+postroute_spef_d_net_count=120
+postroute_drc_violations=0
+postroute_connectivity_problems=0
+
+bundled_data_address_late_slow_ns=1.915
+bundled_data_control_early_fast_ns=2.591
+bundled_data_conservative_margin_ns=0.676
+busy_to_request_early_fast_ns=0.380
+external_path_budget_ns=5.000
+worst_constrained_path_slack_ns=4.076
+
+NOTE=T0-PPA is a physically implementable traditional comparison baseline under its explicit request-stability contract.
+NOTE=It is not a replacement for a characterized MUTEX-based fully asynchronous arbiter.
+NOTE=As a self-timed design it has no meaningful global-clock Fmax; event rate depends on the complete request/acknowledge environment.
+NOTE=Default-activity power is not measured energy per event.

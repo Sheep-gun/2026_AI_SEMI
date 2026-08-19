@@ -1,0 +1,82 @@
+*----------------------------------------------------------------------------------------
+*	Innovus 23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+*	
+*
+* 	Date & Time:	2026-Aug-19 23:32:52 (2026-Aug-19 14:32:52 GMT)
+*
+*----------------------------------------------------------------------------------------
+*
+*	Design: aer_traditional_latch_paa
+*
+*	Liberty Libraries used: 
+*	        setup_view: $AER_PDK_ROOT/lib/slow.lib
+*
+*	Power Domain used: 
+*              Rail:        VDD      Voltage:       1.62 
+*
+*       Power View : setup_view
+*
+*       User-Defined Activity : N.A.
+*
+*       Activity File: N.A.
+*
+*       Hierarchical Global Activity: N.A.
+*
+*       Global Activity: N.A.
+*
+*       Sequential Element Activity: N.A.
+*
+*       Primary Input Activity: 0.200000
+*
+*       Default icg ratio: N.A.
+*
+*       Global Comb ClockGate Ratio: N.A.
+*
+*	Power Units = 1mW
+*
+*	Time Units = 1e-09 secs 
+*
+*       report_power -outfile reports/postroute_power.rpt
+*
+-----------------------------------------------------------------------------------------
+
+
+Total Power 
+-----------------------------------------------------------------------------------------
+Total Internal Power:        0.02041620 	   58.6019%
+Total Switching Power:       0.01438802 	   41.2988%
+Total Leakage Power:         0.00003458 	    0.0993%
+Total Power:                 0.03483881 
+-----------------------------------------------------------------------------------------
+
+
+Group                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+Sequential                      0.005606    0.003154   4.312e-06    0.008764       25.16 
+Macro                                  0           0           0           0           0 
+IO                                     0           0           0           0           0 
+Combinational                    0.01481     0.01123   3.027e-05     0.02607       74.84 
+Clock (Combinational)                  0           0           0           0           0 
+Clock (Sequential)                     0           0           0           0           0 
+-----------------------------------------------------------------------------------------
+Total                            0.02042     0.01439   3.458e-05     0.03484         100 
+-----------------------------------------------------------------------------------------
+
+
+Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+VDD                      1.62    0.02042     0.01439   3.458e-05     0.03484         100 
+
+
+-----------------------------------------------------------------------------------------
+*	Power Distribution Summary: 
+*                Highest Average Power: g_grant_latch[0].grant_latch (TLATNRX1):          0.00264 
+*                Highest Leakage Power:                busy_latch (TLATRX1):        8.652e-07 
+*          Total Cap:      8.60636e-13 F
+*          Total instances in design:   100
+*          Total instances in design with no power:     0
+*          Total instances in design with no activity:     0
+*          Total Fillers and Decap:     0
+-----------------------------------------------------------------------------------------

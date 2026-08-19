@@ -187,3 +187,13 @@ All times are Asia/Seoul unless otherwise stated.
 - Rejected complete pending-bit removal from the equal-function comparison because it prevents early source acknowledgement during receiver stalls and removes the verified 16-event decoupling capacity.
 - Reopened the saved P3 RC-preserving Innovus database under Xvfb and exported a native 1800×1400 post-route PNG with `gui_dump_picture`; the image and capture script are now recorded in the P3 evidence manifest.
 - Rewrote the public README and competition report around plain-language T0/P3 explanations, corrected the baseline SVG to match the clockless T0 structure, localized the four-phase flow, and added a dedicated P3 architecture SVG.
+
+### T0-PPA physically comparable traditional asynchronous baseline
+
+- Replaced the structural cross-coupled-NOR storage implementation with five characterized TSMC 180 nm transparent latch cells while retaining no global clock, fixed priority, no FIFO, one 4-bit bus and active-high four-phase handshakes.
+- Preserved five `DLY4X1` cells on the grant-capture control path and one additional request-launch delay cell. No `cdn_loop_breaker` appears in the Genus or Innovus netlists.
+- Vivado and Cadence Xcelium main workloads passed 139/139 events with zero assertions. The 84-trial skew/X-window stress had zero event, unknown or pulse errors; 42 first-winner shifts document fixed-priority rather than FCFS behavior.
+- Conformal LEC passed all 21 output and five state compare points with zero nonequivalent, abort or unknown points.
+- Post-route conservative bundled-data analysis measured 1.915 ns latest slow address-data arrival versus 2.591 ns earliest fast capture-control arrival, giving +0.676 ns relative margin before the additional latch/request delay.
+- Genus mapped 100 cells, area 1,397.088 µm² and vectorless power 0.0451046 mW. Innovus preserved 100 cells and the six delay cells, with 1,397.088 µm² cell area, 59.82% density, 0.03483881 mW slow/default-activity power, 120 SPEF nets, DRC 0 and connectivity 0.
+- Recorded the validity boundary: this is a PPA-qualified traditional baseline under a held-request and stable-capture-aperture contract, not a characterized-MUTEX proof for arbitrary near-simultaneous analog edges.
