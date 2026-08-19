@@ -197,3 +197,13 @@ All times are Asia/Seoul unless otherwise stated.
 - Post-route conservative bundled-data analysis measured 1.915 ns latest slow address-data arrival versus 2.591 ns earliest fast capture-control arrival, giving +0.676 ns relative margin before the additional latch/request delay.
 - Genus mapped 100 cells, area 1,397.088 µm² and vectorless power 0.0451046 mW. Innovus preserved 100 cells and the six delay cells, with 1,397.088 µm² cell area, 59.82% density, 0.03483881 mW slow/default-activity power, 120 SPEF nets, DRC 0 and connectivity 0.
 - Recorded the validity boundary: this is a PPA-qualified traditional baseline under a held-request and stable-capture-aperture contract, not a characterized-MUTEX proof for arbitrary near-simultaneous analog edges.
+
+### P4 cut-through and homeostatic exploration
+
+- Identified P3's fixed service bubble: a synchronized request was written to `pending_q` and became eligible only in the following arbitration cycle.
+- Implemented P4-C so the newly accepted `pending_d` participates in the same next-state arbitration decision. It retained 2FF CDC, sixteen one-event pending slots, hierarchical round-robin, one 4-bit output lane and 1 event/cycle peak throughput.
+- P4-C passed Vivado RTL/post-synthesis main, 192-phase CDC and 16-source order tests, plus Cadence Xcelium 139/139 main, 192/192 CDC and 16/16 order tests. Conformal LEC passed all 100 compare points.
+- Against P3, average latency improved 4.70% (16.517 to 15.741 cycles), maximum latency 3.45% (29 to 28) and source-15 hotspot latency 25% (4 to 3).
+- P4-C Genus used 308 cells, area 8,568.807 µm², 2.990 ns data path and 1.16579 mW vectorless power. Post-route used 362 cells, area 9,353.837 µm², setup +3.547 ns, hold +0.004 ns, default-activity power 0.96067953 mW, DRC 0 and connectivity 0.
+- Explored P4-H homeostatic backpressure steering. It moved the group pointer toward aged backlog during receiver stalls and demonstrated `15 blocker -> 5 aged -> 0 fresh`, but post-route cost rose to 391 cells, 10,039.075 µm² and 1.02219972 mW. It was retained as a QoS research extension rather than the main design.
+- Selected P4-C as the new main improved controller because it improves latency and setup margin with only 4.15% post-route area and 3.87% default-power increases over P3.

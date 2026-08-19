@@ -144,6 +144,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P3 is the current smallest verified balance under the fixed functionality. Further reductions require an explicit interface or buffering trade-off and must be reported as a different operating point, not a free PPA improvement.
 
+## DD-019: Replace P3 with P4-C cut-through scheduling
+
+**Decision:** Preserve P3's interface, 2FF CDC, sixteen depth-1 pending slots, parallel 4x4 round-robin and single valid/ready output, but make a newly accepted `pending_d` event eligible in the same next-state arbitration decision.
+
+**Why:** P3 imposed one pending-register cycle even when the output could accept an event. P4-C removes that fixed service bubble without adding a bus, queue entry or pipeline stage. It passed RTL/post-synthesis/Xcelium main, CDC and order regressions plus 100/100 Conformal compare points. Versus P3 it reduces average latency 4.70%, maximum latency 3.45% and hotspot latency 25%; post-route area and default power rise 4.15% and 3.87%, while setup slack improves 13.29%.
+
+**Consequence:** P4-C replaces P3 as the main improved controller. P4-H homeostatic stall-time pointer steering is retained as a QoS research extension because it improves aged-group recovery order but costs 391 cells, 10,039.075 µm² and 1.02219972 mW post-route.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |
@@ -156,3 +164,5 @@ These are design targets until simulation and synthesis produce measured evidenc
 | Burst/delta address encoding | Fewer transferred address bits for local bursts | Workload dependence, packet state, escape cases | Trace-driven stretch goal |
 | Timestamp/polarity/payload | More expressive events | Wider datapath and higher switching | Functional extension only |
 | Congestion indication | Earlier throttling and observability | Threshold tuning and extra status paths | Add counters first |
+| Cut-through pending next-state | Removes one fixed service cycle without more buffering | Longer same-cycle next-state dependency | Selected as P4-C |
+| Homeostatic stall steering | Aged backlog resumes before fresh groups | Extra age state and physical area | Research extension |

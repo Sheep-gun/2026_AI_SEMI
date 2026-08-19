@@ -129,6 +129,11 @@ Two implementations are now preserved:
 - [x] P3 depth-1 pending-buffer optimization completed: all RTL/post-synthesis/Xcelium regressions passed with 1 event/cycle, average latency 16.517 cycles and maximum latency 29 cycles.
 - [x] P3 matched 180 nm P&R completed: 311 cells, area 8,981.280 µm², setup +3.131 ns, hold +0.027 ns, power 0.924919 mW, DRC/connectivity problems 0.
 - [x] P3 replaces P2 as the current balanced main design, reducing P2 post-route area 24.0% and power 19.7% while preserving throughput and fairness.
+- [x] T0-PPA latch/delay-cell baseline completed: 100 post-route cells, 1,397.088 µm², bundled-data margin +0.676 ns, DRC/connectivity 0 under the explicit stable-capture-aperture contract.
+- [x] P4-C cut-through controller completed: 139/139 main, 192/192 CDC, 16/16 order and 100/100 LEC compare points passed.
+- [x] P4-C matched 180 nm P&R completed: 362 cells, area 9,353.837 µm², setup +3.547 ns, hold +0.004 ns, power 0.960680 mW, DRC/connectivity 0.
+- [x] P4-C replaces P3 as the main improved controller: average latency -4.70%, maximum latency -3.45%, hotspot latency -25%, post-route area +4.15% and default power +3.87% versus P3.
+- [x] P4-H homeostatic stall steering demonstrated aged-group priority but was retained as a QoS research extension due to higher PPA cost.
 
 ## Evidence labels
 

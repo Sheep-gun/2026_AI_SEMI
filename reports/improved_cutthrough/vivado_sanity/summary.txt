@@ -1,0 +1,4 @@
+purpose=P4-C cut-through FPGA synthesis exploration
+estimated_setup_slack_ns=2.546
+estimated_datapath_delay_ns=4.016
+P4C_SYNTH_PASS
