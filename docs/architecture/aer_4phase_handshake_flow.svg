@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="960" viewBox="0 0 1400 960" role="img" aria-labelledby="title desc">
-  <title id="title">전통적 AER의 4단계 요청·응답 흐름</title>
+  <title id="title">전통적 AER 4-Phase Handshake 흐름</title>
   <desc id="desc">뉴런 5, AER 컨트롤러, 수신기 사이에서 source-side request acknowledgement와 receiver-facing four-phase AER request acknowledgement가 순서대로 오가는 시퀀스 다이어그램</desc>
 
   <defs>
@@ -34,8 +34,8 @@
 
   <rect width="1400" height="960" fill="#f8fafc"/>
 
-  <text x="70" y="62" class="title">전통적 AER의 4단계 요청·응답</text>
-  <text x="70" y="94" class="subtitle">공통 clock 없이 두 신호를 주고받아 한 이벤트를 안전하게 전달 · 시간은 위에서 아래로 흐름</text>
+  <text x="70" y="62" class="title">전통적 AER 4-Phase Handshake</text>
+  <text x="70" y="94" class="subtitle">active-high return-to-zero protocol · 공통 clock 없이 REQ/ACK 전이로 transaction 완료를 합의</text>
 
   <!-- Participants -->
   <g filter="url(#shadow)">
@@ -71,8 +71,8 @@
   <text x="935" y="404" text-anchor="middle" class="meaning">주소를 유지하고 전송 요청</text>
   <g>
     <rect x="71" y="350" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
-    <text x="133" y="373" text-anchor="middle" class="phase">1. 요청 올림</text>
-    <text x="133" y="394" text-anchor="middle" class="phase-detail">REQ = 1</text>
+    <text x="133" y="373" text-anchor="middle" class="phase">1. REQ ↑</text>
+    <text x="133" y="394" text-anchor="middle" class="phase-detail">assert · 요청 올림</text>
   </g>
 
   <!-- Phase 2 -->
@@ -81,8 +81,8 @@
   <text x="935" y="489" text-anchor="middle" class="meaning">“주소 5를 받았어”</text>
   <g>
     <rect x="71" y="435" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
-    <text x="133" y="458" text-anchor="middle" class="phase">2. 응답 올림</text>
-    <text x="133" y="479" text-anchor="middle" class="phase-detail">ACK = 1</text>
+    <text x="133" y="458" text-anchor="middle" class="phase">2. ACK ↑</text>
+    <text x="133" y="479" text-anchor="middle" class="phase-detail">assert · 응답 올림</text>
   </g>
 
   <!-- Source acknowledge -->
@@ -103,8 +103,8 @@
   <text x="700" y="728" text-anchor="middle" class="meaning">컨트롤러가 source 응답과 AER 요청을 종료</text>
   <g>
     <rect x="71" y="670" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
-    <text x="133" y="693" text-anchor="middle" class="phase">3. 요청 내림</text>
-    <text x="133" y="714" text-anchor="middle" class="phase-detail">REQ = 0</text>
+    <text x="133" y="693" text-anchor="middle" class="phase">3. REQ ↓</text>
+    <text x="133" y="714" text-anchor="middle" class="phase-detail">release · 요청 내림</text>
   </g>
 
   <!-- Phase 4 -->
@@ -113,8 +113,8 @@
   <text x="935" y="814" text-anchor="middle" class="meaning">수신기도 정리 완료 → 다음 이벤트 가능</text>
   <g>
     <rect x="71" y="760" width="124" height="54" rx="12" fill="#fff7ed" stroke="#fb923c"/>
-    <text x="133" y="783" text-anchor="middle" class="phase">4. 응답 내림</text>
-    <text x="133" y="804" text-anchor="middle" class="phase-detail">ACK = 0</text>
+    <text x="133" y="783" text-anchor="middle" class="phase">4. ACK ↓</text>
+    <text x="133" y="804" text-anchor="middle" class="phase-detail">release · 응답 내림</text>
   </g>
 
   <!-- Ready line -->
