@@ -96,6 +96,22 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** Genus vectorless power is the official comparison value. The 1.33562 mW VCD result is auxiliary and is always accompanied by its 15.43% driver-net, 63.63% RTL-driver and 0% MDA-queue coverage.
 
+## DD-013: Replace the flat P1 scheduler with parallel 4x4 hierarchical round-robin
+
+**Decision:** Keep P1's asynchronous source boundary, synchronizers, per-source depth-2 queues and elastic output, but compute four local 4-way winners in parallel and select one with a global 4-way round-robin pointer.
+
+**Why:** A first serial group-then-local implementation improved FPGA results but regressed the 2 ns ASIC point. Parallel local winner computation removed that serial dependency. The final P2 kept all functional metrics while reducing FPGA LUTs by 28.5%, meeting the 10 ns FPGA constraint, reducing 10 ns ASIC area/power slightly, and reducing 2 ns ASIC area by 14.7%.
+
+**Consequence:** P2 replaces P1 as the current main contest design. P1 remains the ablation reference that attributes the measured gain to scheduler structure alone. Activity-based power remains a caution because low-coverage VCD analysis was higher for P2 despite lower vectorless power.
+
+## DD-014: Reject an equal-capacity shared FIFO in the standard-cell first-round design
+
+**Decision:** Retain source-local event counts rather than implementing a central address FIFO for the same 32-event capacity.
+
+**Why:** Source identity is implicit in each local counter, so P1/P2 represent 32 queued events with 32 count bits. A 32-entry central FIFO requires 128 address payload bits plus pointers/count and still needs an admission arbiter for simultaneous requests. A depth-8 FIFO would use fewer bits only by cutting total capacity by 75%, which is not an equal comparison.
+
+**Consequence:** Shared FIFO is reconsidered only with an SRAM macro or a workload contract that justifies lower total occupancy. It is not presented as an area improvement under the current standard-cell constraints.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

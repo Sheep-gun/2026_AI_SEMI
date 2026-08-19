@@ -1,0 +1,57 @@
+design=P2 parallel 4x4 hierarchical round-robin AER
+rtl=aer_improved_hierarchical
+library=typical 1.0
+corner=typical
+
+P2_XCELIUM_MAIN=PASS
+events_offered=139
+events_accepted=139
+events_received=139
+assertion_errors=0
+saturation_min_gap_cycles=1
+saturation_max_gap_cycles=1
+hotspot_source15_latency_cycles=4
+average_latency_cycles_x1000=18438
+maximum_latency_cycles=44
+
+P2_XCELIUM_CDC_PHASE=PASS
+cdc_phase_trials=192
+cdc_phase_received=192
+cdc_phase_errors=0
+
+P2_XCELIUM_ORDER=PASS
+order_events=16
+order_errors=0
+reset_order=0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15
+
+P2_GENUS_10NS=PASS
+cell_count=450
+cell_area=11386.267
+sequential_cells=95
+sequential_area=7035.336
+worst_data_path_ps=3396
+worst_slack_ps=6132
+vectorless_power_w=1.64037e-03
+
+P2_GENUS_2NS=PASS
+cell_count_2ns=510
+cell_area_2ns=13229.093
+worst_data_path_2ns_ps=1542
+worst_slack_2ns_ps=0
+synthesis_frequency_mhz=500
+
+P2_GENUS_1P8NS=PASS
+cell_count_1p8ns=553
+cell_area_1p8ns=14177.117
+worst_data_path_1p8ns_ps=1638
+worst_slack_1p8ns_ps=0
+synthesis_frequency_mhz_1p8ns=555.556
+
+P2_VCD_POWER_AUXILIARY=1.70590e-03 W
+vcd_driver_net_coverage_percent=15.56
+vcd_rtl_driver_net_coverage_percent=60.00
+vcd_mda_queue_coverage_percent=0.00
+vcd_power_status=AUXILIARY_ONLY_LOW_INTERNAL_COVERAGE
+
+NOTE=P2 preserves P1 source CDC, depth-2 queues, output protocol, throughput and latency.
+NOTE=The 1.8 ns point is synthesis timing only, not post-layout signoff Fmax.

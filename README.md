@@ -3,7 +3,7 @@
 팀 **최태원의 검**의 디지털 1차 설계 수행과제 저장소다. Bio-mimic Neuron을 위한 전통적 AER 통신 구조를 분석하고, 병목을 한 단계씩 개선한 뒤 동일 조건에서 기능·성능·PPA를 비교한다.
 
 - 1차 제출일: **2026년 8월 28일**
-- 현재 기준점: **T0 전통 clockless baseline**과 **P1 buffered round-robin hybrid 개선본**
+- 현재 기준점: **T0 전통 clockless baseline**과 **P2 계층형 buffered round-robin 개선본**
 - 합성 대상: AER 컨트롤러 RTL
 - testbench model: 뉴런 event source와 receiver
 - 범위 밖: ECG, SNN ECG Classifier, 이전 ECG SoC의 RTL과 구조
@@ -21,6 +21,7 @@
 | `B3` | registered elastic `valid/ready` output | 4-phase return-to-zero bubble 제거 |
 | `T0` | 구조적 latch 기반 clockless fixed-priority AER | 전통 구조의 실제 안정성·합성 한계 측정 |
 | `P1` | 비동기 4-phase 입력 + CDC + round-robin + depth-2 queue + elastic output | 안정성·공정성·burst·throughput·PPA 종합 개선 |
+| `P2` | P1의 flat 16-way scheduler를 병렬 4×4 계층형으로 교체 | 기능 유지, arbiter timing·area 최적화 |
 
 단계별 비교에서 source 수, 주소 폭, 단일 output lane, event traffic, receiver backpressure trace와 검증 기준을 고정한다. B1에서는 FIFO나 receiver protocol을 함께 바꾸지 않는다.
 
@@ -166,7 +167,28 @@ T0의 작은 area/power는 정상 timing closure가 가능한 동일 기능 구�
 - 비교표: [`results/T0_P1_COMPARISON_2026-08-19.md`](results/T0_P1_COMPARISON_2026-08-19.md)
 - evidence hash: [`results/T0_P1_MANIFEST_2026-08-19.md`](results/T0_P1_MANIFEST_2026-08-19.md)
 
-## 8. 재현 방법
+## 8. P2 계층형 arbiter 최적화
+
+P2는 P1의 CDC, depth-2 queue, round-robin 정책과 elastic output을 유지하고 scheduler 구현만 바꿨다. 네 개 group이 local winner를 병렬 계산하고 global round-robin이 group 하나를 고른다.
+
+| 항목 | P1 | P2 |
+|---|---:|---:|
+| 기능 / CDC error | 0 | 0 |
+| steady throughput | 1 event/cycle | 1 event/cycle |
+| FPGA LUT | 207 | 148 |
+| FPGA 10 ns WNS | -0.813 ns | +1.735 ns |
+| Genus 10 ns area | 11,605.810 | 11,386.267 |
+| Genus 10 ns vectorless power | 1.66431 mW | 1.64037 mW |
+| Genus 2 ns area | 15,511.003 | 13,229.093 |
+| fastest tested synthesis point | 2.0 ns | 1.8 ns |
+
+P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area를 14.7% 줄였다. 1.8 ns 합성점은 약 555.6 MHz에 해당하지만 post-layout signoff 값은 아니다.
+
+- P2 상세: [`results/P2_HIERARCHICAL_AER_2026-08-19.md`](results/P2_HIERARCHICAL_AER_2026-08-19.md)
+- P1/P2 비교: [`results/P1_P2_COMPARISON_2026-08-19.md`](results/P1_P2_COMPARISON_2026-08-19.md)
+- P2 evidence hash: [`results/P2_MANIFEST_2026-08-19.md`](results/P2_MANIFEST_2026-08-19.md)
+
+## 9. 재현 방법
 
 PowerShell에서 저장소 root를 기준으로 실행한다.
 
@@ -186,6 +208,13 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 .\scripts\run_improved_gate.ps1
 .\scripts\run_improved_cdc_phase.ps1 -Mode rtl
 .\scripts\run_improved_cdc_phase.ps1 -Mode gate
+.\scripts\run_improved_hierarchical.ps1
+.\scripts\run_vivado_synth_improved_hierarchical.ps1
+.\scripts\run_improved_hierarchical_gate.ps1
+.\scripts\run_improved_hierarchical_cdc_phase.ps1 -Mode rtl
+.\scripts\run_improved_hierarchical_cdc_phase.ps1 -Mode gate
+.\scripts\run_improved_hierarchical_order.ps1 -Mode rtl
+.\scripts\run_improved_hierarchical_order.ps1 -Mode gate
 ```
 
 - 시뮬레이션 결과: `sim/logs/`, `sim/waves/`
@@ -196,13 +225,14 @@ PowerShell에서 저장소 root를 기준으로 실행한다.
 
 일상적인 재검증은 manifest-bound 원본을 덮어쓰지 않도록 격리 작업공간에서 수행한다. RTL 버그 수정이 필요하면 `B0-v2`와 새 dated manifest를 만든다.
 
-## 9. 저장소 구성
+## 10. 저장소 구성
 
 ```text
 rtl/baseline/       B0-v1 합성 가능 RTL
 rtl/async_baseline/ A0-functional clockless latch RTL
 rtl/traditional_async/ T0 구조적 clockless RTL
 rtl/improved/       P1 hybrid 개선 RTL
+                    P2 계층형 scheduler 최적화 RTL
 tb/                 self-checking testbench
 scripts/            XSIM·Vivado·Cadence 환경 확인 스크립트
 docs/requirements/  고정 비교 조건과 평가 지표
@@ -214,7 +244,7 @@ reports/            보존할 핵심 text report와 synthesis checkpoint
 
 상세 범위와 확인/미확인 상태는 [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md), 설계 선택의 근거는 [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md), 실행 이력은 [`WORKLOG.md`](WORKLOG.md)에 기록한다.
 
-## 10. 결과 해석 원칙
+## 11. 결과 해석 원칙
 
 - 확인된 측정값, 설계 결정, 가정, 미확인 사항을 구분한다.
 - simulation 기능 정확도와 synthesis PPA를 섞지 않는다.

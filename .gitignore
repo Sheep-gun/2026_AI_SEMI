@@ -15,6 +15,12 @@
 /sim/improved_gate_work/
 /sim/improved_cdc_phase_rtl_work/
 /sim/improved_cdc_phase_gate_work/
+/sim/improved_hierarchical_work/
+/sim/improved_hierarchical_gate_work/
+/sim/improved_hierarchical_cdc_rtl_work/
+/sim/improved_hierarchical_cdc_gate_work/
+/sim/improved_hierarchical_order_rtl_work/
+/sim/improved_hierarchical_order_gate_work/
 **/xsim.dir/
 *.wdb
 *.pb
@@ -58,6 +64,8 @@ innovus.log*
 /reports/improved/cadence/final/reports/sweep_*/
 !/reports/improved/cadence/final/reports/sweep_2p0ns/
 !/reports/improved/cadence/final/reports/sweep_2p0ns/**
+/reports/improved_hierarchical/cadence/p2_final_artifacts.tgz
+/reports/improved_hierarchical/cadence/final/logs/
 
 # Other local simulator products
 *.vvp

@@ -84,6 +84,14 @@ Two implementations are now preserved:
 - Source-facing 4-phase request/acknowledge boundary and two-flop request synchronizers are included in P1 PPA so the asynchronous input cost is not hidden.
 - Two-lane banking and delta/burst compression are stretch experiments, not part of the first frozen comparison.
 
+### Implemented P2 optimization
+
+- P1 interface, CDC, queue depth, output protocol, traffic and constraints remain fixed.
+- Four local 4-way round-robin winners are computed in parallel.
+- One global 4-way round-robin selects among valid groups.
+- P2 is the current main design candidate because it preserves P1 behavior while reducing FPGA LUTs and high-speed ASIC area.
+- Equal-capacity shared FIFO is rejected for the standard-cell first-round comparison: implicit per-source counts use 32 storage bits for 32 events, while an explicit 32-entry address FIFO needs at least 128 payload bits plus pointers and admission arbitration.
+
 ## Status as of 2026-08-19
 
 - [x] Orientation PDF pages 2-3 inspected.
@@ -108,6 +116,10 @@ Two implementations are now preserved:
 - [x] P1 main workload passed Vivado RTL, Vivado post-synthesis and Cadence Xcelium with 139/139 events and zero assertions.
 - [x] P1 CDC phase sweep passed 192/192 trials in Vivado RTL, Vivado post-synthesis and Cadence Xcelium.
 - [x] Cadence P1 synthesis, timing, area, and power completed: 10 ns area 11,605.810, vectorless power 1.66431 mW, 2 ns synthesis point reached with area 15,511.003.
+- [x] P2 parallel 4x4 hierarchical scheduler implemented and passed the same 139-event main workload, 192 CDC phases and an explicit 16-source order test in RTL, post-synthesis and Xcelium.
+- [x] P2 Vivado sanity improved from 207 to 148 LUT and from WNS -0.813 ns to +1.735 ns while preserving 1 event/cycle.
+- [x] P2 Genus 10 ns produced area 11,386.267 and vectorless power 1.64037 mW; the 2 ns area fell to 13,229.093 and a 1.8 ns synthesis point was reached.
+- [x] P2 selected as the current main design; equal-capacity shared FIFO rejected as a non-competitive standard-cell storage representation.
 
 ## Evidence labels
 

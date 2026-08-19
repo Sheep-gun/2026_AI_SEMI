@@ -140,3 +140,15 @@ All times are Asia/Seoul unless otherwise stated.
 - Genus 2 ns mapping produced 676 cells, area 15,511.003, worst data path 1.799 ns and zero slack. This is synthesis evidence for a 500 MHz point, not post-layout signoff Fmax.
 - VCD power was 1.33562 mW but internal mapping coverage was incomplete, so it remains auxiliary. A queue-flattening experiment improved signal visibility but regressed FPGA mapping from 207 to 347 LUT and was rejected.
 - Recorded the broad design comparison in `results/T0_P1_COMPARISON_2026-08-19.md`: P1 improves implementation stability, fairness, burst absorption, backpressure decoupling and throughput at an explicit area/power cost.
+
+### P2 parallel 4x4 hierarchical scheduler optimization
+
+- Held the P1 source interface, CDC, depth-2 queues, elastic output, workload and constraints fixed; changed only the flat 16-way scheduler.
+- The first group-then-local serial implementation passed function but failed the 2 ns Genus target with -201 ps slack and area 18,281.895. It was rejected before commit.
+- Reworked P2 so all four local 4-way winners are computed in parallel and the global arbiter selects one candidate. RTL main and CDC tests again passed without metric changes.
+- Added an explicit 16-source order test. RTL, post-synthesis and Xcelium each produced 16/16 events with zero error in order `0,4,8,12,1,5,9,13,2,6,10,14,3,7,11,15`.
+- Final Vivado result: 148 LUT, 95 FF, WNS +1.735 ns and data path 8.114 ns at the 10 ns sanity constraint. P1 used 207 LUT, 89 FF and had WNS -0.813 ns.
+- Final Genus 10 ns result: 450 cells, area 11,386.267, data path 3.396 ns, slack +6.132 ns and vectorless power 1.64037 mW.
+- Final Genus 2 ns result: 510 cells, area 13,229.093, data path 1.542 ns and zero slack. P2 also reached a 1.8 ns synthesis point with area 14,177.117.
+- VCD auxiliary power was 1.70590 mW with only 15.56% driver-net and 0% queue-MDA coverage. It is retained as a possible switching warning, not an absolute power claim.
+- Rejected an equal-capacity shared FIFO because explicit 4-bit addresses require at least four times the event-storage bits of implicit per-source counts before pointers and arbitration.

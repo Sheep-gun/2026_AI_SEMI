@@ -1,0 +1,51 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Wed Aug 19 12:12:22 2026
+# Process ID: 52248
+# Current directory: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/improved_hierarchical_work
+# Command line: xsim.exe -log ../logs/improved_hierarchical.log -mode tcl -source {xsim.dir/improved_hierarchical_sim/xsim_script.tcl}
+# Log file: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/improved_hierarchical_work/../logs/improved_hierarchical.log
+# Journal file: C:/Users/YangGeon/Documents/2026_AI_SEMI/sim/improved_hierarchical_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/improved_hierarchical_sim/xsim_script.tcl
+# xsim {improved_hierarchical_sim} -autoloadwcfg -tclbatch {../../scripts/xsim_improved_hierarchical.tcl}
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+source ../../scripts/xsim_improved_hierarchical.tcl
+## log_wave -recursive *
+WARNING: [Simtcl 6-197] One or more HDL objects could not be logged because of object type or size limitations.  To see details please rerun the command with -verbose (-v).
+## open_vcd ../waves/aer_improved_hierarchical.vcd
+## log_vcd [get_objects -r /aer_improved_hybrid_tb/*]
+INFO: HDL object /aer_improved_hybrid_tb/issue_head is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_improved_hybrid_tb/issue_tail is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_improved_hybrid_tb/issue_cycle is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_improved_hybrid_tb/request_start_cycle is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+INFO: HDL object /aer_improved_hybrid_tb/received_by_source is an unpacked array. VCD does not support unpacked array type according to IEEE LRM 1800-2009, section21.7.5.
+## run all
+TEST_START improved_single_event
+TEST_START improved_simultaneous_all_sources
+TEST_START improved_burst_source_5
+TEST_START improved_receiver_stall
+TEST_START improved_no_stall_saturation
+METRIC improved_saturation_events=64
+METRIC improved_saturation_elapsed_cycles=68
+METRIC improved_saturation_gap_sum_cycles=63
+METRIC improved_saturation_min_gap_cycles=1
+METRIC improved_saturation_max_gap_cycles=1
+TEST_START improved_hotspot_round_robin
+METRIC improved_hotspot_source15_latency_cycles=4
+TEST_START improved_reset_held_request
+TEST_START improved_independent_streams
+METRIC improved_events_offered=139
+METRIC improved_events_accepted=139
+METRIC improved_events_received=139
+METRIC improved_avg_latency_cycles_x1000=18438
+METRIC improved_max_latency_cycles=44
+METRIC improved_assertion_errors=0
+TEST_PASS improved issued=139 received=139
+$finish called at time : 2905 ns : File "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_improved_hybrid_tb.sv" Line 354
+## close_vcd
+## quit
+INFO: [Common 17-206] Exiting xsim at Wed Aug 19 12:12:24 2026...
