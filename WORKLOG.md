@@ -166,3 +166,11 @@ All times are Asia/Seoul unless otherwise stated.
 - Recorded the boundary: this is digital core P&R, not pad/package or foundry GDS/DRC/LVS signoff. Required GDS/CDL, stream-out map, rule decks and standard-cell Verilog models were not found.
 - Rendered two reviewable PNGs directly from the final DEF: placement/power-grid view and full Metal1-Metal6 post-route view. The renderer verifies that all 476 components are present before writing images.
 - Restored the final RC-preserving Innovus database under Xvfb and used Innovus `gui_dump_picture` directly to export a native 1800×1400 post-route screenshot.
+
+### B0-v1 matched 180 nm physical baseline
+
+- Identified that P2-only Innovus evidence was insufficient for a fair physical comparison. T0 remains physically invalid because of feedback-loop instability, so B0-v1 was selected as the implementable traditional reference.
+- Added scan-free B0 Genus, SDC, MMMC and Innovus scripts using the same 180 nm kit, 10 ns clock, 0.2 ns uncertainty, 60% target utilization, VDD/VSS core ring, CTS/hold optimization and post-route coupled extraction as P2.
+- B0 Genus produced 94 cells, area 1,573.387 and worst data path 0.940 ns. Innovus completed with setup +6.704 ns, hold +0.103 ns, route DRC 0 and connectivity problems 0.
+- B0 post-route used 94 cells, cell area 1,573.387 µm², density 59.87%, default-activity power 0.08285847 mW and 113 SPEF nets.
+- Matched comparison showed P2 at 7.51× area and 13.90× default-activity power, while improving peak throughput 4×, average latency 37.8%, maximum latency 95.1% and source-15 hotspot latency 91.8%.

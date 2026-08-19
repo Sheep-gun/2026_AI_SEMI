@@ -124,6 +124,8 @@ Two implementations are now preserved:
 - [x] P2 scan-free physical netlist completed and routed in Innovus with a VDD/VSS core ring, CTS, post-CTS hold fixing and post-route coupled RC extraction.
 - [x] 180 nm post-route result: 476 cells, area 11,812.046 µm², setup +2.721 ns, hold +0.033 ns, route DRC 0, connectivity problems 0, SPEF 504 nets.
 - [ ] Foundry GDS stream-out, signoff DRC/LVS/antenna/metal fill and post-route gate simulation remain blocked by missing standard-cell GDS/CDL, rule decks and cell simulation models.
+- [x] B0-v1 was completed through the same scan-free 180 nm Genus/Innovus physical flow: 94 cells, area 1,573.387 µm², setup +6.704 ns, hold +0.103 ns, route DRC/connectivity problems 0.
+- [x] Fair physical comparison completed: P2 provides 4× throughput and major latency/fairness gains at 7.51× cell area and 13.90× default-activity power versus B0-v1.
 
 ## Evidence labels
 

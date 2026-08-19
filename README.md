@@ -207,9 +207,23 @@ P2는 FPGA 100 MHz sanity를 만족했고, 동일 2 ns ASIC 합성점에서 area
 
 ![P2 TSMC 180 nm Innovus native post-route layout](docs/architecture/p2_180nm_innovus_native.png)
 
+### 동일 physical flow의 B0-v1 비교
+
+| 항목 | B0-v1 | P2 |
+|---|---:|---:|
+| cell area | 1,573.387 µm² | 11,812.046 µm² |
+| default-activity power | 0.082858 mW | 1.151400 mW |
+| setup / hold slack | +6.704 / +0.103 ns | +2.721 / +0.033 ns |
+| peak throughput | 0.25 event/cycle | 1 event/cycle |
+| maximum latency | 901 cycles | 44 cycles |
+
+P2는 throughput·fairness·latency·buffering을 개선하는 대신 area와 power를 지불한다. 따라서 “PPA가 전부 좋아졌다”가 아니라 “성능과 강건성을 위한 명시적 trade-off”로 해석한다.
+
 - 상세 결과: [`results/P2_180NM_PNR_2026-08-19.md`](results/P2_180NM_PNR_2026-08-19.md)
 - sanitized summary: [`reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt`](reports/improved_hierarchical/cadence/pnr_180nm/SUMMARY.txt)
 - evidence hash: [`results/P2_180NM_PNR_MANIFEST_2026-08-19.md`](results/P2_180NM_PNR_MANIFEST_2026-08-19.md)
+- B0/P2 physical 비교: [`results/B0_P2_180NM_PHYSICAL_COMPARISON_2026-08-19.md`](results/B0_P2_180NM_PHYSICAL_COMPARISON_2026-08-19.md)
+- B0 physical evidence hash: [`results/B0_180NM_PNR_MANIFEST_2026-08-19.md`](results/B0_180NM_PNR_MANIFEST_2026-08-19.md)
 
 ## 10. 재현 방법
 

@@ -120,6 +120,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P2 now has a verified 180 nm physical implementation point. It is not a pad-ring/package design and Innovus route DRC 0 is not represented as foundry signoff. Missing PDK collateral is a concrete organizer follow-up item.
 
+## DD-016: Use B0-v1, not unstable T0, for apples-to-apples physical PPA
+
+**Decision:** Preserve T0 as the true clockless protocol baseline and its physical-flow failure, while using the synchronous B0-v1 fixed-priority/no-FIFO/four-phase controller as the TSMC 0.18um physical reference for P2.
+
+**Why:** T0 cannot produce meaningful STA or stable finite-delay simulation without a characterized MUTEX and asynchronous signoff flow. B0-v1 preserves the architectural bottlenecks under comparison and can traverse the exact same scan-free Genus and Innovus flow as P2.
+
+**Consequence:** P2 is no longer described as a universal PPA improvement. At matched 100 MHz post-route conditions it delivers 4× throughput and much lower latency/starvation risk, but uses 7.51× cell area and 13.90× default-activity power. Future work must reduce queue and CDC overhead.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |
