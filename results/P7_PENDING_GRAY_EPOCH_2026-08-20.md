@@ -1,5 +1,13 @@
 # P7-GE pending Gray-epoch AER 검증 결과
 
+## 먼저 읽을 핵심
+
+P7-GE는 이전 개선본 P4-C가 제공하던 비동기 요청 동기화, source별 이벤트 대기칸, 조기 ACK와 1 event/clock 출력을 그대로 유지한다. 바뀐 부분은 여러 대기 이벤트 중 다음 전송 대상을 고르는 중재기다.
+
+P4-C는 다음 차례를 기억하기 위해 10 bit의 순번 상태를 사용했다. P7-GE는 이를 4-bit 내부 순번 하나로 줄이고, 모든 source를 Gray 순서로 우선하는 선택 tree를 사용한다. 모든 source가 대기하는 조건에서는 연속 주소가 한 bit씩만 달라지고, 지속적으로 기다리는 source는 receiver stall을 제외한 최대 16번의 실제 처리 결정 안에 선택된다.
+
+동일 기능 조건으로 180 nm 배치·배선한 결과 P7-GE는 P4-C보다 cell area가 13.80%, 기본 활동률 기반 전력 추정치가 10.88% 감소했다. Setup과 hold, reset recovery/removal, 논리 등가성, DRC와 connectivity도 모두 통과했다. 아래 절은 이 결론을 뒷받침하는 시험 조건과 수치를 정리한다.
+
 ## 설계 목적
 
 P7-GE는 P4-C의 source별 16-bit pending 저장과 조기 ACK를 그대로 유지하고,
@@ -29,10 +37,10 @@ P7-GE는 P4-C의 source별 16-bit pending 저장과 조기 ACK를 그대로 유�
 | CDC phase sweep, RTL / gate | 192 / 192, 오류 0 / 192 / 192, 오류 0 |
 | receiver stall valid/address 안정성 | PASS |
 
-공통 contract/fairness workload에서도 P4-C와 P7-GE가 모두 101 events를 손실과
-중복 없이 처리했다. Stall 해제 전에 접수된 요청은 두 설계 모두 5개였고,
-해제 시 controller에 아직 제시되지 않은 요청은 0개였다. 따라서 source-resident
-후보와 달리 buffering을 upstream으로 이동시킨 결과가 아니다.
+동일한 101개 입력 이벤트와 도착 시각을 사용한 공정 비교에서도 P4-C와 P7-GE는
+모든 이벤트를 손실과 중복 없이 처리했다. Stall 해제 전에 접수된 요청은 두 설계
+모두 5개였고, 해제 시 controller에 아직 제시되지 않은 요청은 0개였다. 따라서
+P7-GE의 면적 감소는 controller의 저장 기능을 source 쪽으로 옮긴 결과가 아니다.
 
 | 공통 workload 항목 | P4-C | P7-GE |
 |---|---:|---:|

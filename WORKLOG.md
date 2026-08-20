@@ -207,3 +207,13 @@ All times are Asia/Seoul unless otherwise stated.
 - P4-C Genus used 308 cells, area 8,568.807 µm², 2.990 ns data path and 1.16579 mW vectorless power. Post-route used 362 cells, area 9,353.837 µm², setup +3.547 ns, hold +0.004 ns, default-activity power 0.96067953 mW, DRC 0 and connectivity 0.
 - Explored P4-H homeostatic backpressure steering. It moved the group pointer toward aged backlog during receiver stalls and demonstrated `15 blocker -> 5 aged -> 0 fresh`, but post-route cost rose to 391 cells, 10,039.075 µm² and 1.02219972 mW. It was retained as a QoS research extension rather than the main design.
 - Selected P4-C as the new main improved controller because it improves latency and setup margin with only 4.15% post-route area and 3.87% default-power increases over P3.
+
+### P7-GE Gray-epoch arbitration and documentation rewrite
+
+- Replaced P4-C's 10-bit hierarchical round-robin state with a 4-bit Gray epoch and XOR tournament while retaining the 16 source-indexed pending slots, registered output, early ACK and 1 event/cycle peak throughput.
+- Added the final robust reset release synchronizer; reset recovery/removal closed at +8.366/+0.340 ns after route.
+- Passed broad 139/139, RTL/gate CDC 192/192 each, full-backlog Gray order, 64 random pending masks, worst-position 16 service decisions, Xcelium and 96/96 Conformal equivalence.
+- Under the common fixed-demand workload, P4-C and P7-GE kept the same aggregate end-to-end service timing and stall elasticity; output-address bit transitions fell from 174 to 106.
+- Genus mapped 236 cells, 7,248.226 µm², 2.508 ns data path and 0.887720 mW vectorless power. Innovus completed at 292 cells, 8,063.194 µm², setup +4.350 ns, hold +0.006 ns and 0.85619239 mW, with DRC/connectivity 0/0.
+- Rejected the P7-GE fall-through output as the main design because its -2.380 ns register-to-output slack failed the 10 ns interface constraint despite a one-cycle no-stall latency gain.
+- Rewrote README.md and the Korean competition report using the reference submission's problem → intuition → circuit operation → evidence → limitation narrative. Technical terms, PPA conditions, non-signoff boundaries and second-task IP reuse scope remain explicit.

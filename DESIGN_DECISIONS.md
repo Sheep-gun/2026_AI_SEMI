@@ -152,6 +152,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P4-C replaces P3 as the main improved controller. P4-H homeostatic stall-time pointer steering is retained as a QoS research extension because it improves aged-group recovery order but costs 391 cells, 10,039.075 µm² and 1.02219972 mW post-route.
 
+## DD-020: Replace P4-C with robust P7-GE Gray-epoch arbitration
+
+**Decision:** Preserve P4-C's asynchronous source protocol, 2FF request CDC, sixteen source-indexed pending slots, early ACK, registered valid/ready output and one-event-per-clock peak throughput. Replace the 10-bit hierarchical round-robin state with a 4-bit Gray epoch and XOR tournament. Add a two-FF asynchronous-assert/synchronous-deassert reset release path in the final robust implementation.
+
+**Why:** Under the same event-storage and output contract, P7-GE passed the broad, CDC, fairness, gate, Xcelium, Conformal and Innovus checks. Versus P4-C it reduced post-route cells 362 to 292, cell area 13.80% and vectorless power estimate 10.88%, while setup slack increased from +3.547 ns to +4.350 ns. The common 101-event fixed-demand workload preserved aggregate service timing and reduced output-address bit transitions from 174 to 106.
+
+**Consequence:** P7-GE robust replaces P4-C as the main improved controller. Its fairness bound is at most 16 service decisions for a continuously pending source, excluding receiver stall wall time; it is not FCFS and carries no original-event timestamp. The fall-through variant is retained only as a rejected latency experiment because its register-to-output slack was -2.380 ns.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |
@@ -166,3 +174,4 @@ These are design targets until simulation and synthesis produce measured evidenc
 | Congestion indication | Earlier throttling and observability | Threshold tuning and extra status paths | Add counters first |
 | Cut-through pending next-state | Removes one fixed service cycle without more buffering | Longer same-cycle next-state dependency | Selected as P4-C |
 | Homeostatic stall steering | Aged backlog resumes before fresh groups | Extra age state and physical area | Research extension |
+| Gray-epoch XOR tournament | Reduces arbitration state and full-backlog address switching | Reorders events; not FCFS | Selected as P7-GE |

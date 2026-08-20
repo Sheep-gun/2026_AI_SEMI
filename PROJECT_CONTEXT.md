@@ -134,6 +134,10 @@ Two implementations are now preserved:
 - [x] P4-C matched 180 nm P&R completed: 362 cells, area 9,353.837 µm², setup +3.547 ns, hold +0.004 ns, power 0.960680 mW, DRC/connectivity 0.
 - [x] P4-C replaces P3 as the main improved controller: average latency -4.70%, maximum latency -3.45%, hotspot latency -25%, post-route area +4.15% and default power +3.87% versus P3.
 - [x] P4-H homeostatic stall steering demonstrated aged-group priority but was retained as a QoS research extension due to higher PPA cost.
+- [x] P7-GE robust replaces P4-C as the main improved controller while preserving pending 16 + output 1 storage, early ACK and 1 event/clock peak throughput.
+- [x] P7-GE verification completed: broad 139/139, RTL/gate CDC 192/192 each, 64/64 pending-mask trials, 16-service-decision worst position and Conformal 96/96.
+- [x] P7-GE matched 180 nm P&R completed: 292 cells, 8,063.194 µm², setup +4.350 ns, hold +0.006 ns, reset recovery/removal +8.366/+0.340 ns, power 0.85619239 mW, DRC/connectivity 0/0.
+- [x] Public README and competition report rewritten using a problem-to-evidence narrative while preserving technical depth, measurement conditions and limitation boundaries.
 
 ## Evidence labels
 

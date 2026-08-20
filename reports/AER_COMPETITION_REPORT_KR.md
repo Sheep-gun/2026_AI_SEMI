@@ -1,478 +1,452 @@
 # Bio-mimic Neuron용 AER 컨트롤러 설계 보고서
 
-## 1. 연구 목적
+## I. 설계 개요
 
-뉴런 회로는 자극을 받는 순간마다 발화 이벤트를 만든다. 여러 뉴런이 동시에 동작하더라도 각 뉴런에 전용 데이터선을 연결하면 회로 면적과 배선 수가 빠르게 증가한다.
+### 1. 설계 요지
 
-AER(Address-Event Representation)은 발화한 뉴런의 **번호만 주소로 변환해 하나의 공용 통로로 전달**하는 방식이다. 본 설계에서는 16개 뉴런을 사용하므로 주소는 4-bit면 충분하다.
+뉴런 회로는 자극을 받은 시점에 발화 이벤트를 만든다. 여러 뉴런의 출력을 각각 별도의 데이터선으로 전달하면 뉴런 수가 증가할수록 배선과 출력 핀도 함께 증가한다. AER(Address-Event Representation)은 이를 줄이기 위해 발화한 뉴런의 번호만 하나의 공용 주소 버스로 전달하는 통신 방식이다.
 
-본 연구의 목표는 다음과 같다.
+본 설계는 16개 뉴런의 비동기 발화 요청을 입력으로 받고, 선택한 뉴런의 번호를 하나의 4-bit 주소 버스로 출력한다. 여러 뉴런이 동시에 발화하면 컨트롤러가 전송 순서를 정하고, 수신기가 잠시 멈추면 이미 접수한 이벤트를 내부에 보관한다.
 
-1. 공통 clock 없이 동작하는 전통적 AER 컨트롤러 T0-PPA를 직접 구현한다.
-2. 기능, 합성 등가성, bundled-data relative timing과 180 nm 물리 구현을 검증하고 유효 조건을 명시한다.
-3. 요청 손실, 불공정성, return-to-zero overhead를 보완하고 신규 event의 고정 대기까지 제거한 P4-C를 설계한다.
-4. P4-C의 source별 pending 16개와 registered output, 처리율을 유지하면서 중재 상태·주소 switching·PPA를 함께 줄인 P7-GE를 설계한다.
-5. T0-PPA, P4-C와 P7-GE를 TSMC 180 nm core flow로 배치·배선하여 정량 비교한다.
+연구는 먼저 공통 clock 없이 요청과 응답만으로 동작하는 전통적 AER 구조를 T0-PPA로 구현하는 것에서 시작하였다. 전통 구조의 fixed priority, 내부 대기 공간 부재, 수신기 정체의 직접 전파와 비동기 중재 조건을 실제 RTL·합성·배치 결과로 확인하였다. 이후 비동기 요청을 동기식 회로로 안전하게 가져오고, 이벤트를 내부에 저장하며, 모든 뉴런에 처리 기회를 주는 P4-C를 구현하였다.
 
-세 설계는 모두 16개의 입력과 **4-bit 출력 버스 1개**를 사용한다. 따라서 개선 결과는 출력 통로를 추가한 것이 아니라 컨트롤러 내부 저장·중재·service path를 바꾼 결과다.
+최종 제안 구조 P7-GE는 P4-C의 입력·출력 규격, 이벤트 저장 능력과 최대 처리율을 유지한다. 대신 다음 처리 대상을 기억하고 찾는 중재 회로를 새로 구성한다. P4-C가 사용하던 10-bit 순번 상태를 4-bit epoch 하나로 줄이고, 뉴런 주소를 Gray 순서로 방문하는 선택 tree를 사용한다. 그 결과 동일한 이벤트 저장·출력 계약에서 면적·전력·계산 경로와 주소선 전환을 함께 줄였다.
 
-## 2. AER의 기본 동작
+### 2. 설계 목표와 범위
 
-### 2.1 주소로 이벤트를 표현하는 원리
+설계 목표는 다음과 같다.
 
-AER(Address-Event Representation)은 event-driven 회로에서 널리 사용하는 통신 표현이다. 각 뉴런의 값을 매 주기 읽는 대신, spike가 발생했을 때 해당 source의 식별 번호를 주소 버스에 실어 보낸다.
+1. 16개 비동기 뉴런 요청을 입력으로 받는다.
+2. 발화한 뉴런의 원래 번호를 하나의 4-bit 주소 버스로 출력한다.
+3. 수신기가 멈추거나 여러 요청이 겹쳐도 명시한 요청 유지 규약 안에서 이벤트를 보존한다.
+4. 특정 뉴런이 계속 밀려나는 starvation을 방지한다.
+5. 수신기가 준비되어 있고 대기 이벤트가 남아 있으면 clock마다 이벤트 하나를 전달한다.
+6. 전통적 구조와 개선 구조를 합성 가능한 RTL로 구현하고 기능·등가성·timing·area·power를 검증한다.
+7. 최종 개선본을 TSMC 180 nm 표준셀로 배치·배선하고 실제 물리 결과를 확보한다.
 
-예를 들어 5번 뉴런이 발화하면 컨트롤러는 `주소 5`를 수신기로 보낸다. 수신기는 주소를 보고 5번 뉴런에서 이벤트가 발생했음을 알아낸다. 이때 주소는 spike의 크기나 membrane potential 값이 아니라 **이벤트가 발생한 위치 또는 source ID**를 뜻한다. 이벤트의 시간 정보는 별도 timestamp가 아니라 transaction이 실제로 일어난 시점에 암묵적으로 포함된다.
+합성 대상은 AER 컨트롤러다. 뉴런 source와 receiver는 검증을 위한 testbench model이며, 뉴런의 막전위 계산이나 2차 과제의 좌표·방향·공간 메모리 연산은 본 컨트롤러에 포함하지 않는다.
 
-AER의 확장 규격은 주소 외에 polarity, event type, timestamp 또는 payload를 추가할 수 있다. 그러나 본 과제의 기본 전송 word는 source address만 포함한다. 즉, 뉴런의 막전위 계산을 수행하는 datapath가 아니라 여러 뉴런의 spike 주소를 공유 link로 운반하는 interconnect와 controller가 설계 대상이다.
+현재 완료 범위는 디지털 코어의 RTL, 기능 시뮬레이션, 논리 합성, 180 nm 배치·배선과 timing 분석이다. 입출력 pad ring, package, 제조용 최종 DRC/LVS, 실제 제작과 실리콘 측정은 포함하지 않는다.
+
+### 3. 설계 발전 과정
+
+각 단계에서는 문제와 개선 효과를 분리하기 위해 구조를 순차적으로 바꾸었다.
+
+| 단계 | 해결한 문제 | 남은 문제 또는 다음 개선점 |
+|---|---|---|
+| T0-PPA | 공통 clock 없는 전통적 4-phase AER를 물리 비교 가능한 형태로 구현 | fixed priority, source별 pending 없음, 수신기 정체 직접 전파 |
+| P4-C | 2FF 동기화, source별 pending, 조기 ACK, 공정한 순환 선택, registered output 확보 | 중재 순번을 저장하는 10-bit 상태와 주소 전환 비용 |
+| P7-GE | 중재 상태를 4 bit로 줄이고 Gray 순서 선택 tree 적용 | FCFS가 아니며 실제 발화 timestamp는 전송하지 않음 |
+
+P3 등 중간 설계의 세부 결과는 `results/`에 보존하였다. 본 보고서에서는 전통적 동작을 보여주는 T0-PPA, 같은 기능 조건의 직접 비교 대상 P4-C, 최종 제안 구조 P7-GE를 중심으로 설명한다.
+
+## II. 설계기술 설명서
+
+### 1. AER의 동작 원리
+
+AER은 모든 뉴런의 내부 값을 계속 전송하지 않는다. 이벤트가 발생한 순간에 발화한 뉴런의 식별 번호만 주소 버스에 실어 보낸다.
+
+예를 들어 5번 뉴런이 발화하면 다음 과정이 진행된다.
 
 ```text
-5번 뉴런 발화
-    → 5번 뉴런이 전송 요청
-    → AER 컨트롤러가 주소 5를 선택
-    → 수신기가 주소 5를 읽음
-    → 전송 완료 응답
+5번 뉴런이 요청을 발생
+    → 컨트롤러가 요청을 접수
+    → 여러 대기 요청 중 5번을 선택
+    → 주소 버스에 5를 출력
+    → 수신기가 5번 뉴런의 이벤트로 처리
 ```
 
-source 수가 `N`개일 때 필요한 최소 주소 폭은 `ceil(log2(N))`이다. 본 설계의 `N=16`에서는 4-bit로 0번부터 15번까지 구분할 수 있다. 16개의 독립 데이터 경로를 만드는 대신 주소 경로 하나를 공유하므로 배선과 출력 핀을 줄일 수 있다.
+16개 source는 0부터 15까지의 번호로 구분되므로 필요한 최소 주소 폭은 `ceil(log2(16)) = 4 bit`다. 16개의 전용 데이터 경로 대신 주소 경로 하나를 공유하므로 출력 배선을 줄일 수 있다. 반면 여러 뉴런이 동시에 발화하면 버스를 사용할 순서를 결정하는 중재기와 대기 이벤트를 보관하는 구조가 필요하다.
 
-그 대신 두 개 이상의 뉴런이 동시에 발화하면 한 주소 버스에 모두 실을 수 없다. 따라서 AER 컨트롤러에는 다음 기능이 필요하다.
+본 설계의 전송 word에는 source ID만 들어간다. 발화 크기, 막전위와 원래 발화 시각을 나타내는 timestamp는 포함하지 않는다. 수신기는 출력 transaction이 발생한 시각을 볼 수 있지만, 이 시각에는 controller 내부의 동기화와 대기·중재 시간이 포함된다. 따라서 출력 시각만으로 원래 발화 시각을 복원할 수 없다.
 
-- **요청 수집:** 어떤 source에서 이벤트가 발생했는지 확인
-- **중재(arbitration):** 동시에 들어온 요청의 전송 순서를 결정
-- **주소 인코딩:** 선택된 source를 4-bit 이진 주소로 변환
-- **주소 유지:** 수신기가 읽을 때까지 주소가 변하지 않도록 고정
-- **완료 통보:** 이벤트가 접수됐음을 source에 알려 다음 이벤트를 허용
+### 2. 전통형과 개선형의 인터페이스
 
-### 2.2 인터페이스 신호
+서로 다른 단계의 ACK를 같은 의미로 해석하면 안 된다. T0-PPA와 P7-GE는 source 쪽 요청 규약을 공유하지만 receiver 쪽 출력 규약은 다르다.
 
-| 신호 | 방향 | 기능 |
+#### 2.1 Source와 controller 사이
+
+| 신호 | T0-PPA에서의 의미 | P7-GE에서의 의미 |
 |---|---|---|
-| `src_req[15:0]` | 뉴런 → 컨트롤러 | 각 뉴런이 이벤트 발생을 알리는 요청 |
-| `src_ack[15:0]` | 컨트롤러 → 뉴런 | source 요청 접수 응답. P7-GE에서는 winner 선정 전이라도 event가 pending 저장소에 안전하게 들어가면 상승 |
-| `aer_addr[3:0]` | 컨트롤러 → 수신기 | 현재 전송 중인 source ID |
-| `aer_req` | 컨트롤러 → 수신기 | 주소가 유효하므로 capture할 수 있다는 요청 |
-| `aer_ack` | 수신기 → 컨트롤러 | 주소를 정상적으로 capture했다는 응답 |
+| `src_req[15:0]` | 각 뉴런이 이벤트 발생을 알리는 요청 | 각 뉴런이 이벤트 발생을 알리는 비동기 요청 |
+| `src_ack[15:0]` | Receiver가 선택 주소를 받은 뒤 source로 반환되는 완료 응답 | Event가 pending 또는 output register에 접수됐다는 조기 응답 |
 
-`aer_req/aer_ack`는 T0-PPA의 controller↔receiver 4-phase link다. P4-C와 P7-GE의 receiver 쪽은 `out_valid/out_ready`를 사용한다. 따라서 개선본의 `src_ack`는 controller 내부 접수를 뜻하며, 최종 receiver 전송 완료와 같은 신호가 아니다. T0에서는 source와 컨트롤러 사이, 컨트롤러와 수신기 사이에 각각 요청·응답 관계가 존재하고 수신 완료 사실을 선택된 source에 돌려준다.
+Source는 `src_req`를 1로 올린 뒤 `src_ack=1`을 확인할 때까지 요청을 유지한다. ACK를 확인하면 요청을 0으로 내리고, controller가 ACK를 0으로 내린 뒤 다음 이벤트를 요청한다. Source당 한 번에 요청 하나만 존재한다는 계약이다.
 
-### 2.3 전통적 4단계 요청·응답
+두 설계는 `REQ 상승 → ACK 상승 → REQ 하강 → ACK 하강`이라는 source-side 신호 순서는 공유하지만 ACK의 완료 지점은 다르다. T0-PPA의 ACK는 receiver 수신 완료를 포함하고, P7-GE의 ACK는 controller 내부 접수 완료를 뜻한다.
 
-전통적 비동기 AER은 송신기와 수신기가 같은 clock을 공유하지 않아도 동작할 수 있다. 대신 `REQ`와 `ACK`의 상태 변화를 사용해 transaction 시작과 종료를 합의한다. 신호를 모두 0으로 되돌린 뒤 다음 transaction을 시작하므로 4-phase return-to-zero protocol이라고 부른다.
+P7-GE의 `src_ack`는 receiver가 이벤트를 소비했다는 뜻이 아니다. 동기화된 요청이 source별 대기칸에 저장되거나, 같은 처리 결정에서 곧바로 output register에 실리면 ACK가 올라간다. 실제 출력 완료는 `out_valid && out_ready`일 때 성립한다.
 
-본 설계는 active-high 규약을 사용하며 idle 상태는 `aer_req=0, aer_ack=0`이다.
+#### 2.2 T0-PPA와 receiver 사이
 
-1. **Request assert:** 컨트롤러가 `aer_addr`를 먼저 안정시킨 뒤 `aer_req`를 0에서 1로 바꾼다. 수신 완료 전까지 주소는 유지되어야 한다.
-2. **Acknowledge assert:** 수신기가 `aer_req=1`을 감지해 주소를 capture한 다음 `aer_ack`를 0에서 1로 바꾼다. 이 전이는 현재 주소의 수신 완료를 의미한다.
-3. **Request release:** 컨트롤러가 `aer_ack=1`을 확인한 뒤 `aer_req`를 1에서 0으로 내린다. T0-PPA는 내부 grant를 유지해 transaction 중 주소 전이를 막는다.
-4. **Acknowledge release:** 수신기가 `aer_req=0`을 확인한 뒤 `aer_ack`를 1에서 0으로 내린다. 두 신호가 모두 0이 되면 link가 idle로 복귀한다.
+T0-PPA는 `aer_addr`, `aer_req`, `aer_ack`를 사용하는 active-high 4-phase handshake로 receiver와 통신한다.
+
+1. Controller가 주소를 먼저 안정시킨 뒤 `aer_req`를 1로 올린다.
+2. Receiver가 주소를 읽고 `aer_ack`를 1로 올린다.
+3. Controller가 응답을 확인하고 `aer_req`를 0으로 내린다.
+4. Receiver가 `aer_ack`를 0으로 내려 idle 상태로 돌아간다.
 
 ![전통적 AER의 4단계 요청·응답](../docs/architecture/aer_4phase_handshake_flow.svg)
 
-### 2.4 프로토콜이 올바르게 동작하기 위한 조건
+주소는 receiver가 ACK를 올릴 때까지 변하면 안 된다. 데이터인 주소가 먼저 안정되고 제어 신호가 나중에 도착해야 하는 조건을 bundled-data timing이라고 한다.
 
-4-phase handshake는 단순히 신호를 네 번 바꾸는 것만으로 완성되지 않는다. 다음 조건을 함께 지켜야 한다.
+#### 2.3 P7-GE와 receiver 사이
 
-- source는 `src_ack`를 확인할 때까지 `src_req`를 유지해야 한다. 짧은 pulse만 보내면 컨트롤러가 놓칠 수 있다.
-- 컨트롤러는 `aer_addr`가 안정된 뒤에만 `aer_req`를 올려야 하며, 수신기가 capture하기 전에는 주소를 변경하면 안 된다. 주소와 요청의 상대 시간을 보장하는 이 규칙을 bundled-data constraint라고 한다.
-- 수신기는 주소를 실제로 capture한 뒤에만 `aer_ack`를 올려야 한다.
-- 같은 source는 이전 요청·응답이 idle로 복귀하기 전에 다음 이벤트를 덮어쓰면 안 된다.
-- 여러 source가 거의 동시에 요청하면 arbiter는 최종적으로 하나만 선택해야 한다. 이 중재 과정은 handshake와 별개로 metastability 안전성이 필요하다.
+P7-GE는 동기식 후단 모듈에 연결하기 위해 `out_addr`, `out_valid`, `out_ready`를 사용한다. Controller가 유효한 주소를 제시하면 `out_valid=1`이 되고, receiver가 받을 준비가 되면 `out_ready=1`이 된다. 두 신호가 함께 1인 clock edge에서 이벤트 하나가 전달된다.
 
-이 방식은 고정 clock 주기 대신 상대 회로의 실제 완료 신호를 기다리는 self-timed 동작이다. 수신기가 느리면 `ACK`를 늦게 올리므로 송신기도 기다리며, 이 지연 자체가 backpressure로 작동한다. 따라서 기능적으로는 빠른 회로와 느린 회로를 자연스럽게 연결할 수 있다.
+Receiver가 준비되지 않으면 P7-GE는 `out_valid`와 `out_addr`를 그대로 유지한다. Receiver가 계속 준비되어 있고 내부에 대기 이벤트가 남아 있으면 매 clock마다 현재 이벤트를 넘기면서 다음 이벤트를 output register에 채울 수 있다.
 
-반면 한 이벤트마다 `REQ↑ → ACK↑ → REQ↓ → ACK↓` 네 번의 전이가 필요하다. 다음 이벤트는 link가 idle로 돌아온 뒤에야 시작할 수 있으므로 연속 traffic에서는 return-to-zero 시간이 처리율을 제한한다. 또한 handshake가 transaction의 완료를 보장한다고 해서 동시 요청을 선택하는 arbiter까지 자동으로 안전해지는 것은 아니다.
+### 3. 전통적 비동기 기준 설계 T0-PPA
 
-## 3. T0-PPA: 물리 비교 가능한 전통적 비동기 baseline
+#### 3.1 구조와 동작
 
-### 3.1 전통적 구조의 유지
+T0-PPA에는 전체 회로를 진행시키는 global clock이 없다. Source 요청이 들어오면 번호가 가장 작은 요청을 선택하고, 선택 주소를 latch에 보관한 뒤 receiver와 4-phase handshake를 수행한다.
 
-T0-PPA는 전체 회로를 움직이는 global clock을 사용하지 않는다. 입력 요청과 수신기 응답의 전이가 상태를 진행시키며 다음 특성을 유지한다.
+![T0-PPA 전통적 비동기 AER 구조](../docs/architecture/aer_baseline_controller_structure.svg)
 
-- 16 source와 4-bit 공유 주소 bus 1개
-- source 0이 최고인 fixed-priority arbitration
-- source별 FIFO 또는 pending storage 없음
-- receiver-facing active-high 4-phase return-to-zero handshake
-- 한 source당 outstanding event 최대 1개
+초기 T0는 교차 결합 NOR 되먹임으로 주소와 busy 상태를 저장했다. 이 구조는 논리적으로 상태를 기억하지만 일반 디지털 합성 도구는 조합 feedback loop로 판단해 경로를 끊거나 최적화할 수 있다. 유한 gate delay를 반영한 시험에서도 주소가 잠시 흔들리는 문제가 확인됐다.
 
-![T0 전통적 비동기 AER 구조](../docs/architecture/aer_baseline_controller_structure.svg)
+T0-PPA는 저장부를 180 nm library에서 특성이 제공되는 `TLATRX1` 투명 latch 5개로 교체하였다. 주소가 안정되기 전에 request가 먼저 올라가지 않도록 `DLY4X1` delay cell 6개도 물리적으로 보존했다. 이 변경으로 합성 도구가 임의로 loop를 끊지 않아도 되는 구조를 만들었다.
 
-### 3.2 초기 T0의 문제와 T0-PPA의 수정
+#### 3.2 Bundled-data 시간 조건
 
-초기 structural T0는 교차 결합 NOR gate로 busy와 grant를 저장했다. 기능 RTL에서는 139개 이벤트를 전달했지만 Genus는 이를 sequential storage가 아닌 combinational feedback loop로 판단해 7개의 loop breaker를 삽입했고, Xcelium finite-delay simulation에서는 transaction 중 주소가 흔들렸다.
-
-T0-PPA는 handshake 방식과 fixed priority는 바꾸지 않고 저장 구현만 다음과 같이 물리 library에 맞췄다.
-
-- `TLATRX1`/`TLATNRX1` characterized latch 5개: grant address 4-bit와 busy 1-bit 저장
-- `DLY4X1` characterized delay cell 5개: priority data가 settle된 뒤 busy capture 시작
-- 추가 `DLY4X1` 1개: grant latch가 닫힌 뒤 `aer_req` assertion
-- Genus와 Innovus에서 delay cell을 dont-touch로 보호
-
-이 구조는 일반 gate를 교차 연결해 저장소를 흉내 낸 것이 아니라 Liberty에 setup, hold, pulse-width, power와 PVT arc가 정의된 실제 latch macro를 사용한다. 따라서 synthesis와 physical tool이 상태 경계를 인식하며 loop breaker가 필요하지 않다.
-
-### 3.3 Bundled-data relative timing
-
-전통적 bundled-data AER에서는 주소 data path가 request control path보다 먼저 안정되어야 한다. T0-PPA는 post-route RC를 반영한 뒤 가장 불리한 조합을 비교했다.
-
-| 경로 | 측정값 |
-|---|---:|
-| source request → grant latch D, latest slow | 1.915 ns |
-| source request → busy latch D, earliest fast | 2.591 ns |
-| conservative relative margin | **+0.676 ns** |
-| busy latch Q → `aer_req`, earliest fast | 0.380 ns |
-
-가장 느린 주소 계산이 끝난 뒤 최소 0.676 ns가 지나 capture control이 도착하며, 그 뒤에도 busy latch와 request delay stage가 남는다. 따라서 명시한 PVT 범위에서 주소가 먼저 안정되고 요청이 나중에 올라가는 순서를 만족한다.
-
-### 3.4 기능·등가성·물리 검증
-
-| 시험 | 결과 | 해석 |
-|---|---:|---|
-| Xcelium main workload | 139 / 139, error 0 | event loss·duplicate 없음 |
-| 경합 stress | 84 trials, error 0 | X 전파·short pulse·event loss 없음 |
-| first-winner shift | 42 / 84 | 먼저 도착한 요청보다 낮은 source 번호가 선택될 수 있음 |
-| Conformal LEC | 26 / 26 equivalent | RTL 21 outputs와 5 state points 모두 합성 netlist와 등가 |
-| Genus loop breaker | 0 | latch가 정상 sequential cell로 인식됨 |
-| Innovus route DRC / connectivity | 0 / 0 | 배선과 연결 검사 통과 |
-
-경합 시험의 winner shift는 오류가 아니라 fixed priority가 FCFS가 아님을 보여준다. 이 결과는 digital model에서 deterministic selection을 확인한 것이며 analog metastability MTBF를 증명하지 않는다.
-
-### 3.5 T0-PPA의 유효 범위
-
-T0-PPA의 PPA는 다음 operating contract에서 유효하다.
-
-1. source는 `src_ack`까지 `src_req`를 유지한다.
-2. request set은 delayed grant-capture aperture 동안 안정되어야 한다.
-3. receiver는 주소 capture 후 `aer_ack`를 올린다.
-
-현재 library에 characterized MUTEX가 없으므로 arbitrary near-simultaneous request edge에 대한 metastability-safe arbitration은 주장하지 않는다. 이 한계는 숨기거나 동기식으로 대체하지 않고 전통 baseline의 개선 대상에 남긴다.
-
-그럼에도 T0-PPA는 기능, RTL↔netlist 등가성, latch/delay physical mapping, post-route relative timing, DRC와 connectivity를 완료했으므로 **조건이 명시된 전통적 AER PPA 비교 기준**으로 사용할 수 있다.
-
-## 4. P4-C: Cut-through 안정성·공정성·latency 개선안
-
-P4-C는 뉴런이 원하는 순간에 요청한다는 특성은 그대로 받아들인다. 요청을 컨트롤러 안으로 들여온 뒤에는 clock에 맞춰 저장·선택하므로 **외부는 비동기 요청, 내부는 검증 가능한 동기식 회로**인 혼합 구조다. P3에서 검증한 CDC·pending·hierarchical round-robin·elastic output을 유지하면서 신규 event service path만 단축한다.
-
-![P4-C Cut-through AER 컨트롤러 구조](../docs/architecture/aer_p4_cutthrough_structure.svg)
-
-### 4.1 비동기 요청을 안전하게 받는 입구
-
-뉴런 요청은 내부 clock과 관계없는 순간에 바뀐다. 이 신호를 바로 계산에 사용하면 0인지 1인지 잠시 결정되지 않는 상태가 생길 수 있다.
-
-P4-C는 각 요청을 플립플롭 두 개에 차례로 통과시킨다. 첫 번째 단계에서 불안정 가능성을 받아내고, 두 번째 단계의 안정된 값만 컨트롤러가 사용한다. 전문 용어로는 2단 동기화기(2FF synchronizer)라고 한다.
-
-### 4.2 뉴런마다 이벤트 하나를 보관
-
-각 뉴런에 1-bit 대기칸을 둔다. 요청이 들어오면 해당 칸을 1로 만들어 “이 뉴런의 이벤트가 기다리고 있음”을 기억한다.
-
-수신기가 잠시 멈추거나 여러 뉴런이 동시에 요청해도 각 뉴런의 첫 이벤트는 대기칸에 남는다. 이미 칸이 차 있으면 뉴런에 완료 응답을 보내지 않아 다음 이벤트가 덮어쓰는 것을 막는다.
-
-Source-indexed pending 저장 용량은 뉴런 16개 × 1개로 16개 이벤트다. 별도의 registered output 한 칸까지 포함하면 controller가 접수했지만 아직 receiver로 전달하지 않은 event는 최대 17개다. 같은 뉴런의 pending에는 한 번에 하나만 저장되지만, 첫 event가 output으로 이동하고 4-phase source handshake가 재무장되면 그 source의 다음 event가 빈 pending에 들어올 수 있다.
-
-### 4.3 모든 뉴런에 차례가 돌아가는 선택 방식
-
-T0-PPA는 항상 0번부터 확인했지만 P4-C는 마지막으로 처리한 위치의 다음부터 확인한다. 한 번 선택된 위치는 다음 차례에 뒤로 밀리므로 특정 뉴런이 통로를 계속 독점하기 어렵다. 이를 순환 우선순위 방식(round-robin)이라고 한다.
-
-16개를 한 번에 길게 비교하면 회로가 느리고 커질 수 있다. P4-C는 다음 두 단계로 나누었다.
-
-1. 4개 뉴런으로 이루어진 그룹 네 개에서 각각 후보를 고른다.
-2. 후보가 있는 그룹들 사이에서 최종 그룹 하나를 고른다.
-
-네 그룹의 후보 찾기는 동시에 진행된다. 따라서 16개를 처음부터 끝까지 순서대로 훑는 구조보다 논리 경로가 짧다.
-
-### 4.4 수신기가 준비되면 매 clock 연속 전송
-
-P4-C의 출력에는 주소 하나를 보관하는 대기칸이 있다. 수신기가 준비됐다는 신호를 보내면 현재 주소를 넘기면서 바로 다음 주소를 채울 수 있다.
-
-전통적 4단계 방식처럼 매 이벤트마다 요청과 응답을 0으로 되돌리는 빈 시간이 없으므로, 보낼 이벤트가 계속 있고 수신기가 준비된 상태에서는 **매 clock마다 이벤트 하나**를 전달한다.
-
-### 4.5 Pending next-state cut-through
-
-P3는 동기화된 요청을 `pending_q` register에 기록한 뒤 다음 cycle arbitration에서 사용했다. P4-C는 요청을 접수해 `pending_d=1`로 만드는 같은 next-state decision에서 `pending_d`를 local arbiter 입력으로 사용한다.
+Post-route에서 가장 느린 주소 경로는 1.915 ns, 가장 빠른 request capture 제어 경로는 2.591 ns였다.
 
 ```text
-P3   : sync request → pending_q 기록 → 다음 cycle arbitration → output
-P4-C : sync request → pending_d 접수와 같은 decision에서 arbitration → output
+relative timing margin
+  = 가장 빠른 control 도착 - 가장 느린 address 도착
+  = 2.591 ns - 1.915 ns
+  = +0.676 ns
 ```
 
-출력이 비어 있으면 source acknowledge와 output registration이 같은 clock edge에 완료된다. 별도 bypass FIFO나 두 번째 bus를 추가하지 않고 이미 존재하는 pending next-state를 재사용하므로 event capacity와 peak throughput은 그대로 유지하면서 service latency만 줄인다.
+따라서 측정한 corner에서는 주소가 제어보다 0.676 ns 먼저 안정됐다. 이 결과는 명시한 relative-timing 조건을 만족한다는 뜻이며, 모든 비동기 입력 조합의 아날로그 준안정성을 해결했다는 뜻은 아니다.
 
-### 4.6 P7-GE: 4-bit Gray epoch 중재
+#### 3.3 전통 구조에서 확인한 한계
 
-P7-GE는 P4-C의 2FF CDC, source별 pending 16개, 조기 ACK, same-decision cut-through와 registered output 한 칸을 그대로 유지한다. 따라서 receiver stall 중 접수했지만 아직 전송하지 않은 event를 최대 17개까지 보관하는 elasticity와 ready 시 1 event/clock 처리율이 같다.
+- **고정 우선순위:** 낮은 번호가 계속 요청하면 높은 번호 source가 계속 밀릴 수 있다.
+- **Source별 pending/FIFO 부재:** 선택되지 않은 source는 요청을 계속 유지해야 하며 짧은 pulse는 보존하지 못한다.
+- **직접적인 backpressure:** Receiver ACK가 늦어지면 controller와 source까지 모두 기다린다.
+- **Return-to-zero 시간:** 매 event마다 request와 acknowledge를 0으로 돌려야 한다.
+- **비동기 중재 조건:** 현재 library에는 characterized MUTEX가 없다. Grant를 정하는 aperture 동안 request set이 안정적이라는 동작 조건이 필요하다.
 
-![P7-GE 구조](../docs/architecture/aer_p7_gray_epoch_structure.svg)
+T0-PPA의 latch는 주소와 현재 handshake 상태를 기억하지만, 여러 source의 이벤트를 미리 접수하는 source별 pending storage는 아니다.
 
-변경되는 부분은 P4-C의 `group pointer 2 bit + local pointer 8 bit` 계층형 round-robin이다. P7-GE는 grant마다 0~15를 순환하는 4-bit epoch 하나만 저장한다. 현재 epoch를 Gray 값으로 바꾼 뒤, 대기 source 가운데 `source XOR Gray(epoch)`가 가장 작은 주소를 4-level subtree-valid tournament로 고른다.
+### 4. 최종 제안 구조 P7-GE의 전체 흐름
 
-Full backlog에서 선택 순서는 다음과 같다.
+P7-GE는 비동기 source와 동기식 후단 사이에 놓이는 혼합형 AER 컨트롤러다. Source는 원하는 시점에 요청하지만, controller 내부에서는 동기화된 요청만 clock에 맞춰 저장하고 선택한다.
+
+```text
+비동기 뉴런 요청
+    → 2단 동기화
+    → source별 대기칸에 접수
+    → 다음 전송 source 선택
+    → output register에 주소 저장
+    → valid/ready로 후단에 전달
+```
+
+![P7-GE 전체 구조](../docs/architecture/aer_p7_gray_epoch_structure.svg)
+
+각 블록은 다음 문제를 해결한다.
+
+| 블록 | 해결하는 문제 |
+|---|---|
+| 2FF synchronizer | clock과 관계없이 바뀌는 요청을 내부 동기식 회로에서 사용 |
+| `pending[15:0]` | 동시 요청과 receiver stall 중 이벤트를 source별로 기억 |
+| Early ACK | Receiver가 막혀도 controller에 저장된 source를 먼저 재무장 |
+| Gray-epoch 중재기 | 적은 상태로 모든 지속 요청에 처리 기회 제공 |
+| Registered output | Receiver stall 동안 주소와 valid를 안정적으로 유지 |
+| Reset synchronizer | Reset은 즉시 시작하되 내부 해제는 clock edge에 맞춤 |
+
+### 5. 비동기 요청의 동기화
+
+뉴런 요청은 controller clock edge 근처에서도 변할 수 있다. 이 신호를 바로 중재 논리에 사용하면 첫 플립플롭이 0과 1 사이에서 결정을 늦추는 준안정 상태에 들어갈 수 있다.
+
+P7-GE는 각 요청을 두 개의 플립플롭에 차례로 통과시킨다. 첫 번째 플립플롭은 비동기 전이를 받아들이고, 두 번째 플립플롭의 출력만 controller 상태 계산에 사용한다. RTL에는 두 단계가 물리적으로 가깝게 배치될 수 있도록 `ASYNC_REG` 속성을 부여했다.
+
+이 구조는 일반적인 CDC(clock-domain crossing) 위험을 낮추는 표준적인 동기화 방식이다. 수행한 phase sweep은 여러 clock 상대 시점에서 held request가 한 번씩 접수되는지를 확인한 디지털 시험이다. 실제 실리콘 MTBF를 측정하거나 준안정성이 절대 발생하지 않음을 증명하는 시험은 아니다.
+
+### 6. 이벤트 보관과 조기 ACK
+
+동기화된 요청이 보이면 해당 source의 `pending` bit를 1로 만든다. 이 bit는 “이 source의 이벤트 하나가 controller 안에서 전송을 기다리고 있다”는 뜻이다.
+
+P7-GE는 source별 pending 16개와 주소 하나를 보관하는 registered output 한 칸을 가진다. 따라서 controller가 접수했지만 아직 receiver가 소비하지 않은 이벤트는 최대 17개까지 존재할 수 있다. 이는 저장 용량이며, 한 clock에 여러 이벤트를 보내는 bandwidth가 아니다. 출력 버스는 한 개이므로 최고 처리율은 1 event/clock이다.
+
+이벤트가 pending에 기록되거나 같은 처리 결정에서 곧바로 output register에 실리면 source ACK를 올린다. Receiver 전송보다 먼저 응답하므로 이를 early ACK라고 한다. Source는 ACK를 받은 뒤 4-phase 절차를 끝내고 다음 요청을 준비할 수 있다.
+
+한 source의 pending에는 이벤트 하나만 저장된다. 같은 source의 다음 이벤트는 이전 요청과 ACK가 모두 0으로 돌아온 뒤에만 제시해야 한다. Source가 ACK 전에 요청을 내리거나, 재무장되기 전에 새 이벤트로 덮어쓰는 동작은 보장하지 않는다.
+
+P4-C와 P7-GE는 새 요청을 `pending_d=1`로 만드는 계산 결과를 같은 decision의 중재 후보로 사용한다. Pending register에 기록한 뒤 다음 clock까지 기다리지 않고 즉시 후보에 포함시키는 이 방법을 pending next-state cut-through라고 한다. 출력 자체는 여전히 register를 거치므로 receiver stall 동안 안정적으로 유지된다.
+
+### 7. Gray-epoch 중재 구조
+
+#### 7.1 P4-C 중재기의 비용
+
+P4-C는 16개 source를 네 개씩 네 그룹으로 나눈 계층형 round-robin을 사용한다. 어느 그룹을 먼저 볼지 기억하는 2-bit 상태와 각 그룹 내부의 다음 위치를 기억하는 8-bit 상태가 필요하므로 총 10 bit의 중재 상태를 저장한다.
+
+P7-GE는 저장부와 출력부를 바꾸지 않고 이 중재 상태와 선택 논리만 개선한다. 다음 처리 기준을 4-bit 숫자 하나로 표현해 상태 bit를 10개에서 4개로 줄인다.
+
+#### 7.2 Epoch와 Gray 순서
+
+4-bit 내부 순번을 epoch라고 한다. Epoch는 원래 이벤트의 timestamp가 아니라, 중재기가 다음에 어느 주소를 우선할지 나타내는 차례표다. Event가 output register에 새로 실리는 service decision마다 1씩 증가하며 0부터 15까지 순환한다.
+
+현재 epoch를 Gray code로 바꾸면 다음 주소 순서가 된다.
 
 ```text
 0, 1, 3, 2, 6, 7, 5, 4, 12, 13, 15, 14, 10, 11, 9, 8
 ```
 
-이 순서는 주소를 인코딩한 결과가 아니라 **원래 source ID를 고르는 순서 자체**다. 따라서 수신기 decoder는 필요 없고, 인접 transaction의 주소는 한 bit만 바뀐다.
+Gray code는 이웃한 값 사이에서 한 bit만 달라지도록 배열한 code다. 모든 source가 계속 pending인 full-backlog 조건에서는 현재 Gray 값과 같은 source가 항상 존재하므로 P7-GE가 위 순서를 그대로 출력한다. 주소를 새 code로 인코딩하는 것이 아니라 원래 source ID를 선택하는 순서를 정하는 것이므로 decoder는 필요하지 않다.
 
-공정성도 traffic pattern과 무관하게 상한을 설명할 수 있다. Source `i`가 계속 pending이면 16개 epoch 중 `Gray(epoch)=i`인 순간 XOR distance가 0이 되어 반드시 선택된다. 여기서 grant는 clock 수가 아니라 실제 service decision 수이며, receiver stall time을 제외하면 지속 요청은 최대 16 grants 안에 처리된다.
+Sparse traffic에서는 Gray 순서의 다음 source가 비어 있을 수 있다. 이때는 비어 있는 source를 건너뛰므로 연속 출력 주소가 항상 한 bit만 바뀌는 것은 아니다.
 
-Reset은 외부에서 비동기적으로 assert하되, 2FF reset synchronizer를 통해 내부 회로에서는 clock edge에 맞춰 deassert한다. 이 2 FF를 포함한 robust형을 주 설계로 사용한다.
+#### 7.3 XOR tournament 선택 tree
 
-## 5. 검증 방법
+P7-GE는 대기 source 주소와 현재 Gray 선호값을 XOR하고, 이 4-bit XOR 결과를 unsigned 숫자로 보았을 때 가장 작은 source를 선택한다. 이는 XOR 결과의 1 개수를 세는 Hamming distance 비교가 아니다.
 
-기능만 맞는지 보는 시험과 실제 칩으로 구현 가능한지 보는 시험을 구분했다.
+회로는 16개 후보를 한 번에 길게 비교하지 않는다. 먼저 각 주소 쌍에 pending이 있는지 확인하고, 네 주소 단위와 여덟 주소 단위로 묶는다. 가장 선호하는 절반에 후보가 있으면 그쪽을 선택하고, 비어 있으면 반대쪽으로 이동한다. 이 판단을 주소 bit 네 단계에 걸쳐 반복해 실제 대기 source 하나를 찾는다. 토너먼트 대진표처럼 후보 범위를 줄이는 조합논리 tree이므로 XOR tournament라고 부른다.
 
-### 5.1 기능 검증
+#### 7.4 공정성 상한
 
-- 139개 이벤트가 요청·접수·출력 과정에서 빠지거나 중복되는지 확인
-- 여러 뉴런이 동시에 요청하는 상황 확인
-- 수신기가 중간에 멈추는 상황 확인
-- 요청이 clock 직전과 직후에 들어오는 192가지 시점 변화 확인
-- 16개 뉴런이 동시에 기다릴 때 처리 순서 확인
-- P7-GE의 64개 frozen random pending mask와 최악 16-grant 공정성 확인
-- 동일 fixed-demand source model로 P4-C와 P7-GE의 end-to-end latency·stall elasticity·주소 toggle 비교
+각 source 주소는 16개의 Gray epoch 중 한 번씩 정확한 선호값이 된다. Source `i`가 계속 pending이면 `Gray(epoch)=i`인 차례에 XOR 결과가 0이 되어 반드시 선택된다.
 
-### 5.2 논리 합성과 물리 설계
+따라서 지속 pending source는 receiver stall을 제외한 최대 16회의 service decision 안에 처리된다. 이 값은 16 clock이나 고정된 실제 시간을 뜻하지 않는다. `out_ready=0`이어도 비어 있던 output register에는 이벤트 하나를 미리 실을 수 있지만, register가 찬 뒤에는 receiver가 현재 이벤트를 소비할 때까지 추가 service decision이 진행되지 않는다. 또한 이 정책은 starvation을 막지만 실제 요청 도착 순서를 보존하는 FCFS는 아니다.
 
-- Vivado: RTL 기능, 합성 후 기능, FPGA 자원과 동작 시간 확인
-- Cadence Xcelium: 별도의 시뮬레이터에서 기능 재확인
-- Cadence Genus: RTL을 TSMC 180 nm 표준 논리 셀로 변환
-- Cadence Innovus: 셀 배치, clock 배선, 신호 배선, 배선 저항·용량 추출
-- 배치·배선 후 동작 시간, 전력, 배선 오류와 연결 오류 확인
-- Conformal: P7-GE RTL과 Genus netlist의 96개 output/state point 등가성 확인
+### 8. 출력과 reset 구조
 
-## 6. 기능 검증 결과
+선택한 source 주소는 4-bit output register에 저장된다. `out_valid=1`인 동안 receiver가 `out_ready=0`이면 주소와 valid는 바뀌지 않는다. Receiver가 준비된 clock edge에서 현재 이벤트가 전달되며, 같은 edge에서 다음 pending event를 output register에 채울 수 있어 full backlog에서 1 event/clock을 유지한다.
 
-### 6.1 P4-C
+Reset은 외부에서 0으로 내려가면 비동기적으로 즉시 assert된다. 해제는 2단 reset synchronizer를 거쳐 두 clock 뒤에 내부 회로로 전달된다. 최종 RTL은 `ROBUST_RESET=1`을 기본값으로 사용한다. `ROBUST_RESET=0`은 reset synchronizer의 PPA 비용을 분리하기 위한 실험형이며 최종 설계가 아니다.
 
-| 항목 | 결과 | 의미 |
+### 9. P7-GE의 설계 차별점
+
+P7-GE는 저장 용량이나 출력 버스를 줄여 면적을 낮춘 구조가 아니다. P4-C와 다음 조건을 그대로 유지한다.
+
+- 16개 비동기 source와 4-bit 출력 버스 1개
+- Source별 pending 16개와 registered output 1개
+- Source-side 4-phase handshake와 early ACK
+- 2FF CDC
+- Receiver-facing registered valid/ready
+- Full backlog에서 1 event/clock 최대 처리율
+
+두 설계는 입력 CDC, pending 용량, output 구조와 workload 계약을 동일하게 유지한다. P7-GE는 중재 상태와 선택 tree를 주로 변경하고, 최종 robust형에는 P4-C에 없던 reset-release synchronizer 2 FF를 추가했다. 제시한 PPA는 이 reset 비용까지 포함한 순개선 결과다.
+
+## III. 검증 및 구현 결과
+
+### 1. 검증 조건
+
+기능 시험과 물리 구현 시험의 목적을 구분하였다.
+
+#### 1.1 기능 시험
+
+- 16 sources, source당 한 번에 요청 하나
+- Source는 ACK가 올라올 때까지 request 유지
+- 단일 요청, 동시 요청, 반복 burst, receiver stall, 포화 입력, hotspot, reset 포함
+- Scoreboard로 요청 source와 출력 주소를 비교
+- Stall 중 `out_valid`와 `out_addr`가 유지되는지 assertion으로 확인
+- Pass marker와 event accounting으로 성공 판정
+
+#### 1.2 P4-C와 P7-GE의 공정 비교
+
+ACK 속도에 따라 다음 request 도착 시간이 바뀌지 않도록 source 바깥에 동일한 demand FIFO를 두었다. P4-C와 P7-GE에 같은 101개 입력 이벤트와 같은 도착 시각을 제공하고 다음 시간을 분리해 측정했다.
+
+- Demand가 source request로 제시되기 전 외부 대기
+- Request부터 controller ACK까지의 source 보유 시간
+- ACK부터 최종 `valid && ready` 출력까지의 내부 대기
+- 최초 demand부터 최종 출력까지의 end-to-end 시간
+
+#### 1.3 ASIC 물리 조건
+
+- Artisan TSMC 0.18 µm 표준셀
+- Genus 합성 clock period 10 ns
+- Innovus clock uncertainty 0.2 ns
+- Metal1-Metal6
+- Core target utilization 60%
+- P4-C와 P7-GE에 동일한 floorplanning 방식(aspect ratio 1.0, target utilization 60%, margin 20 µm), power-ring 규칙과 timing 제약 적용. 실제 core 크기는 각 netlist의 셀 면적에 따라 산정
+- Post-route setup/hold, recovery/removal, power, DRC와 connectivity 확인
+
+### 2. 기능 및 공정성 검증
+
+| 검증 항목 | 결과 | 이 결과가 의미하는 것 |
 |---|---:|---|
-| 요청한 이벤트 | 139개 | 시험이 컨트롤러에 보낸 총 이벤트 |
-| 출력된 이벤트 | 139개 | 손실과 중복 없이 모두 전달 |
-| 기능 오류 | 0개 | 주소와 전송 횟수 일치 |
-| 요청 시점 변화 시험 | 192 / 192 통과 | clock과 다른 시점의 요청도 한 번씩 처리 |
-| 동시 요청 순서 시험 | 16 / 16 통과 | 16개 뉴런 모두 처리 |
-| 최고 처리율 | clock당 1개 | 수신기가 준비된 상태 |
-| 평균 대기 시간 | 15.741 clock | P3 대비 4.70% 감소 |
-| 최대 대기 시간 | 28 clock | P3 대비 3.45% 감소 |
-| 반복 요청이 많았던 15번 뉴런 | 최대 3 clock | P3 대비 25% 감소 |
-| cut-through 동작 | ACK와 output 등록 0-cycle 차이 | 별도 pending register cycle 제거 |
-| Conformal LEC | 100 / 100 equivalent | 21 outputs와 79 state points 일치 |
+| 종합 기능 시험 | 139/139, 오류 0 | 해당 시험에서 유실·중복 없이 전달 |
+| CDC phase sweep RTL | 192/192, 오류 0 | 여러 clock 상대 시점에서 held request를 한 번씩 접수 |
+| CDC phase sweep gate | 192/192, 오류 0 | 합성 netlist에서도 동일한 디지털 요청 규약 유지 |
+| 16개 source 동시 대기 순서 | 16개 Gray 주소 일치 | 모든 source를 한 번씩 선택하고 예상 순서 유지 |
+| 64개 대기 요청 조합 | 64/64, 오류 0 | 일부 source만 기다릴 때도 선택 결과 일치 |
+| 가장 불리한 지속 요청 | 16 service decisions | Starvation 상한 확인 |
+| 수신기 정지 중 출력 유지 | 오류 0 | Receiver 정지 중 valid와 address 유지 |
 
-이 시험은 P4-C가 설계한 디지털 규칙에 따라 이벤트를 한 번씩 처리하면서 P3의 고정 service latency를 줄였음을 보여준다. 다만 192회 시험만으로 실제 실리콘의 준안정성 발생 확률을 직접 증명하는 것은 아니다.
+Vivado FPGA 합성 sanity check에서 최종 robust형은 92 LUT와 75 FF를 사용했고, 10 ns 조건의 register-to-register slack은 +4.238 ns였다. Reset synchronizer를 제거한 비교형은 91 LUT와 73 FF였지만 reset 해제 안정성을 포함하지 않으므로 최종 설계로 사용하지 않는다. ASIC PPA 판단은 이후의 Genus와 Innovus 결과를 기준으로 한다.
 
-### 6.2 P7-GE
+Broad regression의 평균 지연은 P4-C 15.741 cycles, P7-GE 15.582 cycles였고 최대 지연은 두 설계 모두 28 cycles였다. 이 시험에서는 각 source가 ACK를 받은 뒤 다음 요청을 만들기 때문에 중재 정책에 따라 입력 시점도 일부 달라질 수 있다. 실제 도착 시점을 고정한 직접 비교는 다음 절의 fixed-demand 시험을 주 기준으로 사용한다.
 
-| 항목 | 결과 | 의미 |
-|---|---:|---|
-| broad regression | 139 / 139, 오류 0 | 유실·중복 없이 모두 전달 |
-| 평균 / 최대 대기 | 15.582 / 28 clock | P4-C와 같은 peak 처리율 |
-| full-backlog 순서 | Gray 16개 주소 정확히 일치 | 주소당 한 번씩 처리 |
-| frozen random mask | 64 / 64, 오류 0 | sparse pending 조합에서도 winner 일치 |
-| 최악 위치 지속 요청 | 16 grants | starvation bound 확인 |
-| 합성 후 gate 공정성 시험 | PASS | Vivado netlist에서도 순서·bound 보존 |
-| CDC phase sweep, RTL / gate | 192 / 192, 오류 0 / 192 / 192, 오류 0 | held request를 정확히 한 번 전달 |
+### 3. 동일 입력 workload 비교
 
-P4-C와 P7-GE에 동일한 101-event demand arrival을 넣은 공정 비교에서는 모든 phase의 demand-to-output 평균, output span과 saturation 1 event/clock 처리율이 같았다. Stall 해제 전에 early ACK한 event도 두 설계 모두 5개였고 controller에 아직 제시되지 못한 demand는 0개였다. 따라서 P7-GE의 면적 감소는 저장공간을 source 쪽으로 옮긴 결과가 아니다.
+| 항목 | P4-C | P7-GE | 해석 |
+|---|---:|---:|---|
+| 전달 이벤트 / 오류 | 101 / 0 | 101 / 0 | 두 설계 모두 유실·중복 없음 |
+| 포화 구간 첫 출력-마지막 출력 시간 | 630 ns | 630 ns | 1 event/clock 최대 처리율 동일 |
+| 수신기 정지 해제 전 ACK | 5 | 5 | 시험에서 관찰한 early-ACK 동작 동일 |
+| Stall 해제 시 아직 제시되지 않은 demand | 0 | 0 | 입력 저장 위치와 source decoupling 동일 |
+| 포화 구간 입력 도착-최종 출력 평균 | 354 ns | 354 ns | 해당 workload의 end-to-end 평균 동일 |
+| 전체 출력 주소 bit 전환 | 174 | **106** | 해당 trace에서 39.08% 감소 |
+| 64-event 포화 구간 주소 bit 전환 | 118 | **63** | P7-GE는 인접 전송당 1 bit 전환 |
 
-동일한 101-event 입력 demand-arrival trace에서 4-bit output address toggle은 P4-C 174회에서 P7-GE 106회로 39.08% 감소했다. 출력 순서는 각 중재 정책에 따라 달라진다. 64-event saturation 내부 전이만 보면 118회에서 63회로 줄어, 인접 63회 transaction마다 정확히 한 bit만 바뀌었다.
+이 시험에서 같은 것은 입력 source, 이벤트 수와 demand 도착 시각이다. P4-C와 P7-GE의 출력 순서는 중재 정책 때문에 다르다. P7-GE는 출력 순서를 Gray 형태로 재배열해 이 workload의 주소 전환을 39.08% 줄였다. 모든 sparse workload에서 같은 감소율을 보장하는 값은 아니며, 주소 toggle 감소가 곧 전체 칩 전력 39.08% 감소를 뜻하지도 않는다.
 
-## 7. TSMC 180 nm 물리 설계 결과
-
-T0-PPA, P4-C와 P7-GE는 Artisan TSMC 0.18 µm, 1.8 V 표준 셀, Metal1~Metal6, 60% target utilization과 동일한 core ring 조건을 사용했다. T0-PPA는 self-timed relative timing, 동기식 개선본은 10 ns clock setup/hold STA로 평가했다.
-
-### 7.1 T0-PPA post-route 결과
-
-| 항목 | 결과 | 설명 |
-|---|---:|---|
-| die / core | 92.400 × 85.680 / 51.480 × 45.360 µm | core-only floorplan |
-| post-route cells | 100개 | latch 5개와 delay cell 6개 포함 |
-| cell area | 1,397.088 µm² | 입출력 pad 제외 |
-| placement density | 59.82% | 동일 target utilization |
-| routing overflow | 0.00% | routing resource 초과 없음 |
-| post-route power | 0.03483881 mW | slow 1.62 V, default activity |
-| bundled-data margin | +0.676 ns | slow data 대 fast control 보수 비교 |
-| extracted SPEF nets | 120개 | post-route coupled RC |
-| route DRC / connectivity | 0 / 0 | 배선·연결 검사 통과 |
-
-![T0-PPA TSMC 180 nm Innovus 실제 post-route 화면](../docs/architecture/t0_paa_180nm_innovus_postroute.png)
-
-### 7.2 P4-C 논리 합성 결과
-
-| 항목 | 결과 | 설명 |
-|---|---:|---|
-| 표준 셀 수 | 308개 | 배치 전 Genus 결과 |
-| 셀 면적 합계 | 8,568.807 µm² | P3 대비 1.23% 감소 |
-| 가장 긴 계산 경로 | 2.990 ns | P3 대비 4.53% 감소 |
-| 시간 여유 | 6.853 ns | 10 ns 목표에서 남은 여유 |
-| 추정 전력 | 1.16579 mW | 기본 신호 활동률 사용, P3 대비 2.72% 증가 |
-
-### 7.3 P4-C 배치·배선 결과
-
-| 항목 | 결과 | 설명 |
-|---|---:|---|
-| 칩 내부 영역 | 123.420 × 115.920 µm | 논리 셀이 배치되는 core 크기 |
-| 전체 외곽 크기 | 164.340 × 156.240 µm | 입출력 패드는 포함하지 않은 설계 외곽 |
-| 배치 후 셀 수 | 362개 | hold margin 확보용 buffer 포함 |
-| 셀 면적 합계 | 9,353.837 µm² | P3 대비 4.15% 증가 |
-| 셀 배치 밀도 | 65.38% | core 중 셀이 차지한 비율 |
-| 배선 혼잡 초과 | 0.00% | 도구가 보고한 배선 용량 초과 없음 |
-| 느린 조건 시간 여유 | +3.547 ns | P3 대비 13.29% 증가 |
-| 빠른 조건 시간 여유 | +0.004 ns | hold target을 만족한 최소 양수 margin |
-| 배치 후 추정 전력 | 0.960680 mW | P3 대비 3.87% 증가, default activity |
-| 배선 오류 | 0개 | Innovus 배선 규칙 검사 |
-| 연결 오류 | 0개 | 끊기거나 잘못 연결된 신호 없음 |
-
-### 7.4 P4-C Innovus 실제 화면
-
-아래 이미지는 도식화한 예상도가 아니다. P4-C의 최종 배치·배선 데이터베이스를 Cadence Innovus에서 복원한 뒤 `gui_dump_picture` 기능으로 직접 출력했다.
-
-![P4-C TSMC 180 nm Innovus 실제 post-route 화면](../docs/architecture/p4c_180nm_innovus_postroute.png)
-
-화면 가운데 모여 있는 작은 사각형들이 표준 논리 셀이다. 가로와 세로로 지나가는 여러 색의 선은 전원망과 Metal1~Metal6 신호 배선이며, 외곽으로 뻗은 선은 모듈 입출력 연결이다.
-
-이 결과는 RTL 코드가 논리식으로만 존재하는 단계를 넘어, **실제 공정의 셀 크기와 배선 규칙을 적용해 칩 내부에 배치할 수 있는 단계**까지 진행됐음을 뜻한다.
-
-### 7.5 P7-GE 논리 합성 결과
+### 4. Genus 논리 합성과 Conformal 등가성
 
 | 항목 | P4-C | P7-GE | 변화 |
 |---|---:|---:|---:|
-| 표준 셀 수 | 308 | **236** | -23.38% |
+| 표준셀 수 | 308 | **236** | -23.38% |
 | 셀 면적 | 8,568.807 µm² | **7,248.226 µm²** | -15.41% |
 | 가장 긴 data path | 2.990 ns | **2.508 ns** | -16.12% |
-| 10 ns setup slack | +6.853 ns | **+7.268 ns** | +0.415 ns |
-| vectorless power | 1.165790 mW | **0.887720 mW** | -23.85% |
+| Setup slack | +6.853 ns | **+7.268 ns** | +0.415 ns |
+| Vectorless power | 1.165790 mW | **0.887720 mW** | -23.85% |
 
-### 7.6 P7-GE 배치·배선 결과
+P7-GE는 reset synchronizer 2 FF를 포함한 robust형으로 합성했다. 중재 상태가 10 bit에서 4 bit로 줄었고, 후보 선택 회로도 더 작게 매핑되어 sequential cell뿐 아니라 조합 셀과 가장 긴 계산 경로가 함께 감소했다.
+
+Conformal 논리 등가성 검사(LEC)에서는 primary output 21개와 state point 75개, 총 96개 비교점이 모두 equivalent였다. Nonequivalent, abort, unknown point는 0이었다. 이는 RTL이 표현한 출력과 상태 전이가 Genus netlist에도 보존됐다는 뜻이다.
+
+### 5. Innovus 180 nm 배치·배선
 
 | 항목 | P4-C | P7-GE | 변화 |
 |---|---:|---:|---:|
-| core 크기 | 123.420 × 115.920 µm | **114.180 × 105.840 µm** | 축소 |
+| Core 크기 | 123.420 × 115.920 µm | **114.180 × 105.840 µm** | 축소 |
 | 배치 후 셀 수 | 362 | **292** | -19.34% |
 | 셀 면적 | 9,353.837 µm² | **8,063.194 µm²** | -13.80% |
-| setup slack | +3.547 ns | **+4.350 ns** | +0.803 ns |
-| hold slack | +0.004 ns | **+0.006 ns** | +0.002 ns |
-| vectorless power | 0.960680 mW | **0.856192 mW** | -10.88% |
-| DRC / connectivity | 0 / 0 | **0 / 0** | pass |
+| Setup slack | +3.547 ns | **+4.350 ns** | +0.803 ns |
+| Hold slack | +0.004 ns | **+0.006 ns** | +0.002 ns |
+| Post-route vectorless power | 0.96067953 mW | **0.85619239 mW** | -10.88% |
+| DRC / connectivity | 0 / 0 | **0 / 0** | 통과 |
 
-P7-GE robust reset release도 별도로 분석했다. Recovery slack은 +8.366 ns, removal slack은 +0.340 ns로 모두 양수다. Conformal에서는 primary output 21개와 state point 75개, 총 96/96이 equivalent였고 nonequivalent, abort와 unknown은 0이다.
+Setup은 다음 clock edge 전에 데이터가 도착해야 하는 조건이고, hold는 같은 edge 직후 데이터가 너무 빨리 바뀌지 않아야 하는 조건이다. 두 값이 모두 양수이므로 10 ns 목표에서 배치·배선 후 timing 조건을 만족했다.
 
-![P7-GE TSMC 180 nm Innovus 실제 post-route 화면](../docs/architecture/p7ge_180nm_innovus_postroute.png)
+Robust reset의 내부 해제 경로도 별도로 확인했다. Recovery slack은 +8.366 ns, removal slack은 +0.340 ns로 모두 양수였다.
 
-위 화면도 예상도가 아니라 최종 database를 Innovus에서 복원한 뒤 24-bit virtual display에서 `gui_dump_picture`로 직접 출력했다.
+DRC 0은 사용한 Innovus rule deck에서 신호 배선 위반을 찾지 못했다는 뜻이고, connectivity 0은 끊기거나 잘못 연결된 regular net이 없다는 뜻이다. 이는 core P&R 검사를 통과했다는 근거이며 foundry sign-off와 실리콘 동작을 대신하지 않는다.
 
-동일 fixed-demand workload와 DUT boundary에서 각각 생성한 VCD를 Genus에 적용한 보조 전력 추정은 P4-C 1.048950 mW, P7-GE 0.686120 mW였다. 두 VCD는 중재 정책과 reset release 차이 때문에 내부 signal·출력 순서·종료 시각이 같지 않다. Sequential annotation coverage도 각각 82.75%와 100%로 달라 34.59% 감소를 sign-off 수치로 단정하지 않는다. 동일 조건 vectorless와 post-route 결과를 주 비교 근거로 사용한다.
+### 6. 실제 배치·배선 화면
 
-## 8. T0-PPA, P4-C와 P7-GE 비교
+아래 화면은 도식화한 예상도가 아니다. P7-GE의 최종 post-route database를 Innovus에서 복원한 뒤 `gui_dump_picture`로 직접 출력했다.
 
-| 비교 항목 | T0-PPA 전통적 비동기 | P4-C 이전 개선본 | P7-GE 최종 개선본 |
-|---|---|---|---|
-| 외부 뉴런 요청 | 비동기 | 비동기 | 비동기 |
-| 컨트롤러 내부 | 요청·응답 변화로 직접 동작 | clock에 맞춰 저장·처리 | clock에 맞춰 저장·처리 |
-| 동시 요청 선택 | 항상 작은 번호 우선 | 4×4 hierarchical RR | Gray-epoch XOR tournament |
-| 공정성 | starvation 가능 | pointer 기반 순환 | 최대 16 service decisions, stall 제외 |
-| 이벤트 저장 | 없음 | source마다 pending 1개 | source마다 pending 1개 |
-| 출력 방식 | 매번 4단계 신호 복귀 | registered valid/ready | registered valid/ready |
-| 출력 버스 | 4-bit 1개 | 4-bit 1개 | 4-bit 1개 |
-| 합성 기능 보존 | Conformal 26/26 | Conformal 100/100 | Conformal 96/96 |
-| 물리 timing | bundled-data +0.676 ns | setup +3.547, hold +0.004 ns | setup +4.350, hold +0.006 ns |
-| 최고 처리율 | self-timed, receiver 의존 | ready 시 clock당 1개 | ready 시 clock당 1개 |
-| post-route cells | 100 | 362 | **292** |
-| post-route cell area | 1,397.088 µm² | 9,353.837 µm² | **8,063.194 µm²** |
-| post-route default power | 0.03483881 mW | 0.960680 mW | **0.856192 mW** |
-| 180 nm DRC / connectivity | 0 / 0 | 0 / 0 | 0 / 0 |
+![P7-GE TSMC 180 nm Innovus post-route](../docs/architecture/p7ge_180nm_innovus_postroute.png)
 
-P4-C와 P7-GE는 T0-PPA보다 많은 cell과 area를 사용한다. 그 비용으로 **비동기 요청을 내부 clock domain으로 넘기는 입구, source별 pending 16개와 registered output, starvation을 막는 중재, bubble 없는 출력과 same-decision cut-through**를 제공한다.
+화면 가운데의 작은 사각형은 표준 논리 셀이고, 여러 색의 선은 power ring과 Metal1-Metal6 신호 배선이다. 외곽으로 이어지는 선은 controller의 입력과 출력 pin으로 연결된다.
 
-Power 값은 같은 slow/default-activity 조건의 tool estimate이므로 물리 복잡도 비교에는 참고할 수 있지만 실제 spike traffic의 energy/event 차이로 단정하지 않는다. 또한 T0-PPA에는 global clock이 없으므로 동기식 개선본의 Fmax와 동일한 축으로 비교하지 않고 handshake cycle time과 receiver 조건을 함께 제시해야 한다.
+전통적 baseline T0-PPA도 동일 공정 library를 사용해 배치·배선했다.
 
-### 8.1 P3에서 P4-C로 추가 개선된 부분
+![T0-PPA TSMC 180 nm Innovus post-route](../docs/architecture/t0_paa_180nm_innovus_postroute.png)
 
-| 항목 | P3 | P4-C | 변화 |
-|---|---:|---:|---:|
-| average latency | 16.517 cycles | 15.741 cycles | -4.70% |
-| maximum latency | 29 cycles | 28 cycles | -3.45% |
-| source 15 hotspot | 4 cycles | 3 cycles | -25.00% |
-| Genus data path | 3.132 ns | 2.990 ns | -4.53% |
-| post-route area | 8,981.280 µm² | 9,353.837 µm² | +4.15% |
-| post-route power | 0.924919 mW | 0.960680 mW | +3.87% |
-| post-route setup slack | +3.131 ns | +3.547 ns | +13.29% |
+### 7. T0-PPA의 물리 결과와 해석
 
-P4-C의 개선은 peak bandwidth를 늘린 결과가 아니다. 동일한 1 event/clock에서 event가 arbitration 후보가 되기까지의 고정 대기를 제거한 결과다.
+| 항목 | T0-PPA 결과 | 의미 |
+|---|---:|---|
+| Xcelium event accounting | 139/139, 오류 0 | 명시한 request-stability 조건의 기능 동작 |
+| 경합 digital stress | 84 trials, 오류 0 | 유실 없이 처리 |
+| 첫 선택이 도착순서와 달라진 시험 | 42/84 | Fixed priority가 실제 도착 순서를 보존하지 않음 |
+| Conformal LEC | 26/26 equivalent | RTL과 합성 netlist 논리 보존 |
+| Post-route cells | 100 | Latch 5개와 delay cell 6개 포함 |
+| Cell area | 1,397.088 µm² | Core logic cell 합계 |
+| Default-activity power | 0.03483881 mW | Clock이 없는 전통 구조의 도구 추정 |
+| Bundled-data margin | +0.676 ns | 측정 corner에서 주소가 control보다 먼저 안정 |
+| DRC / connectivity | 0 / 0 | Core 배선·연결 검사 통과 |
 
-### 8.2 P4-C에서 P7-GE로 추가 개선된 부분
+T0-PPA는 P7-GE보다 훨씬 작고 vectorless power도 낮다. 그러나 T0-PPA에는 2FF CDC, source별 pending 16개, registered output, starvation 상한과 1 event/clock 동기식 출력이 없다. 또한 T0-PPA는 self-timed relative timing으로 평가하고 P7-GE는 10 ns clock STA로 평가한다. 따라서 두 값을 동일 기능 회로의 직접적인 PPA 우열로 해석하지 않는다. T0-PPA는 전통 구조의 최소 비용과 한계를 보여주는 기준이다.
 
-| 항목 | P4-C | P7-GE | 변화 |
-|---|---:|---:|---:|
-| source-indexed pending slots | 16 | 16 | 유지 |
-| 최대 accepted-but-untransferred events | 17 | 17 | output 1개 포함, 유지 |
-| saturation throughput | 1 event/clock | 1 event/clock | 유지 |
-| fixed-demand end-to-end latency | 기준 | 동일 | 유지 |
-| output address toggles, 101 events | 174 | **106** | -39.08% |
-| arbitration state | 10 FF | **4 FF** | -60.00% |
-| Genus cells | 308 | **236** | -23.38% |
-| Genus data path | 2.990 ns | **2.508 ns** | -16.12% |
-| post-route area | 9,353.837 µm² | **8,063.194 µm²** | -13.80% |
-| post-route power | 0.960680 mW | **0.856192 mW** | -10.88% |
-| post-route setup slack | +3.547 ns | **+4.350 ns** | +0.803 ns |
+### 8. Power 결과의 범위
 
-P7-GE는 버스 수, FIFO depth 또는 외부 source buffer를 바꾸지 않았다. 동일한 저장·전송 계약 안에서 중재 state representation과 선택 tree를 바꿔 성능·면적·전력을 동시에 개선했다.
+본문의 주 비교값은 P4-C와 P7-GE에 같은 기본 활동률을 적용한 Genus 및 Innovus vectorless power다. 이는 동일 물리 복잡도를 비교하는 도구 추정치이며 실제 실리콘 전력이나 spike당 energy 측정값이 아니다.
 
-## 9. 2차 과제 연계
+동일한 101-event fixed-demand workload에서 신호 전환을 기록한 VCD(Value Change Dump)를 각 DUT boundary에서 별도로 생성해 Genus에 적용했다. P4-C는 1.048950 mW, P7-GE는 0.686120 mW로 계산됐다. 그러나 두 설계의 내부 signal과 출력 순서, simulation 종료 시각이 같지 않다. 합성 회로의 sequential signal 가운데 VCD 활동값이 연결된 비율(annotation coverage)도 P4-C 82.75%, P7-GE 100%로 다르다. 따라서 명목 감소율 34.59%는 실제 입력 전환을 반영한 보조 관찰로만 제시하며 sign-off 전력 개선 수치로 사용하지 않는다.
 
-P7-GE가 출력하는 4-bit 주소는 “어느 뉴런이 발화했는가”를 나타낸다. 2차 과제에서는 이 주소를 다음과 같이 확장할 수 있다.
+실제 ECG/SNN spike trace, 동일 출력 load와 post-route SAIF를 사용한 energy/event 분석은 후속 검증 항목이다.
+
+### 9. 제외한 실험 구조
+
+P7-GE-FT는 receiver가 준비된 경우 중재 결과를 output register를 거치지 않고 직접 보여주는 fall-through 구조다. 기능 시험에서는 no-stall latency가 1 cycle 감소했고, stall 안정성과 1 event/clock 처리율도 유지했다.
+
+그러나 10 ns interface 조건에서 register-to-output data path가 8.942 ns, slack이 -2.380 ns로 측정됐다. 내부 register 경로가 통과하더라도 출력 setup 조건을 만족하지 못하므로 최종 설계로 채택하지 않았다. 빠른 기능 결과보다 물리 timing closure를 우선한 결정이다.
+
+## IV. 제품 및 기술 요약
+
+### 1. 설계 목표 대비 결과
+
+| 목표 | 최종 결과 | 판정과 해석 |
+|---|---|---|
+| 비동기 source 요청 접수 | Source별 2FF synchronizer, RTL/gate CDC 각 192/192 통과 | 디지털 요청 유지 규약 달성 |
+| 동시 이벤트 보관 | Pending 16개 + registered output 1개 | 접수됐지만 아직 전송하지 않은 이벤트 최대 17개 |
+| Starvation 방지 | 지속 pending source 최대 16 service decisions | Receiver stall 시간 제외 조건으로 달성 |
+| 최대 처리율 | Full backlog, `out_ready=1`에서 1 event/clock | 단일 4-bit 버스 유지 |
+| P4-C 대비 PPA 개선 | Post-route area -13.80%, vectorless power -10.88% | 동일 저장·출력 계약에서 달성 |
+| Timing closure | Setup +4.350 ns, hold +0.006 ns | 10 ns 목표 달성 |
+| Reset release | Recovery +8.366 ns, removal +0.340 ns | Robust reset 경로 통과 |
+| 논리·물리 검증 | LEC 96/96, DRC/connectivity 0/0 | Core 수준 검증 완료 |
+
+### 2. 창의성
+
+일반적인 개선은 FIFO를 늘리거나 출력 lane을 추가해 처리량을 높이는 방향으로 진행할 수 있다. P7-GE는 저장 용량과 버스 수를 바꾸지 않고, **다음 차례를 표현하는 상태 자체를 다시 설계**했다.
+
+P4-C의 10-bit hierarchical round-robin 상태를 4-bit epoch로 줄이고, 이 epoch가 원래 source 주소를 Gray 순서로 우선하도록 만들었다. 이 선택 순서는 지속 요청의 공정성을 유지하는 동시에 full backlog에서 주소 bit가 한 번에 하나씩 변하게 한다. 상태 bit 감소와 주소 순서 설계를 하나의 중재 정책에 결합한 점이 핵심 창의성이다.
+
+### 3. 기술성
+
+P7-GE는 다음 기술을 하나의 합성 가능한 RTL에 결합한다.
+
+- 비동기 입력을 위한 source별 2FF CDC
+- Source별 1-bit pending과 early ACK
+- Pending next-state cut-through
+- 4-bit Gray epoch
+- 4-level XOR tournament selection tree
+- Registered valid/ready output
+- Async assertion, 2-clock synchronous deassertion reset
+
+각 기술은 testbench 기능 결과뿐 아니라 Vivado gate simulation, Cadence Xcelium, Genus, Conformal과 Innovus로 이어지는 단계에서 검증하였다.
+
+### 4. 완성도
+
+최종 설계는 139-event broad regression, RTL/gate CDC phase sweep, full-backlog 순서, 64개 random pending mask와 worst-position fairness 시험을 통과했다. Genus netlist는 RTL과 96/96 equivalent였고, Innovus post-route에서 setup/hold와 reset recovery/removal timing을 만족했다. DRC와 connectivity 오류는 0이며 실제 post-route 화면과 DEF, SDF, SPEF, netlist를 보존하였다.
+
+전력 결과는 도구 추정임을 분리해 기술했고, timing을 만족하지 못한 fall-through 구조는 기능상 이점이 있어도 최종안에서 제외했다. 달성한 결과와 아직 필요한 실리콘·traffic 기반 검증을 구분하였다.
+
+### 5. 2차 설계과제에서의 재사용
+
+P7-GE는 특정 응용 계산을 수행하는 회로가 아니라 여러 비동기 event를 하나의 `source_id + valid/ready` 주소 스트림으로 만드는 독립 전단 IP다.
 
 ```text
-뉴런 주소
-  → 센서 위의 위치 (x, y)로 변환
-  → 이동 방향 또는 경계 방향 계산
-  → N×M 공간 기억 장치의 해당 위치 갱신
+뉴런 또는 센서 이벤트
+    → P7-GE 이벤트 수집·저장·중재
+    → 원래 source ID 출력
+    → 좌표 변환, N×M 메모리 또는 후속 연산
 ```
 
-P7-GE의 역할은 여러 뉴런에서 발생한 이벤트를 손실 없이 한 줄로 정리해 다음 단계에 공급하는 것이다. 주소를 좌표나 방향으로 바꾸는 계산은 P7-GE 뒤에 연결되는 별도 모듈이 담당한다.
+Gray code는 출력 payload가 아니라 선택 순서에만 사용되므로 후단에 decoder를 추가할 필요가 없다. 현재 RTL은 16 sources, 4-bit 주소와 4단 선택 tree로 고정되어 있다. 다른 규모의 시스템에서는 parameterized RTL로 수정한 뒤 공정성, CDC와 PPA를 다시 검증해야 한다. 또한 원래 발화 순서나 정확한 시간 차가 필요한 응용에는 timestamp 또는 순서 보존 queue를 별도로 추가해야 한다.
 
-## 10. 결론
+### 6. 완료 범위와 남은 한계
 
-T0-PPA는 공통 clock 없이 요청과 응답만으로 진행하는 전통적 AER를 characterized latch와 delay cell로 구현했다. 139개 event accounting, 26개 LEC compare point, post-route bundled-data margin +0.676 ns, DRC와 connectivity 0을 확보해 명시한 request-stability contract 안에서 유효한 물리 비교 기준을 만들었다.
+- T0-PPA는 grant capture 구간의 request stability가 필요하며 arbitrary near-simultaneous edge의 metastability sign-off를 완료하지 않았다.
+- P7-GE의 CDC phase sweep은 디지털 protocol sampling 시험이며 실리콘 MTBF 측정이 아니다.
+- Event 보존은 source가 ACK까지 request를 유지하고 source당 한 번에 요청 하나만 제시하는 계약 안에서 성립한다.
+- P7-GE는 FCFS가 아니며 original event timestamp를 전송하지 않는다.
+- Post-route power는 vectorless estimate이며 실제 spike workload의 energy/event가 아니다.
+- Pad ring, package, GDS, foundry sign-off DRC/LVS, silicon fabrication과 측정은 아직 수행하지 않았다.
 
-P4-C는 비동기 요청을 두 단계로 안정화하고, 뉴런마다 이벤트 하나를 기억하며, 모든 뉴런에 차례가 돌아가는 선택 방식을 사용한다. 신규 event는 pending next-state에 접수되는 같은 decision에서 선택될 수 있고, 수신기가 준비된 동안에는 하나의 4-bit 버스로 매 clock마다 이벤트 하나를 전송한다.
+### 7. 결론
 
-P4-C 기능 시험에서는 139개 이벤트를 손실과 중복 없이 전달했고 192가지 요청 시점 시험을 모두 통과했다. P3보다 고정 service latency를 줄여, 안전한 CDC·pending 16개와 output 1개의 elasticity·1 event/clock 출력의 비교 기준을 만들었다.
+T0-PPA는 공통 clock 없이 요청과 응답으로 동작하는 전통적 AER를 characterized latch와 delay cell로 구현하였다. 이를 통해 fixed priority, source별 pending 부재, return-to-zero와 비동기 중재 조건을 물리 비교 가능한 baseline으로 고정하였다.
 
-P7-GE는 이 기능 계약을 유지한 채 10-bit hierarchical RR state를 4-bit Gray epoch과 4-level tournament로 교체했다. 139-event regression, 64 random pending mask, worst-position 16-grant 시험과 post-synthesis gate 시험을 모두 통과했다. 공통 fixed-demand workload의 end-to-end latency·stall elasticity·처리율은 P4-C와 같고 output address toggle은 39.08% 감소했다.
+P4-C는 비동기 요청 동기화, source별 이벤트 보관, early ACK, 공정한 선택과 1 event/clock 출력을 제공하였다. P7-GE는 이 기능을 줄이지 않고 중재 상태와 선택 회로를 다시 구성하였다.
 
-TSMC 180 nm post-route에서 P7-GE는 P4-C보다 cell 19.34%, area 13.80%, vectorless power 10.88%를 줄였고 setup slack은 0.803 ns 증가했다. Hold, reset recovery/removal, LEC 96/96, DRC와 connectivity도 모두 통과했다. 따라서 **registered-output P7-GE robust를 본 과제의 최종 AER 컨트롤러로 채택한다.**
+동일한 P4-C 기능 계약에서 P7-GE는 180 nm post-route cell area를 13.80%, vectorless power estimate를 10.88% 줄였고 setup slack을 0.803 ns 늘렸다. 동일 101-event 입력 workload의 output address toggle은 39.08% 감소했다. 기능, gate, CDC, LEC, timing, DRC와 connectivity 검증을 모두 통과했으므로 registered-output P7-GE robust를 최종 AER 컨트롤러로 채택한다.
 
-## 11. 완료 범위와 한계
+### 8. 주요 근거 파일
 
-완료한 범위는 RTL 설계, 기능 시뮬레이션, 논리 합성, TSMC 180 nm 표준 셀 배치·배선과 배치 후 동작 시간 분석이다.
-
-T0-PPA는 request set이 grant-capture aperture 동안 안정되어 있다는 조건이 필요하며, characterized MUTEX가 없으므로 임의의 near-simultaneous edge에 대한 metastability signoff는 완료하지 않았다. 이것은 baseline의 비교 조건이자 동기식 개선본에서 2FF clock-domain crossing 구조를 선택한 이유다.
-
-다음 항목은 아직 수행하지 않았다.
-
-- 실제 반도체 제작과 실리콘 측정
-- 입출력 패드와 패드 링 설계
-- 반도체 패키지 설계
-- 제조용 최종 GDS 출력과 foundry signoff DRC/LVS
-- 실제 뉴런 발화 파형을 사용한 배치 후 전력 측정
-- Innovus post-route netlist의 SDF 기능 시뮬레이션. 대신 Vivado post-synthesis netlist 공정성 시험과 Conformal LEC는 통과했다.
-
-P7-GE는 모든 지속 pending 요청을 최대 16 service decisions 안에 처리하지만, 이 수치는 clock 수가 아니며 receiver stall 시간은 제외한다. 또한 요청이 들어온 실제 시간 순서를 완벽히 보존하는 선착순 방식은 아니다. 같은 뉴런의 대기칸에는 이벤트 하나만 저장되므로 더 큰 burst를 처리하려면 source-side spike accumulator 또는 추가 FIFO가 필요하다.
-
-P7-GE-FT fall-through 변형은 no-stall latency를 한 clock 줄였지만 10 ns 조건에서 register-to-output slack -2.380 ns로 실패해 최종 설계에서 제외했다. 전력은 실제 ECG/SNN spike trace를 넣은 post-route SAIF 측정이 아니라 vectorless 도구 추정이며, 공통 VCD Genus 비교도 annotation coverage 차이 때문에 보조 근거로만 사용한다.
-
-## 12. 주요 근거 파일
-
-- T0-PPA RTL: [`rtl/traditional_async/aer_traditional_latch_paa.sv`](../rtl/traditional_async/aer_traditional_latch_paa.sv)
-- T0-PPA 검증 결과: [`results/T0_PAA_TRADITIONAL_AER_2026-08-19.md`](../results/T0_PAA_TRADITIONAL_AER_2026-08-19.md)
-- T0-PAA 180 nm 요약: [`reports/traditional_latch_paa/cadence/pnr_180nm/SUMMARY.txt`](traditional_latch_paa/cadence/pnr_180nm/SUMMARY.txt)
-- T0-PAA 증거 목록: [`results/T0_PAA_MANIFEST_2026-08-19.md`](../results/T0_PAA_MANIFEST_2026-08-19.md)
-- P4-C RTL: [`rtl/improved/aer_improved_cutthrough.sv`](../rtl/improved/aer_improved_cutthrough.sv)
-- P4-C 기능 및 비교 결과: [`results/P4_CUTTHROUGH_AER_2026-08-20.md`](../results/P4_CUTTHROUGH_AER_2026-08-20.md)
-- P4-C 180 nm 요약: [`reports/improved_cutthrough/cadence/pnr_180nm/SUMMARY.txt`](improved_cutthrough/cadence/pnr_180nm/SUMMARY.txt)
-- P4-C 증거 목록: [`results/P4_CUTTHROUGH_MANIFEST_2026-08-20.md`](../results/P4_CUTTHROUGH_MANIFEST_2026-08-20.md)
 - P7-GE RTL: [`rtl/improved/aer_pending_gray_epoch.sv`](../rtl/improved/aer_pending_gray_epoch.sv)
-- P7-GE 상세 검증 결과: [`results/P7_PENDING_GRAY_EPOCH_2026-08-20.md`](../results/P7_PENDING_GRAY_EPOCH_2026-08-20.md)
+- T0-PPA RTL: [`rtl/traditional_async/aer_traditional_latch_paa.sv`](../rtl/traditional_async/aer_traditional_latch_paa.sv)
+- P7-GE 상세 결과: [`results/P7_PENDING_GRAY_EPOCH_2026-08-20.md`](../results/P7_PENDING_GRAY_EPOCH_2026-08-20.md)
+- P7-GE 증거 manifest: [`results/P7_PENDING_GRAY_EPOCH_MANIFEST_2026-08-20.md`](../results/P7_PENDING_GRAY_EPOCH_MANIFEST_2026-08-20.md)
 - P7-GE 180 nm 요약: [`reports/pending_gray_epoch/cadence/pnr_180nm/SUMMARY.txt`](pending_gray_epoch/cadence/pnr_180nm/SUMMARY.txt)
-- P7-GE 공정 비교 TB: [`tb/aer_contract_fairness_tb.sv`](../tb/aer_contract_fairness_tb.sv)
-- P7-GE Innovus flow: [`scripts/cadence/p7ge_innovus.tcl`](../scripts/cadence/p7ge_innovus.tcl)
-- P7-GE LEC flow: [`scripts/cadence/p7ge_lec.tcl`](../scripts/cadence/p7ge_lec.tcl)
+- T0-PPA 상세 결과: [`results/T0_PAA_TRADITIONAL_AER_2026-08-19.md`](../results/T0_PAA_TRADITIONAL_AER_2026-08-19.md)
+- P4-C 상세 결과: [`results/P4_CUTTHROUGH_AER_2026-08-20.md`](../results/P4_CUTTHROUGH_AER_2026-08-20.md)
+- 동일 workload 비교 TB: [`tb/aer_contract_fairness_tb.sv`](../tb/aer_contract_fairness_tb.sv)
+- Cadence 재현 절차: [`scripts/cadence/P7GE_FLOW.md`](../scripts/cadence/P7GE_FLOW.md)
