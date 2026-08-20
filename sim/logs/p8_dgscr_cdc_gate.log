@@ -1,0 +1,23 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Fri Aug 21 01:38:43 2026
+# Process ID: 51956
+# Current directory: <WORKSPACE>/sim/p8_dgscr_cdc_gate_work
+# Command line: xsim.exe -log <WORKSPACE>\sim\logs\p8_dgscr_cdc_gate.log -mode tcl -source {xsim.dir/p8_dgscr_cdc_gate_sim/xsim_script.tcl}
+# Log file: <WORKSPACE>/sim/logs/p8_dgscr_cdc_gate.log
+# Journal file: <WORKSPACE>/sim/p8_dgscr_cdc_gate_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/p8_dgscr_cdc_gate_sim/xsim_script.tcl
+# xsim {p8_dgscr_cdc_gate_sim} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+METRIC improved_cdc_phase_trials=192
+METRIC improved_cdc_phase_received=192
+METRIC improved_cdc_phase_errors=0
+CDC_PHASE_TEST_PASS trials=192
+$finish called at time : 25075001 ps : File "<WORKSPACE>/tb/aer_improved_cdc_phase_tb.sv" Line 178
+exit
+INFO: [Common 17-206] Exiting xsim at Fri Aug 21 01:38:49 2026...

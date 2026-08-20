@@ -27,6 +27,7 @@
 /sim/improved_depth1_cdc_gate_work/
 /sim/improved_depth1_order_rtl_work/
 /sim/improved_depth1_order_gate_work/
+sim/*_work/
 **/xsim.dir/
 *.wdb
 *.pb
@@ -49,6 +50,31 @@ sim/logs/async_race_gate*.log
 sim/logs/traditional_structural_gate_compile.log
 sim/logs/traditional_structural_gate_elaborate.log
 sim/logs/traditional_structural_gate_tb_compile.log
+sim/logs/evd*.log
+sim/logs/epoch_variants*.log
+sim/logs/contract_fairness_p8_*.log
+sim/logs/p8_direct_gray_*.log
+sim/logs/p8_sparse_reset_*.log
+sim/logs/p8_dgt_*.log
+sim/logs/p8_dgpr_*.log
+sim/logs/p8_pareto_*.log
+
+# P8 exploratory implementation reports; the final DGSCR evidence is retained
+# separately under reports/p8_dg_scr and one sanitized Vivado result directory.
+/reports/epoch_variants/
+/reports/p8_pareto/
+/reports/p8_candidates/vivado_sparse_reset/
+/reports/p8_candidates/vivado_direct_gray/
+/reports/p8_candidates/vivado_direct_gray_shared_tree/
+/reports/p8_candidates/vivado_direct_gray_split_reset/
+/reports/p8_candidates/vivado_direct_gray_sync_core_reset/vivado.log
+/reports/p8_candidates/vivado_direct_gray_sync_core_reset/vivado.jou
+/sim/waves/contract_fairness_p8_sparse_reset.vcd
+/sim/waves/contract_fairness_p8_direct_gray.vcd
+/sim/waves/contract_fairness_p8_direct_gray_shared_tree.vcd
+/sim/waves/contract_fairness_p8_direct_gray_split_reset.vcd
+/sim/waves/contract_fairness_p8_xor2_sparse_reset.vcd
+/sim/waves/contract_fairness_p8_gray_ring_sparse_reset.vcd
 
 # Cadence Xcelium / Genus / Innovus generated state
 INCA_libs/

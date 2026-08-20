@@ -6,9 +6,9 @@
 - Competition: 2026 AI 반도체 회로 설계 경진대회
 - Current scope: 디지털 1차 설계 수행과제 only
 - Submission deadline: 2026-08-28 (KST)
-- Workspace/source of truth: `C:\Users\YangGeon\Documents\2026_AI_SEMI`
+- Workspace/source of truth: `<LOCAL_WORKSPACE>`
 
-The continuation handoff named `C:\Users\YangGeon\Documents\2026_ai_semi_aer`, but that path did not exist during the 2026-08-18 repository handoff. The complete Git repository and all required B0-v1 artifacts were present in the workspace above, so no directory was moved or duplicated.
+The continuation handoff named `<LOCAL_HANDOFF_PATH>`, but that path did not exist during the 2026-08-18 repository handoff. The complete Git repository and all required B0-v1 artifacts were present in the workspace above, so no directory was moved or duplicated.
 
 ECG, SNN ECG Classifier, and every previous ECG SoC are explicitly out of scope. No RTL or architecture from those projects may be imported.
 
@@ -22,7 +22,7 @@ The orientation PDF was visually inspected on 2026-08-18, pages 2 and 3.
 - The PDF schedule shows the first result date changed from 2026-08-13 to 2026-08-28.
 - The broader judging emphasis includes PPA, robustness, and a defensible explanation of design philosophy, method, performance, and results.
 
-Source PDF: `C:\Users\YangGeon\Downloads\2026년 반도체설계경진대회 오리엔테이션 (2026-07-23).pdf`
+Source PDF: `<LOCAL_DOWNLOADS>/2026년 반도체설계경진대회 오리엔테이션 (2026-07-23).pdf`
 
 ## Current local environment
 
@@ -89,10 +89,10 @@ Two implementations are now preserved:
 - P1 interface, CDC, queue depth, output protocol, traffic and constraints remain fixed.
 - Four local 4-way round-robin winners are computed in parallel.
 - One global 4-way round-robin selects among valid groups.
-- P2 is the current main design candidate because it preserves P1 behavior while reducing FPGA LUTs and high-speed ASIC area.
+- P2 was the main candidate at this stage of the project; P3, P4-C, P7-GE and P8-DG-SCR subsequently superseded it while preserving the documented interface lineage.
 - Equal-capacity shared FIFO is rejected for the standard-cell first-round comparison: implicit per-source counts use 32 storage bits for 32 events, while an explicit 32-entry address FIFO needs at least 128 payload bits plus pointers and admission arbitration.
 
-## Status as of 2026-08-19
+## Status through 2026-08-21
 
 - [x] Orientation PDF pages 2-3 inspected.
 - [x] Empty/local starting state recorded.
@@ -138,6 +138,12 @@ Two implementations are now preserved:
 - [x] P7-GE verification completed: broad 139/139, RTL/gate CDC 192/192 each, 64/64 pending-mask trials, 16-service-decision worst position and Conformal 96/96.
 - [x] P7-GE matched 180 nm P&R completed: 292 cells, 8,063.194 µm², setup +4.350 ns, hold +0.006 ns, reset recovery/removal +8.366/+0.340 ns, power 0.85619239 mW, DRC/connectivity 0/0.
 - [x] Public README and competition report rewritten using a problem-to-evidence narrative while preserving technical depth, measurement conditions and limitation boundaries.
+- [x] P8-DG-SCR replaces P7-GE as the current main controller while preserving the same CDC, pending 16 + output 1 storage, early ACK, full-Gray output order, 16-service-decision fairness bound and one-event/clock peak throughput.
+- [x] P8-DG-SCR partitions 75 state FFs into async-reset 2, resetless 36 and synchronous-clear 37, with clock-independent safe-low ACK/valid isolation and a two-release-clock integration contract.
+- [x] P8-DG-SCR RTL/gate/Xcelium verification completed: broad 139/139, CDC 192/192, random masks 64/64, worst position 16 decisions and clockless/mid-phase reset errors 0.
+- [x] P8-DG-SCR Genus completed: 232 cells, 6,383.362 µm², +6.657 ns slack and 0.848839 mW vectorless power. RTLStim2Gate VCD was 0.620896 mW, but unequal gate-driver coverage keeps it auxiliary.
+- [x] P8-DG-SCR Conformal and final Innovus completed: state 75/75 equivalent, 313 post-route instances, 7,657.373 µm², core setup +3.235 ns, CDC max-delay +0.201 ns, hold +0.028 ns, recovery/removal +9.104/+0.043 ns, 0.81695915 mW, clock-tree/DRC/connectivity violations 0.
+- [x] Current 180 nm results are classified as server-reference comparisons, not an organizer-confirmed process. P7 and P8 official-process migration is deferred until the organizer specifies the target.
 
 ## Evidence labels
 

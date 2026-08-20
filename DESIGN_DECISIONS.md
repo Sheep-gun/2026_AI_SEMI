@@ -160,6 +160,22 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P7-GE robust replaces P4-C as the main improved controller. Its fairness bound is at most 16 service decisions for a continuously pending source, excluding receiver stall wall time; it is not FCFS and carries no original-event timestamp. The fall-through variant is retained only as a rejected latency experiment because its register-to-output slack was -2.380 ns.
 
+## DD-021: Replace P7-GE with P8-DG-SCR reset-partitioned direct Gray
+
+**Decision:** Preserve P7-GE's 2FF CDC, sixteen pending slots, early ACK, registered output, full-Gray service order, 16-service-decision fairness bound and one-event-per-clock peak throughput. Store the Gray epoch directly, share one balanced candidate-valid OR tree, factor request acceptance as bit-vector logic, and partition the 75 state FFs into two asynchronous-reset release FFs, 36 resetless FFs and 37 synchronous-clear core FFs. Isolate ACK and valid low while the core reset is active.
+
+**Why:** P8-DG-SCR passed RTL/gate broad, fairness, CDC and clockless/mid-transaction reset tests, repeated the checks in Cadence Xcelium, and passed 75/75 state-point Conformal equivalence. On the fixed 101-event workload it kept P7's event count, service timing, elasticity, output order and 106 address toggles. In the same FPR 180 nm reference flow it reduced Genus area 11.93%. RTLStim2Gate VCD showed a 9.525% directional reduction, but gate driver coverage differed and this value is not treated as clean matched power evidence. The final physical rerun preserves/groups all synchronizer pairs, bounds request-pair delay to 0.9 ns, uses the same CLKBUFX20 root driver as P7, has zero clock-tree violations, and reduces post-route cell area 5.03% and vectorless power 4.58%.
+
+**Consequence:** P8-DG-SCR replaces P7-GE as the current main controller. Normal operation requires two rising clock edges after reset deassertion; `out_addr` is invalid while `out_valid=0`. The smaller timing margins must be reclosed when the official process is known.
+
+## DD-022: Treat all current 180 nm results as provisional reference comparisons
+
+**Decision:** Do not describe the available 180 nm FPR kit as the organizer's confirmed process or as a complete foundry tapeout PDK. Use it only for matched architecture comparison until the organizer specifies the official PDK, library set, corners and submission artifacts.
+
+**Why:** Earlier inspection found process-identifying metadata in the reference library, but no organizer document confirmed that metadata as the contest target. A separate generic 45 nm library is also present on the server. Selecting a server-visible kit is not the same as receiving an official process requirement.
+
+**Consequence:** P7 and P8 180 nm PPA remain valid relative evidence under one controlled library and flow. Once the organizer responds, both designs must be rerun under the same official 45 nm or other target conditions before using the numbers as submission-final PPA.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

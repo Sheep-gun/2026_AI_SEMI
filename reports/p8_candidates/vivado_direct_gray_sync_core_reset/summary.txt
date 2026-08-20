@@ -1,0 +1,9 @@
+reg2reg_slack_ns=4.238
+reg2reg_datapath_delay_ns=5.611
+reg2reg_startpoint=req_sync_q_reg[5]/C
+reg2reg_endpoint=out_addr_q_reg[0]/D
+reset_mode=async_2ff_release_sync_core_clear_output_isolation
+epoch_mode=direct_reflected_gray
+arbitration_validity=shared_balanced_or_tree
+request_acceptance=vector_factored
+P8_DGSCR_SYNTH_PASS

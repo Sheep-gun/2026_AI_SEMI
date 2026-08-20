@@ -41,7 +41,7 @@ All times are Asia/Seoul unless otherwise stated.
 
 ### Repository hygiene and isolated B0-v1 reproduction
 
-- The continuation handoff requested `C:\Users\YangGeon\Documents\2026_ai_semi_aer`, but `Test-Path -LiteralPath` returned false. The complete repository was found at the active workspace `C:\Users\YangGeon\Documents\2026_AI_SEMI`; it was used in place without moving or duplicating files.
+- The continuation handoff requested `<LOCAL_HANDOFF_PATH>`, but `Test-Path -LiteralPath` returned false. The complete repository was found at `<LOCAL_WORKSPACE>`; it was used in place without moving or duplicating files.
 - Ran `git status --short --branch`, `git remote -v`, and `rg --files -uu -g '!.git/**'`. The repository had no commits and no configured remote. All project files were untracked; Vivado/XSIM and review/install temporary products were also present locally.
 - Expanded `.gitignore` for `tmp/`, workspace-local tools, `.Xil`, XSIM work/snapshots, WDB/PB/XPR files, Vivado project directories, journals, backup logs, and Cadence Xcelium/Genus/Innovus runtime state. Existing files were preserved locally; none were deleted.
 - Added `.gitattributes` to keep text artifacts LF-stable across Windows/Linux checkouts, mark DCP/WDB/media as binary, and exempt fixed-width generated reports plus intentional Markdown hard breaks from whitespace rewriting. This preserves manifest-bound bytes.
@@ -217,3 +217,16 @@ All times are Asia/Seoul unless otherwise stated.
 - Genus mapped 236 cells, 7,248.226 µm², 2.508 ns data path and 0.887720 mW vectorless power. Innovus completed at 292 cells, 8,063.194 µm², setup +4.350 ns, hold +0.006 ns and 0.85619239 mW, with DRC/connectivity 0/0.
 - Rejected the P7-GE fall-through output as the main design because its -2.380 ns register-to-output slack failed the 10 ns interface constraint despite a one-cycle no-stall latency gain.
 - Rewrote README.md and the Korean competition report using the reference submission's problem → intuition → circuit operation → evidence → limitation narrative. Technical terms, PPA conditions, non-signoff boundaries and second-task IP reuse scope remain explicit.
+
+### P8-DG-SCR direct-Gray, shared-tree and reset-partition optimization
+
+- Held P7-GE's external and storage contract fixed: source-local 2FF CDC, pending 16, registered output 1, early ACK, one 4-bit lane, one event/clock peak throughput and at most 16 service decisions for persistent requests excluding receiver-stall time.
+- Explored sparse-reset, direct-Gray, shared-valid-tree, two-XOR, strict Gray-ring pointer reuse, full synchronous-core reset and split-reset candidates. Exhaustively checked the XOR tournament and strict ring selectors across 1,048,576 preference/mask combinations each.
+- Selected P8-DG-SCR: direct registered Gray state, shared pair/quarter/half/grant OR tree, vector request acceptance, two async-reset release FFs, 36 resetless FFs and 37 synchronous-clear core FFs with ACK/valid output isolation.
+- Passed Vivado RTL and post-synthesis broad 139/139, CDC 192/192, exact full-Gray order, 64 random masks, worst-position 16 service decisions and clockless/mid-phase reset tests with zero errors. Cadence Xcelium repeated broad, CDC, fairness and reset tests with zero errors.
+- The fixed 101-event contract workload remained identical to P7 at the DUT boundary: events 101, errors 0, saturation span 630 ns, average saturation demand-to-output 354 ns, five pre-release stall ACKs and 106 address toggles.
+- Genus FPR 180 nm mapped 232 cells, 6,383.362 µm², 3.130 ns data path, +6.657 ns setup slack and 0.848839 mW vectorless power. RTLStim2Gate VCD power was 0.620896 mW versus P7 0.686263 mW (-9.525%), but gate driver coverage differed 51.21% versus 37.10%, so this remains a directional auxiliary result.
+- Conformal mapped all 75 state points as equivalent with nonequivalent/abort/unknown all zero.
+- Final Innovus rerun added explicit synchronizer preservation/grouping, a 0.9 ns CDC pair max-delay and the same CLKBUFX20 root driver used by P7. It completed at 313 instances and 7,657.373 µm² with core setup +3.235 ns, CDC max-delay +0.201 ns, hold +0.028 ns, recovery +9.104 ns, removal +0.043 ns, 0.81695915 mW, clock-tree/DRC/connectivity violations 0. Versus P7 this is -5.03% cell area and -4.58% estimated power.
+- Restored the RC-preserving Innovus database and exported a native 1800×1400 post-route PNG. Preserved DEF, SDF, SPEF, post-route Verilog, Genus/LEC/Innovus reports and sanitized tool logs.
+- Reclassified all 180 nm results as server-provided reference comparisons rather than an organizer-confirmed target. Official-process migration is deferred until the organizer answers; P7 and P8 will be rerun together under that target.

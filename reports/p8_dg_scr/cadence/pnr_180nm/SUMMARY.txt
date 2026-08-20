@@ -1,0 +1,119 @@
+P8-DG-SCR 180 nm implementation summary
+generated=2026-08-21
+status=PASS
+
+PROCESS_SCOPE
+kit=server-provided FPR 180 nm digital reference kit
+organizer_official_process=NOT_CONFIRMED
+clock_period_ns=10.000
+genus_clock_uncertainty_ns=NOT_EXPLICITLY_SET
+innovus_clock_uncertainty_ns=0.200
+core_size_um=105.600 x 100.800
+metal_range=Metal1-Metal6
+
+FUNCTIONAL_CONTRACT
+sources=16
+source_protocol=active-high four-phase REQ/ACK; REQ held until ACK
+receiver_protocol=registered valid/ready
+output_bus=one 4-bit source-ID bus
+pending_slots=16
+registered_output_slots=1
+max_accepted_not_transferred=17
+max_throughput=1 event/clock when out_ready=1
+fairness_bound=16 service decisions; receiver-stall time excluded
+
+RESET_PARTITION
+total_sequential_state=75
+async_reset_ff=2 reset_release_q
+resetless_ff=36 request synchronizers 32 + out_addr 4
+synchronous_clear_ff=37 ack 16 + pending 16 + Gray epoch 4 + valid 1
+reset_release_contract=asynchronous assertion, two-clock synchronous release
+output_isolation=ACK and valid forced low while core_rst_n=0
+
+RTL_AND_GATE_VERIFICATION
+vivado_broad_rtl=139/139 errors=0
+vivado_broad_gate=139/139 errors=0
+vivado_cdc_rtl=192/192 errors=0
+vivado_cdc_gate=192/192 errors=0
+fair_full_order=0,1,3,2,6,7,5,4,12,13,15,14,10,11,9,8
+fair_random_masks=64/64 errors=0
+fair_worst_position=16 service decisions
+reset_clockless_midphase_rtl=PASS errors=0
+reset_clockless_midphase_gate=PASS errors=0
+
+XCELIUM_RTL
+broad=139/139 errors=0
+fair_random_masks=64/64 errors=0
+fair_worst_position=16 service decisions
+cdc=192/192 errors=0
+reset_clockless_midphase=PASS errors=0
+
+CONTRACT_FAIR_WORKLOAD
+events=101 errors=0
+address_toggles=106
+saturation_output_span_ns=630
+saturation_avg_demand_to_output_ns=354.000
+stall_pre_release_acks=5
+behavior_vs_p7=identical boundary metrics and address-output order on this workload
+
+GENUS_180NM
+cell_count=232
+cell_area_um2=6383.362
+longest_data_path_ns=3.130
+setup_slack_ns=6.657
+vectorless_power_mw=0.848839
+contract_vcd_power_p7_mw=0.686263
+contract_vcd_power_p8_mw=0.620896
+contract_vcd_sequential_annotation=100.00%
+contract_vcd_rtl_driver_annotation=100.00%
+contract_vcd_gate_driver_annotation_p7=37.10%
+contract_vcd_gate_driver_annotation_p8=51.21%
+contract_vcd_interpretation=auxiliary direction only; gate driver coverage differs
+
+CONFORMAL_LEC
+mapped_state_points=75/75
+nonequivalent=0
+abort=0
+unknown=0
+status=PASS
+
+INNOVUS_POSTROUTE_180NM
+instance_count=313
+cell_area_um2=7657.373
+overall_setup_constraint_slack_ns=0.201
+core_setup_slack_ns=3.235
+cdc_max_delay_ns=0.900
+cdc_observed_max_data_path_ns=0.425
+cdc_setup_slack_ns=0.201
+hold_slack_ns=0.028
+cdc_hold_slack_ns=0.028
+reset_release_pair_setup_slack_ns=0.220
+reset_release_pair_hold_slack_ns=0.074
+recovery_slack_ns=9.104
+removal_slack_ns=0.043
+vectorless_power_mw=0.81695915
+clock_buffer=CLKBUFX20 count=1
+clock_tree_violations=0
+cdc_physical_groups=17
+cdc_pair_max_manhattan_um=37.74
+cadence_async_reg_handling=RTL ASYNC_REG ignored; mapped preserve + dont-touch + soft-guide + max-delay applied
+drc_violations=0
+connectivity_problems=0
+status=PASS
+
+P7_TO_P8_CHANGE
+genus_area=-11.93%
+genus_vectorless_power=-4.38%
+genus_contract_vcd_power=-9.525% auxiliary; not matched gate-driver coverage
+postroute_instances=+7.19%
+postroute_cell_area=-5.03%
+postroute_vectorless_power=-4.58%
+core_setup_slack_change_ns=-1.115; still positive at +3.235 ns
+
+CAVEATS
+power=tool estimate, not silicon measurement
+postroute_power_cts=P7 and final P8 each use one CLKBUFX20; final P8 clock-tree violations=0
+cdc=digital protocol/phase verification, not silicon MTBF measurement
+reset=clock must run for the two release edges before normal operation
+reset_sta=recovery/removal slack uses the STA input-arrival assumption and is not proof for every asynchronous deassertion phase
+scope=digital core P&R; no pad ring, package, foundry sign-off DRC/LVS, or silicon

@@ -1,0 +1,24 @@
+# Version:1.0 MMMC View Definition File
+set script_dir [file dirname [file normalize [info script]]]
+set project_root [file normalize [file join $script_dir ../..]]
+set kit_root "$::env(HOME)/FPR"
+set constraint_file [file join $project_root scripts cadence p8dgscr_pnr.sdc]
+
+if {![file exists $constraint_file]} {
+    error "P8-DG-SCR SDC not found at repo-relative path: $constraint_file"
+}
+
+create_rc_corner -name rc_180nm \
+    -cap_table "$kit_root/captable/t018s6mlv.capTbl" \
+    -preRoute_res 1.0 -preRoute_cap 1.0 -preRoute_clkres 0.0 -preRoute_clkcap 0.0 \
+    -postRoute_res 1.0 -postRoute_cap 1.0 -postRoute_xcap 1.0 \
+    -postRoute_clkres 0.0 -postRoute_clkcap 0.0 \
+    -qx_tech_file "$kit_root/QRC/t018s6mm.tch"
+create_library_set -name libs_fast -timing [list "$kit_root/lib/fast.lib"]
+create_library_set -name libs_slow -timing [list "$kit_root/lib/slow.lib"]
+create_constraint_mode -name p8dgscr_constraints -sdc_files [list $constraint_file]
+create_delay_corner -name corner_fast -library_set libs_fast -rc_corner rc_180nm
+create_delay_corner -name corner_slow -library_set libs_slow -rc_corner rc_180nm
+create_analysis_view -name hold_view -constraint_mode p8dgscr_constraints -delay_corner corner_fast
+create_analysis_view -name setup_view -constraint_mode p8dgscr_constraints -delay_corner corner_slow
+set_analysis_view -setup [list setup_view] -hold [list hold_view]

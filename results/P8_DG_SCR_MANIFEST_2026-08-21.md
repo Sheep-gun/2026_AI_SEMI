@@ -1,0 +1,77 @@
+# P8-DG-SCR evidence manifest — 2026-08-21
+
+아래 SHA-256과 byte 수는 최종 P8-DG-SCR RTL, 검증, 합성, LEC와 배치·배선 근거를 고정한다.
+180 nm 산출물은 서버 제공 FPR reference kit의 잠정 비교이며 주최측 공식 공정 sign-off가 아니다.
+
+| 파일 | bytes | SHA-256 |
+|---|---:|---|
+| `rtl/improved/aer_pending_direct_gray_sync_core_reset.sv` | 5168 | `d2e2660bf93aa72e8f14d20a1748d1a5e105f879f5d8908db90387850ca66e05` |
+| `tb/aer_p8_dgscr_wrappers.sv` | 1589 | `81878633f8af435fdc755ffdf109c6a33d2440853ba03de1a90e3fd3b6be83e4` |
+| `tb/aer_p8_dgscr_reset_tb.sv` | 5815 | `569f8c65adef0b7dcbd977217304a1233ca4b0e14f994badffda40ad63094aa0` |
+| `scripts/run_p8_dgscr_verification.ps1` | 3329 | `7051b7b4ee91c98f88819f7d092020aba42e3fe8bd3cafddef6dc1ea48c4710a` |
+| `scripts/run_vivado_synth_p8_dgscr.ps1` | 764 | `de51d4b516cb4ff77e3c26ec49c9eafa921037016668341194115affbdb0aff1` |
+| `scripts/vivado_synth_p8_dgscr.tcl` | 1940 | `9a1715564a6d86e16015d2326e6f118136c72b172a8175ef2571bc9d5cf0b021` |
+| `scripts/run_p8_contract_fairness.ps1` | 4524 | `ab4b9d284df3d575a76e1fc4a8d89f26e7358c6abb22f1bfe268ad4e45dfb950` |
+| `scripts/prepare_p8dgscr_cadence_bundle.ps1` | 1966 | `82acfe42c0ba29f1fdd8b8157a18980d3f1699572003a82f60d25267f9d9b17c` |
+| `scripts/cadence/P8DGSCR_FLOW_NOTES.md` | 6951 | `245b68c2551fcd227e5ab22fe610fb7a33f7d16bdc2dce1657535a0984cf46a0` |
+| `scripts/cadence/p8dgscr_genus_explore.tcl` | 2290 | `5c8dc156cce2977046db1c1832deb1d14f70df50fcafc13322bfb2fa6271138f` |
+| `scripts/cadence/p8dgscr_genus_contract_vcd_power.tcl` | 1793 | `c6acbd10ab9d8f2e47b3c98f7b76b158fc56b5ac65cafaa4d8f6a7d57683571e` |
+| `scripts/cadence/p7ge_genus_contract_vcd_power_rtl2gate.tcl` | 1800 | `7422a19bab878d3c3768fb62be096d0a200d7da6e30e088a589e72fe97bf92e0` |
+| `scripts/cadence/p8dgscr_lec.tcl` | 2155 | `3ca2e1be0befaa9540796a8b72f630d7340363bd34db25a47144ce26dc718ae8` |
+| `scripts/cadence/p8dgscr_pnr.sdc` | 1252 | `91872bd6225d4a319397f006bf4dbbe77914e75356d562ba7c58b56e8106cc52` |
+| `scripts/cadence/p8dgscr_pnr.view` | 1391 | `0df5ad930e14f25272ca545bc4473eb2ad7ff6459b6832932a9853e463c76a92` |
+| `scripts/cadence/p8dgscr_innovus.tcl` | 7107 | `ce441bb19f090e26b48f27df7510e476d3a9458cc2dd92fc52ffcbef94dc7276` |
+| `scripts/cadence/p8dgscr_innovus_capture.tcl` | 802 | `666c267aaf53ce8886829349e120da12f858088f95864cb08cf94c69e08353fe` |
+| `sim/waves/contract_fairness_p8_direct_gray_sync_core_reset.vcd` | 39363 | `22580fd2f1994892cf45c5ddd9908d7bb17396d5a99d30bee256912de9e54895` |
+| `sim/waves/contract_fairness_p7ge.vcd` | 36154 | `718cd08fb50a95239429dc749ee84c1c31c1929d6cf3e315b81272080e8cd93a` |
+| `rtl/improved/aer_pending_gray_epoch.sv` | 5757 | `9d2f8ad576026bbbffbb28ddb6f2ace66c3b4c9ac61499ddfa1ab625ae8472e8` |
+| `sim/logs/p8_dgscr_regression_rtl.log` | 1536 | `29f42f3c9e4e4f27b10d54382034796ec6f939e25b95486312e380e958582321` |
+| `sim/logs/p8_dgscr_regression_gate.log` | 1543 | `240682181dd3115290e7ffd561465bf303c31a1a566b999b5f2cb201c77f0c78` |
+| `sim/logs/p8_dgscr_fair_rtl.log` | 1253 | `725c5774fb371b2785747486a04e991302c4e3af373e0f74555e9b122f0883c0` |
+| `sim/logs/p8_dgscr_fair_gate.log` | 1260 | `724205bb9164dc70331a6509a27971887c00493cabcba2d8c108b489534d01d9` |
+| `sim/logs/p8_dgscr_cdc_rtl.log` | 1104 | `e5e21805c88442a433c3e1baf22d3fb725b3833637daf855e53669f169386358` |
+| `sim/logs/p8_dgscr_cdc_gate.log` | 1111 | `937567171ec3a18f71d0c785e43cba781988ce2df7573c675179bbda3cebf65f` |
+| `sim/logs/p8_dgscr_reset_rtl.log` | 1100 | `0f41b10dd2de84a31cabfee755820097093fb946c965911f3957fc332cad2cf6` |
+| `sim/logs/p8_dgscr_reset_gate.log` | 1106 | `a7874ec85bf6c0dc2952cc0a0a1ff1a9c4b7f6a3500e2e463dc7747ef2639f1a` |
+| `reports/p8_candidates/vivado_direct_gray_sync_core_reset/aer_pending_direct_gray_sync_core_reset_post_synth.v` | 47518 | `0e81264b1682910c312fe79f989bc689547c0474401dfcda56fdd4fd33101640` |
+| `reports/p8_candidates/vivado_direct_gray_sync_core_reset/summary.txt` | 326 | `96c4f31a54c3e488252c97941a3fba71060e7d7d3b230c160c064d2f52600a9e` |
+| `reports/p8_candidates/vivado_direct_gray_sync_core_reset/utilization.rpt` | 1579 | `57b38b9500a9dadcc47aaf3d9cd5c0bc4afa66b3ac8bcfcfbde12fb93d2109f3` |
+| `reports/p8_candidates/vivado_direct_gray_sync_core_reset/reg2reg_timing.rpt` | 104110 | `28a1d9a8737bf42cff9f041a48d58f4cb738d85a9ce1c4d1892d30b259ba7e1d` |
+| `reports/p8_candidates/vivado_direct_gray_sync_core_reset/timing_summary.rpt` | 70381 | `181a588403b65e264d2d1442ec4404c2f14b30a3ddcd23108aecd070f7ae8cf3` |
+| `reports/p8_candidates/vivado_direct_gray_sync_core_reset/check_timing.rpt` | 3355 | `93389112208893bcada44a3ad3ea545763ad52177c13b23e35e5d1780f9ef0f6` |
+| `docs/architecture/aer_p8_dgscr_structure.svg` | 15040 | `9385ea9d7fae04781d135c37dcd1e838be29ec3073ee4f0cf182cd04e488db09` |
+| `docs/architecture/p8dgscr_180nm_innovus_postroute.png` | 204464 | `ccddf1c355cca4dafd3a9c6d15b31148182dc990abb7c84b4dad25e197fb847a` |
+| `results/P8_DG_SCR_2026-08-21.md` | 27506 | `b2fa4b86941134b2196ff48342426b0da084ac0ccd5a6d7d0551f6f4be8dced1` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/SUMMARY.txt` | 3865 | `b5e938e350249936e5eafd35a171dbcfc8f4547f61fdc2ffc389b583b89572ff` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/genus/genus_area.rpt` | 840 | `4dad472e7e7cd5d40614272721bcc150a6aa53fc8c0b0ba0c4e3f25668609138` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/genus/genus_gates.rpt` | 2303 | `47d1cd137ed16d2afccdebfe7f2783dd0567c1fc3cdc7b7738622fbe522ec5e3` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/genus/genus_timing.rpt` | 123460 | `b68542a1d65922fbc31b19094d1f57e04c64e73de575a61f43b52151a29fe483` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/genus/genus_power.rpt` | 1233 | `f851d97e962c49f9723653d6775dffbcd11f0a4bfa75610af459f2612878a0f6` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/genus/genus_qor.rpt` | 1654 | `e5a387905415a9ee8a19af60a7f28e585057aee227c85f3243a02206ae19738c` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/contract_vcd_power/p7ge_genus_power_vcd_rtl2gate.rpt` | 1216 | `e4e390cb80cdaefdfbdd1dfaee2cb33714e776c67d69ffb98d7b91e8b32b7bd1` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/contract_vcd_power/p7ge_read_vcd_rtl2gate.log` | 113292 | `bd2680bbd7c05b5a4a6d3471932c11aa42c19e36c2f2138dc9342d707af72c5e` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/contract_vcd_power/p8dgscr_genus_power_vcd_rtl2gate.rpt` | 1233 | `fa44454138dcc6e57463cb7baf010bae74c4265bc0ae4b306c279979c490ad9d` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/contract_vcd_power/p8dgscr_read_vcd_rtl2gate.log` | 124199 | `b35ab81151e13ebf3dc752867f24417bdd5fbcb9e8fcbd422d734f4c4fbffb0b` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/p8dgscr_lec.rpt` | 8348 | `90d99aa4a45a273bd587da0491e6403e55a95bc281b0239d1c979664fc908fe9` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_area.rpt` | 276 | `fcaa529f4014dc4c5ca9c006a56ccea6d69dfa13fa4354d6dbef9be81b1881c6` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_setup_timing.rpt` | 106391 | `bca7d7b4d3e35adb8b36a0b25a4d436afdb285fd3a69e8ccf62baf6d7eb808d3` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_core_setup_timing.rpt` | 91964 | `19c321382ab9bb5c7e5c2097090da84c3850416af88b5f8798f38a1ea8c22430` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_cdc_setup_timing.rpt` | 23695 | `f04a42afd6c31803a63e65d4cce3dcd9ee255c8d44118cee9b04aaca620cd2c3` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_cdc_hold_timing.rpt` | 25813 | `9fb8fa4fc266c6a4402df1762843c2db648b21c221809a538b07b5da9db140e2` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_clock_tree.rpt` | 13555 | `1db952845a9dd6bff72b47f30bc129f112099cda669b28f40c522edf02b061b2` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/cdc_pair_placement.rpt` | 579 | `586f345d01b105357eeb10f98bfdf7927047d3d14d9edac931f6f6ca10f8b3a7` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_hold_timing.rpt` | 76655 | `e1ea4e528bec50a385fd520249633cd8a5f43733c0a494f39fedbf4ce034f24c` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_recovery_timing.rpt` | 3386 | `6109570023068c0ae7c84aa0fb010148a60ad7606ab04e5e611ee974b559ac50` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_removal_timing.rpt` | 3380 | `539ea5a1e78bb9813724a92aff330ce783e79193ce73c8255339afed7695b1d9` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_power.rpt` | 4388 | `63fe576d960476bc95e2713c40576e190177bc563d4d3bcf553964b2fd5e93b7` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_drc.rpt` | 500 | `3ff52e3261dbe02b3d56a356cf656f1e10d74af04ab2ff1d70f0c1494809c757` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/postroute_connectivity.rpt` | 682 | `c0a1be9f6531e84f09d34fbf2e2342942766b1fcfffed19aa04d81d9ceee07b0` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/pnr/reset_timing_command_status.txt` | 426 | `6c7220721977a8a797b73c356e99bf47a19fdd31539ea0a6c5f8fc5952c642e4` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/outputs/aer_pending_direct_gray_sync_core_reset_postroute.def` | 236719 | `d6751635a43930968e5ac74da78b10fde25af6ccc57c66f9e1a44a5f6d4f74f4` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/outputs/aer_pending_direct_gray_sync_core_reset_postroute.v` | 32634 | `5051668c15ce4b155f7dade7a37ba76e765ee040590a9b8ce865fa51c625ce77` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/outputs/aer_pending_direct_gray_sync_core_reset_postroute.sdf` | 142587 | `66b529c052ff87103d297ee9a5e30d2dd08c63a332f569b5c83a43bd8f53026a` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/outputs/aer_pending_direct_gray_sync_core_reset_postroute.spef` | 322029 | `668b4249ef942e84b9353155580231bf173bbd02a0c1d7d2469bb7fabdf6c134` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/logs/p8dgscr_xcelium_regression.log` | 41215 | `adc30a40d7a378b147a31a316591255ff4241b26870adaf8ff405655dec6e848` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/logs/p8dgscr_xcelium_fair.log` | 40995 | `c7eff1091f29232ffef0db5674b73e798dd48a7b310f027482ee8a29355dd7b8` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/logs/p8dgscr_xcelium_cdc.log` | 40805 | `be3e894606b97d883772315bb126afd3b505008b20f25ea87f003a7d3f7bb07b` |
+| `reports/p8_dg_scr/cadence/pnr_180nm/logs/p8dgscr_xcelium_reset.log` | 40760 | `20d90d6fc54b421b93496abb98082856da6004fec44f68fcf250c88ae44dbc59` |
