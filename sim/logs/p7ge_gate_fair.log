@@ -1,0 +1,27 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Thu Aug 20 12:45:37 2026
+# Process ID: 48072
+# Current directory: <WORKSPACE>/sim/p7ge_gate_work
+# Command line: xsim.exe -log <WORKSPACE>\sim\logs\p7ge_gate_fair.log -mode tcl -source {xsim.dir/p7ge_gate_sim/xsim_script.tcl}
+# Log file: <WORKSPACE>/sim/logs/p7ge_gate_fair.log
+# Journal file: <WORKSPACE>/sim/p7ge_gate_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/p7ge_gate_sim/xsim_script.tcl
+# xsim {p7ge_gate_sim} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+TEST_START p7_full_backlog_gray_order
+METRIC p7_full_order=0,1,3,2,6,7,5,4,12,13,15,14,10,11,9,8
+TEST_START p7_starvation_bound
+METRIC p7_worst_position_grants=16
+TEST_START p7_random_frozen_masks trials=64
+METRIC p7_random_trials=64
+METRIC p7_errors=0
+P7_GRAY_EPOCH_FAIR_TEST_PASS
+$finish called at time : 44766 ns : File "<WORKSPACE>/tb/aer_pending_gray_epoch_fair_tb.sv" Line 368
+exit
+INFO: [Common 17-206] Exiting xsim at Thu Aug 20 12:45:42 2026...

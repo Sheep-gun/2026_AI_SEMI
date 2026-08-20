@@ -1,5 +1,5 @@
 design=P4-C cut-through hierarchical round-robin AER
-status=selected improved main design
+status=superseded by P7-GE; retained as the direct comparison predecessor
 flow=scan-free Genus plus Innovus core place-and-route
 process=TSMC 0.18um Artisan standard cells
 clock_period_ns=10.000

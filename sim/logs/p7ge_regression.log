@@ -1,0 +1,39 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Thu Aug 20 13:21:00 2026
+# Process ID: 44984
+# Current directory: <WORKSPACE>/sim/p7ge_regression_work
+# Command line: xsim.exe -log <WORKSPACE>\sim\logs\p7ge_regression.log -mode tcl -source {xsim.dir/p7ge_regression_sim/xsim_script.tcl}
+# Log file: <WORKSPACE>/sim/logs/p7ge_regression.log
+# Journal file: <WORKSPACE>/sim/p7ge_regression_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/p7ge_regression_sim/xsim_script.tcl
+# xsim {p7ge_regression_sim} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+TEST_START sr_single
+TEST_START sr_simultaneous
+TEST_START sr_burst
+TEST_START sr_stall
+TEST_START sr_saturation
+TEST_START sr_hotspot
+TEST_START sr_reset_held
+TEST_START sr_independent
+METRIC sr_events_offered=139
+METRIC sr_events_received=139
+METRIC sr_avg_latency_x1000=15582
+METRIC sr_max_latency=28
+METRIC sr_hotspot_latency=3
+METRIC sr_address_toggles=136
+METRIC sr_saturation_events=64
+METRIC sr_saturation_elapsed=67
+METRIC sr_saturation_min_gap=1
+METRIC sr_saturation_max_gap=1
+METRIC sr_errors=0
+SOURCE_RESIDENT_TEST_PASS
+$finish called at time : 2835 ns : File "<WORKSPACE>/tb/aer_source_resident_tb.sv" Line 135
+exit
+INFO: [Common 17-206] Exiting xsim at Thu Aug 20 13:21:05 2026...

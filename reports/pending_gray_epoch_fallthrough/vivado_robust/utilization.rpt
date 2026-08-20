@@ -1,0 +1,27 @@
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+-----------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
+| Date         : Thu Aug 20 12:44:17 2026
+| Host         : <LOCAL_HOST> running 64-bit major release  (build 9200)
+| Command      : report_utilization -hierarchical -file reports/pending_gray_epoch_fallthrough/vivado_robust/utilization.rpt
+| Design       : aer_pending_gray_epoch_fallthrough
+| Device       : 7a35tcpg236-1
+| Design State : Optimized
+-----------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++------------------------------------+--------+------------+------------+---------+------+-----+--------+--------+------------+
+|              Instance              | Module | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP Blocks |
++------------------------------------+--------+------------+------------+---------+------+-----+--------+--------+------------+
+| aer_pending_gray_epoch_fallthrough |  (top) |         93 |         93 |       0 |    0 |  75 |      0 |      0 |          0 |
++------------------------------------+--------+------------+------------+---------+------+-----+--------+--------+------------+
+
+

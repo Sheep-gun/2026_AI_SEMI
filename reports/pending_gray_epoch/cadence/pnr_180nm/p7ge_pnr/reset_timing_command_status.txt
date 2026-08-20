@@ -1,0 +1,4 @@
+recovery_command_status=0
+recovery_command_message=
+removal_command_status=0
+removal_command_message=

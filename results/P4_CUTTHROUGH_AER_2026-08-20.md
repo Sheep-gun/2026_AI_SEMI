@@ -72,7 +72,7 @@ P4-H 후보는 receiver stall 동안 오래 기다린 4-source group으로 round
 
 ## 결론
 
-P4-C는 버스 폭, FIFO 깊이 또는 clock frequency를 늘리지 않고 기존 pending next-state를 arbitration에 직접 사용해 한 cycle의 고정 대기를 제거한다. 작은 물리 비용으로 latency와 setup margin을 함께 개선했으므로 P3를 대체하는 최종 개선안으로 채택한다.
+P4-C는 버스 폭, FIFO 깊이 또는 clock frequency를 늘리지 않고 기존 pending next-state를 arbitration에 직접 사용해 한 cycle의 고정 대기를 제거한다. 작은 물리 비용으로 latency와 setup margin을 함께 개선해 P3를 대체했으며, 이후 동일 elasticity에서 PPA와 switching을 더 줄인 P7-GE의 직접 비교 기준으로 남는다.
 
 ## 근거
 
