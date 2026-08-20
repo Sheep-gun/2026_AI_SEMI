@@ -1,0 +1,3 @@
+state_bits=71
+power_optimization=selector_operand_isolation_on_stall_and_reset
+P9_GRR_OI_SYNTH_PASS

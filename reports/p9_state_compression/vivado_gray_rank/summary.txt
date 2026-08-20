@@ -1,0 +1,3 @@
+state_bits=71
+fairness_state=binary_gray_rank_reuses_output_register
+P9_GRAY_RANK_SYNTH_PASS

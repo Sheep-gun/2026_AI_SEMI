@@ -1,0 +1,23 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Fri Aug 21 04:25:01 2026
+# Process ID: 728
+# Current directory: <REPO_ROOT>/sim/p9_epoch_cycle_equivalence_work
+# Command line: xsim.exe -log <REPO_ROOT>\sim\logs\p9_epoch_cycle_equivalence_rtl.log -mode tcl -source {xsim.dir/p9_epoch_cycle_equivalence_sim/xsim_script.tcl}
+# Log file: <REPO_ROOT>/sim/logs/p9_epoch_cycle_equivalence_rtl.log
+# Journal file: <REPO_ROOT>/sim/p9_epoch_cycle_equivalence_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/p9_epoch_cycle_equivalence_sim/xsim_script.tcl
+# xsim {p9_epoch_cycle_equivalence_sim} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+METRIC p9_epoch_equivalence_cycles=4007
+METRIC p9_epoch_equivalence_variants=3
+METRIC p9_epoch_equivalence_errors=0
+P9_EPOCH_CYCLE_EQUIVALENCE_PASS
+$finish called at time : 40070 ns : File "<REPO_ROOT>/tb/aer_p9_epoch_cycle_equivalence_tb.sv" Line 93
+exit
+INFO: [Common 17-206] Exiting xsim at Fri Aug 21 04:25:07 2026...

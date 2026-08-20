@@ -1,0 +1,569 @@
+
+Cadence Innovus(TM) Implementation System.
+Copyright 2024 Cadence Design Systems, Inc. All rights reserved worldwide.
+
+Version:	v23.14-s088_1, built Fri Feb 28 12:25:44 PST 2025
+Options:	-no_gui -files scripts/cadence/p8dgscr_postroute_saif_power.tcl 
+Date:		Fri Aug 21 04:55:22 2026
+Host:		<REMOTE_HOST> (x86_64 w/Linux 3.10.0-1160.81.1.el7.x86_64) (16cores*64cpus*Intel(R) Xeon(R) Gold 6246R CPU @ 3.40GHz 36608KB)
+OS:		CentOS Linux 7 (Core)
+
+License:
+		[04:55:22.377233] Configured Lic search path (23.02-s006): 5280@<LICENSE_SERVER>
+
+		invs	Innovus Implementation System	23.1	checkout succeeded
+		8 CPU jobs allowed with the current license(s). Use setMultiCpuUsage to set your required CPU count.
+Create and set the environment variable TMPDIR to <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/innovus_temp_155959_b7593cac-e6d1-460c-8d30-443c2878d6a3_<REMOTE_HOST>_<REMOTE_USER>_F9umUg.
+
+Change the soft stacksize limit to 0.2%RAM (2060 mbytes). Set global soft_stack_size_limit to change the value.
+Info: Process UID = 155959 / b7593cac-e6d1-460c-8d30-443c2878d6a3 / QzRe4eD3Ms
+source /home/tools/cadence/DDI231/INNOVUS231/tools.lnx86/../etc/synth/attr_def/plus_attr_defs.tcl
+Loading attribute definitions from mini dummy db...
+Info: Defined 24215 Synthesis attributes
+Info: Skipped defining 360 Synthesis attributes already defined in Innovus
+source /home/tools/cadence/DDI231/INNOVUS231/tools.lnx86/../etc/synth/attr_def/plus_msg_defs.tcl
+
+**INFO:  MMMC transition support version v31-84 
+
+Sourcing file "scripts/cadence/p8dgscr_postroute_saif_power.tcl" ...
+innovus 1> source scripts/cadence/p8dgscr_postroute_saif_power.tcl
+#% Begin load design ... (date=08/21 04:55:45, mem=1639.6M)
+Set Default Input Pin Transition as 0.1 ps.
+Loading design 'aer_pending_direct_gray_sync_core_reset' saved by 'Innovus' '23.14-s088_1' on 'Fri Aug 21 04:16:31 2026'.
+% Begin Load MMMC data ... (date=08/21 04:55:47, mem=1644.0M)
+% End Load MMMC data ... (date=08/21 04:55:47, total cpu=0:00:00.0, real=0:00:00.0, peak res=1645.1M, current mem=1645.1M)
+
+Loading LEF file <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/libs/lef/all.lef ...
+Set DBUPerIGU to M2 pitch 1320.
+**WARN: (IMPLF-200):	Pin 'A' in macro 'ANTENNA' has no ANTENNAGATEAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-200' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[0]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[10]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[11]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[12]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[13]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[14]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[15]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[1]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[2]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[3]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[4]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[5]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[6]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[7]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[8]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[9]' in macro 'rom_512x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[0]' in macro 'ram_256x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[10]' in macro 'ram_256x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[11]' in macro 'ram_256x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (IMPLF-201):	Pin 'Q[12]' in macro 'ram_256x16A' has no ANTENNADIFFAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-201' for more detail.
+**WARN: (EMS-27):	Message (IMPLF-201) has exceeded the current message display limit of 20.
+To increase the message display limit, refer to the product command reference manual.
+**WARN: (IMPLF-200):	Pin 'PAD' in macro 'PDB04DGZ' has no ANTENNAGATEAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-200' for more detail.
+**WARN: (IMPLF-200):	Pin 'OEN' in macro 'PDB04DGZ' has no ANTENNAGATEAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-200' for more detail.
+**WARN: (IMPLF-200):	Pin 'I' in macro 'PDB04DGZ' has no ANTENNAGATEAREA value defined. The library data is incomplete and some process antenna rules will not be checked correctly.
+Type 'man IMPLF-200' for more detail.
+
+##  Check design process and node:  
+##  Both design process and tech node are not set.
+
+Loading view definition file from <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/viewDefinition.tcl
+Reading libs_slow timing library '<REMOTE_HOME>/FPR/lib/slow.lib' ...
+**WARN: (TECHLIB-302):	No function defined for cell 'HOLDX1'. The cell will only be used for analysis. (File <REMOTE_HOME>/FPR/lib/slow.lib)
+Read 462 cells in library 'tsmc18' 
+Reading libs_fast timing library '<REMOTE_HOME>/FPR/lib/fast.lib' ...
+**WARN: (TECHLIB-302):	No function defined for cell 'HOLDX1'. The cell will only be used for analysis. (File <REMOTE_HOME>/FPR/lib/fast.lib)
+Read 470 cells in library 'tsmc18' 
+*** End library_loading (cpu=0.03min, real=0.02min, mem=55.5M, fe_cpu=0.45min, fe_real=0.43min, fe_mem=1798.9M) ***
+% Begin Load netlist data ... (date=08/21 04:55:48, mem=1662.0M)
+*** Begin netlist parsing (mem=1798.9M) ***
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XOR3X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XOR3X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XOR3X2' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XOR3X2' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XOR2XL' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XOR2XL' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XOR2X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XOR2X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XOR2X2' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XOR2X2' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XOR2X1' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XOR2X1' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XNOR3X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XNOR3X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XNOR3X2' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XNOR3X2' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XNOR2XL' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XNOR2XL' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VSS' of cell 'XNOR2X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (IMPVL-159):	Pin 'VDD' of cell 'XNOR2X4' is defined in LEF but not in the timing library.
+Type 'man IMPVL-159' for more detail.
+**WARN: (EMS-27):	Message (IMPVL-159) has exceeded the current message display limit of 20.
+To increase the message display limit, refer to the product command reference manual.
+Created 470 new cells from 2 timing libraries.
+Reading netlist ...
+Backslashed names will retain backslash and a trailing blank character.
+Reading verilogBinary netlist '<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/vbin/aer_pending_direct_gray_sync_core_reset.v.bin'
+
+*** Memory Usage v#2 (Current mem = 1798.938M, initial mem = 839.465M) ***
+*** End netlist parsing (cpu=0:00:00.0, real=0:00:00.0, mem=1798.9M) ***
+% End Load netlist data ... (date=08/21 04:55:48, total cpu=0:00:00.0, real=0:00:00.0, peak res=1671.7M, current mem=1671.7M)
+Set top cell to aer_pending_direct_gray_sync_core_reset.
+Hooked 932 DB cells to tlib cells.
+** Removed 8 unused lib cells.
+Starting recursive module instantiation check.
+No recursion found.
+Building hierarchical netlist for Cell aer_pending_direct_gray_sync_core_reset ...
+***** UseNewTieNetMode *****.
+*** Netlist is unique.
+** info: there are 951 modules.
+** info: there are 297 stdCell insts.
+** info: there are 297 stdCell insts with at least one signal pin.
+
+*** Memory Usage v#2 (Current mem = 1822.949M, initial mem = 839.465M) ***
+*info: set bottom ioPad orient R0
+**WARN: (IMPFP-3961):	The techSite 'corner' has no related standard cells in the LEF/OA library. The calculations for this site type cannot be made unless standard cell models of this type exist in the LEF/OA library. Ignore this warning if the SITE is not used by the library. Alternatively, remove the SITE definition for the LEF/OA library to avoid this message.
+Type 'man IMPFP-3961' for more detail.
+**WARN: (IMPFP-3961):	The techSite 'pad' has no related standard cells in the LEF/OA library. The calculations for this site type cannot be made unless standard cell models of this type exist in the LEF/OA library. Ignore this warning if the SITE is not used by the library. Alternatively, remove the SITE definition for the LEF/OA library to avoid this message.
+Type 'man IMPFP-3961' for more detail.
+Horizontal Layer M1 offset = 560 (derived)
+Vertical Layer M2 offset = 660 (derived)
+Start create_tracks
+Generated pitch 0.99 in Metal6 is different from 1.32 defined in technology file in preferred direction.
+Generated pitch 0.56 in Metal5 is different from 1.12 defined in technology file in preferred direction.
+##  Process: 180           (User Set)               
+##     Node: (not set)                           
+
+##  Check design process and node:  
+##  Design tech node is not set.
+
+Applying the recommended capacitance filtering threshold values for 180nm process node: total_c_th=5, relative_c_th=0.03 and coupling_c_th=3.
+	These values will be used by all post-route extraction engines, including TQuantus, IQuantus and Quantus QRC extraction.
+	For postRoute effortLevel low extraction, the coupling_c_th value will be used only when the -capFilterMode parameter of the setExtractRCMode command is set to relAndCoup or relOrCoup. Default value of -capFilterMode parameter in postRoute extraction effortLevel low is relOnly.
+	The accuracy mode for postRoute effortLevel low extraction will be set to 'standard'.
+	Default value for EffortLevel(-effortLevel option of the setExtractRCMode) in postRoute extraction mode is 'low'.
+**WARN: (IMPOPT-3602):	The specified path group name tdgp_reg2reg_default is not defined.
+Type 'man IMPOPT-3602' for more detail.
+Effort level <high> specified for tdgp_reg2reg_default path_group
+Slack adjustment of -0 applied on tdgp_reg2reg_default path_group
+**WARN: (IMPTCM-77):	Option "-drouteStartIteration" for command setNanoRouteMode is obsolete and will be removed in a future release. The obsolete option still works in this release but to avoid this warning and to ensure compatibility with future releases, remove the obsolete option from your script.
+#WARNING (NRIF-90) Option setNanoRouteMode -route_bottom_routing_layer is obsolete. It will continue to work for the current release. To ensure compatibility with future releases, use option setDesignMode -bottomRoutingLayer instead.
+#WARNING (NRIF-91) Option setNanoRouteMode -route_top_routing_layer is obsolete. It will continue to work for the current release. To ensure compatibility with future releases, use option setDesignMode -topRoutingLayer instead.
+AAE_INFO: switching setDelayCal -siAware from false to true ...
+AAE_INFO: The setting is changed from false to true in setDelayCalMode -SIAware
+*Info: initialize multi-corner CTS.
+Total number of combinational cells: 266
+Total number of sequential cells: 178
+Total number of tristate cells: 18
+Total number of level shifter cells: 0
+Total number of power gating cells: 0
+Total number of isolation cells: 0
+Total number of power switch cells: 0
+Total number of pulse generator cells: 0
+Total number of always on buffers: 0
+Total number of retention cells: 0
+Total number of physical cells: 0
+List of usable buffers: BUFX2 BUFX1 BUFX12 BUFX16 BUFX20 BUFX3 BUFX4 BUFX8 BUFXL CLKBUFX2 CLKBUFX1 CLKBUFX12 CLKBUFX16 CLKBUFX20 CLKBUFX3 CLKBUFX4 CLKBUFX8 CLKBUFXL
+Total number of usable buffers: 18
+List of unusable buffers:
+Total number of unusable buffers: 0
+List of usable inverters: RFRDX2 RFRDX1 RFRDX4 CLKINVX2 CLKINVX1 CLKINVX12 CLKINVX16 CLKINVX20 CLKINVX3 CLKINVX4 CLKINVX8 CLKINVXL INVX1 INVX2 INVX12 INVX16 INVX20 INVX3 INVXL INVX4 INVX8
+Total number of usable inverters: 21
+List of unusable inverters:
+Total number of unusable inverters: 0
+List of identified usable delay cells: DLY2X1 DLY1X1 DLY4X1 DLY3X1
+Total number of identified usable delay cells: 4
+List of identified unusable delay cells:
+Total number of identified unusable delay cells: 0
+Reading floorplan file - <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.fp.gz (mem = 2086.2M).
+% Begin Load floorplan data ... (date=08/21 04:55:49, mem=1980.0M)
+*info: reset 354 existing net BottomPreferredLayer and AvoidDetour
+Deleting old partition specification.
+Set FPlanBox to (0 0 293040 282240)
+**WARN: (IMPFP-3961):	The techSite 'corner' has no related standard cells in the LEF/OA library. The calculations for this site type cannot be made unless standard cell models of this type exist in the LEF/OA library. Ignore this warning if the SITE is not used by the library. Alternatively, remove the SITE definition for the LEF/OA library to avoid this message.
+Type 'man IMPFP-3961' for more detail.
+**WARN: (IMPFP-3961):	The techSite 'pad' has no related standard cells in the LEF/OA library. The calculations for this site type cannot be made unless standard cell models of this type exist in the LEF/OA library. Ignore this warning if the SITE is not used by the library. Alternatively, remove the SITE definition for the LEF/OA library to avoid this message.
+Type 'man IMPFP-3961' for more detail.
+There are 2 members in group cdc_pair_00.
+There are 2 members in group cdc_pair_01.
+There are 2 members in group cdc_pair_02.
+There are 2 members in group cdc_pair_03.
+There are 2 members in group cdc_pair_04.
+There are 2 members in group cdc_pair_05.
+There are 2 members in group cdc_pair_06.
+There are 2 members in group cdc_pair_07.
+There are 2 members in group cdc_pair_08.
+There are 2 members in group cdc_pair_09.
+There are 2 members in group cdc_pair_10.
+There are 2 members in group cdc_pair_11.
+There are 2 members in group cdc_pair_12.
+There are 2 members in group cdc_pair_13.
+There are 2 members in group cdc_pair_14.
+There are 2 members in group cdc_pair_15.
+There are 2 members in group reset_release_pair.
+ ... processed partition successfully.
+Reading binary special route file <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.fp.spr.gz (Created by Innovus v23.14-s088_1 on Fri Aug 21 04:16:30 2026, version: 1)
+Convert 0 swires and 0 svias from compressed groups
+12 swires and 16 svias were compressed
+12 swires and 16 svias were decompressed from small or sparse groups
+Ending "Read special route file" (total cpu=0:00:00.0, real=0:00:00.0, peak res=1980.9M, current mem=1980.9M)
+There are 2 nets with weight being set
+There are 2 nets with bottomPreferredRoutingLayer being set
+There are 2 nets with avoidDetour being set
+Extracting standard cell pins and blockage ...... 
+Pin and blockage extraction finished
+Delete all existing relative floorplan constraints.
+% End Load floorplan data ... (date=08/21 04:55:49, total cpu=0:00:00.1, real=0:00:00.0, peak res=1981.2M, current mem=1981.2M)
+Reading congestion map file <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.route.congmap.gz ...
+% Begin Load SymbolTable ... (date=08/21 04:55:49, mem=1981.6M)
+Suppress "**WARN ..." messages.
+Un-suppress "**WARN ..." messages.
+% End Load SymbolTable ... (date=08/21 04:55:50, total cpu=0:00:00.0, real=0:00:01.0, peak res=1982.0M, current mem=1982.0M)
+Loading place ...
+% Begin Load placement data ... (date=08/21 04:55:50, mem=1982.0M)
+Reading placement file - <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.place.gz.
+** Reading stdCellPlacement_binary (Created by Innovus v23.14-s088_1 on Fri Aug 21 04:16:30 2026, version# 2) ...
+Read Views for adaptive view pruning ...
+Read 0 views from Binary DB for adaptive view pruning
+*** Completed restorePlace (cpu=0:00:00.0 real=0:00:00.0 mem=2086.2M) ***
+Total net length = 8.082e+03 (4.571e+03 3.511e+03) (ext = 1.638e+03)
+% End Load placement data ... (date=08/21 04:55:50, total cpu=0:00:00.0, real=0:00:00.0, peak res=1982.4M, current mem=1982.4M)
+Reading PG file <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.pg.gz, version#2, (Created by Innovus v23.14-s088_1 on       Fri Aug 21 04:16:30 2026)
+*** Completed restorePGFile (cpu=0:00:00.0 real=0:00:00.0 mem=2086.2M) ***
+% Begin Load routing data ... (date=08/21 04:55:50, mem=1982.5M)
+Reading routing file - <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.route.gz.
+Reading Innovus routing data (Created by Innovus v23.14-s088_1 on Fri Aug 21 04:16:30 2026 Format: 23.1) ...
+*** Total 354 nets are successfully restored.
+*** Completed restoreRoute (cpu=0:00:00.0 real=0:00:00.0 mem=2086.2M) ***
+% End Load routing data ... (date=08/21 04:55:50, total cpu=0:00:00.1, real=0:00:00.0, peak res=1983.9M, current mem=1982.9M)
+TAT_INFO: ::restoreCongMap REAL = 1 : CPU = 0 : MEM = 0.
+Reading property file <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.prop
+*** Completed restoreProperty (cpu=0:00:00.1 real=0:00:00.0 mem=2086.2M) ***
+Reading dirtyarea snapshot file <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.db.da.gz (Create by Innovus v23.14-s088_1 on Fri Aug 21 04:16:31 2026, version: 7).
+Set Default Input Pin Transition as 0.1 ps.
+Extraction setup Started for TopCell aer_pending_direct_gray_sync_core_reset 
+Initializing multi-corner RC extraction with 1 active RC Corners ...
+**WARN: (IMPEXT-6202):	In addition to the technology file, the capacitance table file is specified for all the RC corners. If the technology file  is already specified for all the RC corners, the capacitance table file is not required for preRoute and postRoute extraction. In a new session, the capacitance table files can be removed from the create_rc_corner command to enable the technology file to be used for preRoute and postRoute (effort level medium/high/signoff) extraction engines.
+Type 'man IMPEXT-6202' for more detail.
+Reading Capacitance Table File <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/libs/mmmc/t018s6mlv.capTbl ...
+Cap table was created using Encounter 10.10-s002_1.
+Process name: t018s6mm.
+Importing multi-corner RC tables ... 
+Summary of Active RC-Corners : 
+ 
+ Analysis View: setup_view
+    RC-Corner Name        : rc_180nm
+    RC-Corner Index       : 0
+    RC-Corner Temperature : 25 Celsius
+    RC-Corner Cap Table   : '<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/libs/mmmc/t018s6mlv.capTbl'
+    RC-Corner PreRoute Res Factor         : 1
+    RC-Corner PreRoute Cap Factor         : 1
+    RC-Corner PostRoute Res Factor        : 1 {1 1 1}
+    RC-Corner PostRoute Cap Factor        : 1 {1 1 1}
+    RC-Corner PostRoute XCap Factor       : 1 {1 1 1}
+    RC-Corner PreRoute Clock Res Factor   : 1	[Derived from postRoute_res (effortLevel low)]
+    RC-Corner PreRoute Clock Cap Factor   : 1	[Derived from postRoute_cap (effortLevel low)]
+    RC-Corner PostRoute Clock Cap Factor  : 1 {1 1 1} 	[Derived from postRoute_cap (effortLevel low)]
+    RC-Corner PostRoute Clock Res Factor  : 1 {1 1 1} 	[Derived from postRoute_res (effortLevel low)]
+    RC-Corner PostRoute Clock coupling capacitance Factor : 1 {1 1 1} 
+    RC-Corner Technology file: '<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/libs/mmmc/rc_180nm/t018s6mm.tch'
+ 
+ Analysis View: hold_view
+    RC-Corner Name        : rc_180nm
+    RC-Corner Index       : 0
+    RC-Corner Temperature : 25 Celsius
+    RC-Corner Cap Table   : '<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/libs/mmmc/t018s6mlv.capTbl'
+    RC-Corner PreRoute Res Factor         : 1
+    RC-Corner PreRoute Cap Factor         : 1
+    RC-Corner PostRoute Res Factor        : 1 {1 1 1}
+    RC-Corner PostRoute Cap Factor        : 1 {1 1 1}
+    RC-Corner PostRoute XCap Factor       : 1 {1 1 1}
+    RC-Corner PreRoute Clock Res Factor   : 1	[Derived from postRoute_res (effortLevel low)]
+    RC-Corner PreRoute Clock Cap Factor   : 1	[Derived from postRoute_cap (effortLevel low)]
+    RC-Corner PostRoute Clock Cap Factor  : 1 {1 1 1} 	[Derived from postRoute_cap (effortLevel low)]
+    RC-Corner PostRoute Clock Res Factor  : 1 {1 1 1} 	[Derived from postRoute_res (effortLevel low)]
+    RC-Corner PostRoute Clock coupling capacitance Factor : 1 {1 1 1} 
+    RC-Corner Technology file: '<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/libs/mmmc/rc_180nm/t018s6mm.tch'
+Initializing multi-corner capacitance tables ... 
+Initializing multi-corner resistance tables ...
+Restoring parasitic data from file '<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.rcdb.d' ...
+Begin read_parasitics... (cpu: 0:00:00.0 real: 0:00:00.0 mem: 2086.184M)
+Following multi-corner parasitics specified:
+	<REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.rcdb.d (rcdb)
+		Cell aer_pending_direct_gray_sync_core_reset has rcdb <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset.rcdb.d specified
+Cell aer_pending_direct_gray_sync_core_reset, hinst 
+Done read_parasitics... (cpu: 0:00:00.0 real: 0:00:00.0 mem: 2086.184M)
+Start generating vias ..
+#Skip building auto via since it is not turned on.
+Extracting standard cell pins and blockage ...... 
+Pin and blockage extraction finished
+Via generation completed.
+% Begin Load power constraints ... (date=08/21 04:55:52, mem=1992.7M)
+source <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/db/aer_pending_direct_gray_sync_core_reset_postroute.enc.dat/aer_pending_direct_gray_sync_core_reset_power_constraints.tcl
+'set_default_switching_activity' finished successfully.
+% End Load power constraints ... (date=08/21 04:55:52, total cpu=0:00:00.0, real=0:00:00.0, peak res=1998.5M, current mem=1998.5M)
+% Begin load AAE data ... (date=08/21 04:55:52, mem=2042.4M)
+**WARN: (IMPESI-3505):	setDelayCalMode -eng_enablePrePlacedFlow false (default=false) will be obsoleted along with its sgs2set equivalent.  This parameter will continue to be supported in the current release, but will be removed in the next major release of the software.
+AAE DB initialization (MEM=2051.878906 CPU=0:00:00.0 REAL=0:00:00.0) 
+% End load AAE data ... (date=08/21 04:55:52, total cpu=0:00:00.5, real=0:00:00.0, peak res=2052.1M, current mem=2052.1M)
+Restoring CCOpt config...
+  Extracting original clock gating for clk...
+    clock_tree clk contains 75 sinks and 0 clock gates.
+  Extracting original clock gating for clk done.
+  The skew group clk/p8dgscr_constraints was created. It contains 75 sinks and 1 sources.
+  The skew group clk/p8dgscr_constraints was created. It contains 75 sinks and 1 sources.
+Restoring CCOpt config done.
+Total number of combinational cells: 266
+Total number of sequential cells: 178
+Total number of tristate cells: 18
+Total number of level shifter cells: 0
+Total number of power gating cells: 0
+Total number of isolation cells: 0
+Total number of power switch cells: 0
+Total number of pulse generator cells: 0
+Total number of always on buffers: 0
+Total number of retention cells: 0
+Total number of physical cells: 0
+List of usable buffers: BUFX2 BUFX1 BUFX12 BUFX16 BUFX20 BUFX3 BUFX4 BUFX8 BUFXL CLKBUFX2 CLKBUFX1 CLKBUFX12 CLKBUFX16 CLKBUFX20 CLKBUFX3 CLKBUFX4 CLKBUFX8 CLKBUFXL
+Total number of usable buffers: 18
+List of unusable buffers:
+Total number of unusable buffers: 0
+List of usable inverters: CLKINVX2 CLKINVX1 CLKINVX12 CLKINVX16 CLKINVX20 CLKINVX3 CLKINVX4 CLKINVX8 CLKINVXL INVX1 INVX2 INVX12 INVX16 INVX20 INVX3 INVXL INVX4 INVX8
+Total number of usable inverters: 18
+List of unusable inverters: RFRDX2 RFRDX1 RFRDX4
+Total number of unusable inverters: 3
+List of identified usable delay cells: DLY2X1 DLY1X1 DLY4X1 DLY3X1
+Total number of identified usable delay cells: 4
+List of identified unusable delay cells:
+Total number of identified unusable delay cells: 0
+#% End load design ... (date=08/21 04:55:52, total cpu=0:00:06.4, real=0:00:07.0, peak res=2074.9M, current mem=2058.5M)
+
+*** Summary of all messages that are not suppressed in this session:
+Severity  ID               Count  Summary                                  
+WARNING   IMPLF-200            4  Pin '%s' in macro '%s' has no ANTENNAGAT...
+WARNING   IMPLF-201           50  Pin '%s' in macro '%s' has no ANTENNADIF...
+WARNING   IMPFP-3961           4  The techSite '%s' has no related standar...
+WARNING   IMPEXT-6202          1  In addition to the technology file, the ...
+WARNING   IMPVL-159          924  Pin '%s' of cell '%s' is defined in LEF ...
+WARNING   IMPESI-3505          1  setDelayCalMode -eng_%s (default=%s) wil...
+WARNING   IMPOPT-3602          1  The specified path group name %s is not ...
+WARNING   NRIF-90              1  Option setNanoRouteMode -route_bottom_ro...
+WARNING   NRIF-91              1  Option setNanoRouteMode -route_top_routi...
+WARNING   IMPTCM-77            1  Option "%s" for command %s is obsolete a...
+WARNING   TECHLIB-302          2  No function defined for cell '%s'. The c...
+*** Message Summary: 990 warning(s), 0 error(s)
+
+** WARN:  (VOLTUS_POWR-3212): The 'set_power_analysis_mode -leakage_power_view |-dynamic_power_view|-analysis_view' will be obsolete in 18.20 release. Use 'set_analysis_view -leakage <> | -dynamic <>' to set leakage and dynamic power views.
+
+Begin Processing SAIF file
+Ended Processing SAIF file: (cpu=0:00:00, real=0:00:00,
+mem(process/total/peak)=2059.98MB/3968.46MB/2060.00MB)
+
+'read_activity_file' finished successfully.
+
+Power Net Detected:
+        Voltage	    Name
+             0V	    VSS
+          1.62V	    VDD
+Using Power View: setup_view.
+AAE_INFO: opIsDesignInPostRouteState() is 1
+AAE_INFO: resetNetProps viewIdx 0 
+Starting SI iteration 1 using Infinite Timing Windows
+#################################################################################
+# Design Stage: PostRoute
+# Design Name: aer_pending_direct_gray_sync_core_reset
+# Design Mode: 180nm
+# Analysis Mode: MMMC OCV 
+# Parasitics Mode: SPEF/RCDB 
+# Signoff Settings: SI On 
+#################################################################################
+AAE_INFO: 1 threads acquired from CTE.
+Start delay calculation (fullDC) (1 T). (MEM=2152.44)
+Total number of fetched objects 352
+AAE_INFO: Total number of nets for which stage creation was skipped for all views 0
+AAE_INFO-618: Total number of nets in the design is 354,  99.4 percent of the nets selected for SI analysis
+End delay calculation. (MEM=2190.26 CPU=0:00:00.1 REAL=0:00:00.0)
+End delay calculation (fullDC). (MEM=2183.06 CPU=0:00:00.4 REAL=0:00:00.0)
+Save waveform <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/innovus_temp_155959_b7593cac-e6d1-460c-8d30-443c2878d6a3_<REMOTE_HOST>_<REMOTE_USER>_F9umUg/.AAE_13xXch/.AAE_155959_b7593cac-e6d1-460c-8d30-443c2878d6a3/waveform.data...
+Loading CTE timing window with TwFlowType 0...(CPU = 0:00:00.0, REAL = 0:00:00.0, MEM = 2194.9M)
+Add other clocks and setupCteToAAEClockMapping during iter 1
+Loading CTE timing window is completed (CPU = 0:00:00.0, REAL = 0:00:00.0, MEM = 2195.2M)
+Starting SI iteration 2
+Start delay calculation (fullDC) (1 T). (MEM=2203.25)
+Glitch Analysis: View setup_view -- Total Number of Nets Skipped = 0. 
+Glitch Analysis: View setup_view -- Total Number of Nets Analyzed = 352. 
+Total number of fetched objects 352
+AAE_INFO: Total number of nets for which stage creation was skipped for all views 0
+AAE_INFO-618: Total number of nets in the design is 354,  0.3 percent of the nets selected for SI analysis
+End delay calculation. (MEM=2211.55 CPU=0:00:00.0 REAL=0:00:00.0)
+End delay calculation (fullDC). (MEM=2211.55 CPU=0:00:00.0 REAL=0:00:00.0)
+Load RC corner of view setup_view
+
+Begin Power Analysis
+
+             0V	    VSS
+          1.62V	    VDD
+
+Begin Processing Timing Library for Power Calculation
+
+Ended Processing Timing Library for Power Calculation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2207.44MB/4556.24MB/2207.46MB)
+
+
+
+Begin Processing Power Net/Grid for Power Calculation
+
+Ended Processing Power Net/Grid for Power Calculation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2207.46MB/4556.24MB/2207.47MB)
+
+Begin Processing Timing Window Data for Power Calculation
+
+clk(100MHz) CK: assigning clock clk to net clk
+Ended Processing Timing Window Data for Power Calculation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2207.60MB/4556.24MB/2207.61MB)
+
+Begin Processing User Attributes
+
+Ended Processing User Attributes: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2207.69MB/4556.24MB/2207.69MB)
+
+Begin Processing Signal Activity
+
+
+Starting Levelizing
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT)
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 10%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 20%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 30%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 40%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 50%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 60%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 70%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 80%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 90%
+
+Finished Levelizing
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT)
+
+Starting Activity Propagation
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT)
+
+Finished Activity Propagation
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT)
+
+Activity annotation summary:
+        Primary Inputs : 19/19 = 100%
+          Flop outputs : 111/111 = 100%
+  Memory/Macro outputs : 0/0 = 0%
+      Tristate outputs : 0/0 = 0%
+            Total Nets : 284/352 = 80.6818%
+
+Ended Processing Signal Activity: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2208.00MB/4556.24MB/2208.00MB)
+
+Begin Power Computation
+
+      ----------------------------------------------------------
+      # of cell(s) missing both power/leakage table: 0
+      # of cell(s) missing power table: 0
+      # of cell(s) missing leakage table: 0
+      ----------------------------------------------------------
+
+
+
+Starting Calculating power
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT)
+ ... Calculating switching power
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 10%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 20%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 30%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 40%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 50%
+ ... Calculating internal and leakage power
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 60%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 70%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 80%
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT): 90%
+
+Finished Calculating power
+2026-Aug-21 04:55:54 (2026-Aug-20 19:55:54 GMT)
+      # of MSMV cell(s) missing power_level: 0
+Ended Power Computation: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2208.68MB/4556.24MB/2208.68MB)
+
+Begin Processing User Attributes
+
+Begin Processing set_power
+Ended Processing set_power: (cpu=0:00:00, real=0:00:00,
+mem(process/total/peak)=2208.68MB/4556.24MB/2208.73MB)
+Ended Processing User Attributes: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2208.73MB/4556.24MB/2208.74MB)
+
+Ended Power Analysis: (cpu=0:00:00, real=0:00:00, mem(process/total/peak)=2208.74MB/4556.24MB/2208.74MB)
+
+Begin Boundary Leakage Calculation
+Ended Boundary Leakage Calculation: (cpu=0:00:00, real=0:00:00,
+mem(process/total/peak)=2208.81MB/4556.24MB/2208.81MB)
+Begin Static Power Report Generation
+*
+
+
+
+Total Power
+-----------------------------------------------------------------------------------------
+Total Internal Power:        0.48194558 	   80.7774%
+Total Switching Power:       0.11444653 	   19.1820%
+Total Leakage Power:         0.00024185 	    0.0405%
+Total Power:                 0.59663396
+-----------------------------------------------------------------------------------------
+** INFO:  (VOLTUS_POWR-3465): There are 0 decaps and 0 fillers in the design
+
+Ended Static Power Report Generation: (cpu=0:00:00, real=0:00:00,
+mem(process/total/peak)=2209.23MB/4556.24MB/2209.25MB)
+
+
+Output file is <REMOTE_HOME>/aer_2026/p9_hold_sweep_20260821_0349/hold_0p021/reports/p8dgscr_pnr/postroute_power_saif.rpt
+P8DGSCR_POSTROUTE_SAIF_POWER_DONE
+
+*** Memory Usage v#2 (Current mem = 2559.234M, initial mem = 839.465M) ***
+*** Message Summary: 990 warning(s), 0 error(s)
+
+--- Ending "Innovus" (totcpu=0:00:31.4, real=0:00:32.0, mem=2559.2M) ---
+
+real 33.49
+user 30.05
+sys 3.28

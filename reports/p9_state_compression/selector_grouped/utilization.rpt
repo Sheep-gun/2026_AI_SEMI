@@ -1,0 +1,27 @@
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+----------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
+| Date         : Fri Aug 21 04:13:39 2026
+| Host         : <LOCAL_HOST> running 64-bit major release  (build 9200)
+| Command      : report_utilization -hierarchical -file reports/p9_state_compression/selector_grouped/utilization.rpt
+| Design       : aer_gray_rank_ring_selector16
+| Device       : 7a35tcpg236-1
+| Design State : Optimized
+----------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-------------------------------+--------+------------+------------+---------+------+-----+--------+--------+------------+
+|            Instance           | Module | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP Blocks |
++-------------------------------+--------+------------+------------+---------+------+-----+--------+--------+------------+
+| aer_gray_rank_ring_selector16 |  (top) |         18 |         18 |       0 |    0 |   0 |      0 |      0 |          0 |
++-------------------------------+--------+------------+------------+---------+------+-----+--------+--------+------------+
+
+

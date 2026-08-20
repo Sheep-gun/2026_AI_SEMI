@@ -2,11 +2,11 @@
 
 여러 뉴런이 동시에 발화하면 다음 처리 블록은 어느 뉴런에서 이벤트가 발생했는지 알아야 한다. 뉴런마다 전용 데이터 버스를 만들면 배선과 핀이 빠르게 늘어난다. 이 프로젝트는 발화한 뉴런의 번호만 하나의 공용 주소 버스로 보내는 AER(Address-Event Representation) 방식으로 이 문제를 해결한다.
 
-비교 기준으로 공통 clock 없이 요청과 응답만으로 움직이는 전통적 AER **T0-PPA**를 구현했다. 이후 비동기 발화를 안전하게 접수하고 모든 뉴런에 처리 기회를 주는 동기식 구조를 발전시켰다. **P7-GE**가 공정한 Gray 순서 중재를 완성했다면, 최종 개선본 **P8-DG-SCR**은 같은 기능을 유지하면서 Gray 상태·선택 tree·reset 구조를 함께 다시 설계해 면적과 전력을 더 줄인다.
+비교 기준으로 공통 clock 없이 요청과 응답만으로 움직이는 전통적 AER **T0-PPA**를 구현했다. 이후 비동기 발화를 안전하게 접수하고 모든 뉴런에 처리 기회를 주는 동기식 구조를 발전시켰다. **P7-GE**가 공정한 Gray 순서 중재를 완성했고, **P8-DG-SCR**은 같은 기능을 유지하면서 Gray 상태·선택 tree·reset 구조를 다시 설계했다. 현재 주 설계 **P9-GRR**은 ACK와 pending을 Gray 순번으로 저장하고 출력 rank register를 공정성 pointer로도 재사용해 상태를 75 FF에서 71 FF로 줄인다.
 
-> 핵심 결과: 서버 제공 FPR 180 nm reference kit의 동일 조건에서 P8-DG-SCR은 P7-GE보다 배치·배선 후 셀 면적을 5.03%, 기본 활동률 전력 추정치를 4.58% 줄였다. Core setup +3.235 ns, CDC max-delay +0.201 ns와 hold +0.028 ns로 모든 timing 조건을 만족했고 clock-tree·DRC·연결 위반은 0이었다. 이 180 nm 결과는 주최측 공식 공정이 확정되기 전의 잠정 비교값이다.
+> 핵심 결과: 서버 제공 FPR 180 nm reference kit에서 같은 경계탐색 절차로 hold를 각각 재최적화한 P8-DG-SCR(0.021 ns) 대비 P9-GRR은 배치·배선 후 셀 면적 5.10%, 기본 활동률 전력 2.55%, 동일 workload mapped-SAIF 전력 2.98%를 줄였다. Core setup +4.810 ns, CDC setup +0.159 ns와 hold +0.012 ns로 timing을 만족했고 clock-tree·DRC·연결 위반은 0이었다. 이 180 nm 결과는 주최측 공식 공정이 확정되기 전의 잠정 비교값이다.
 
-상세 수치와 검증 근거는 [P8-DG-SCR 결과 문서](results/P8_DG_SCR_2026-08-21.md), 설계 전 과정은 [대회 보고서](reports/AER_COMPETITION_REPORT_KR.md)에 정리한다.
+상세 수치와 검증 근거는 [P9 상태 압축·물리 탐색 문서](results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md), 설계 전 과정은 [대회 보고서](reports/AER_COMPETITION_REPORT_KR.md)에 정리한다.
 
 ## 1. AER이 필요한 이유
 
@@ -27,7 +27,7 @@
 
 ### 2.1 뉴런 쪽 active-high 4-phase handshake
 
-뉴런은 컨트롤러 clock과 관계없는 순간에 발화할 수 있다. 뉴런과 P8-DG-SCR 사이의 `src_req`와 `src_ack`는 다음 네 단계를 거친다.
+뉴런은 컨트롤러 clock과 관계없는 순간에 발화할 수 있다. 뉴런과 P8-DG-SCR/P9-GRR 사이의 `src_req`와 `src_ack`는 다음 네 단계를 거친다.
 
 1. 뉴런이 `src_req`를 1로 올려 이벤트 발생을 알린다.
 2. 컨트롤러가 이벤트를 안전하게 접수하고 `src_ack`를 1로 올린다.
@@ -40,7 +40,7 @@
 
 ### 2.2 수신기 쪽 valid/ready
 
-P8-DG-SCR은 뉴런 쪽에서 4-phase handshake를 사용하고, 수신기 쪽에서는 동기식 `out_valid/out_ready` 규약을 사용한다.
+P8-DG-SCR과 P9-GRR은 뉴런 쪽에서 4-phase handshake를 사용하고, 수신기 쪽에서는 동기식 `out_valid/out_ready` 규약을 사용한다.
 
 | 신호 | 역할 |
 |---|---|
@@ -67,7 +67,7 @@ T0-PPA에는 전체 회로를 움직이는 공통 clock이 없다. 요청이 들
 
 T0-PPA는 이 한계를 숨기지 않은 최소 비교 기준이다. Xcelium에서 139개 이벤트를 유실·중복 없이 전달했고, RTL과 합성 netlist의 26개 비교점이 일치했다. 배치·배선 후 bundled-data 상대 시간 여유는 +0.676 ns였고 DRC와 연결 오류는 0이었다.
 
-## 4. 개선 과정: P4-C에서 P7-GE, P8-DG-SCR까지
+## 4. 개선 과정: P4-C에서 P9-GRR까지
 
 P4-C에서 다음 기능이 먼저 갖춰졌다.
 
@@ -160,7 +160,7 @@ P8의 전력 감소는 P7보다 이벤트를 덜 처리하거나 주소 의미�
 
 ## 7. 서버 제공 FPR 180 nm 구현 결과
 
-현재 주최측 공식 공정은 확인되지 않았다. 아래 수치는 서버에서 먼저 사용 가능했던 FPR 180 nm digital reference kit에서 P7과 P8을 비교한 잠정 결과다. Genus 합성은 10 ns clock과 1 ns I/O delay를 사용했으며 명시적인 clock uncertainty는 두지 않았다. Innovus 배치·배선에는 10 ns clock, 0.2 ns uncertainty와 Metal1-Metal6를 적용했다. 공식 45 nm 환경이 확정되면 두 설계를 같은 조건으로 다시 실행해야 한다.
+현재 주최측 공식 공정은 확인되지 않았다. 아래 수치는 서버에서 먼저 사용 가능했던 FPR 180 nm digital reference kit에서 P7과 P8을 비교한 잠정 결과다. Genus 합성은 10 ns clock과 1 ns I/O delay를 사용했으며 명시적인 clock uncertainty는 두지 않았다. Innovus 배치·배선에는 10 ns clock, 0.2 ns uncertainty와 Metal1-Metal6를 적용했다. 주최측 공식 공정 환경이 확정되면 비교 설계를 같은 조건으로 다시 실행해야 한다.
 
 ### 7.1 Genus 논리 합성
 
@@ -217,39 +217,101 @@ P8의 instance 수는 CDC max-delay와 hold를 함께 닫기 위한 buffer 때�
 - **P8-GR:** output address를 중재 pointer로 재사용해 71 FF로 줄였다. 그러나 순환 검색 조합 논리 비용 때문에 면적 6,606.230 µm², VCD 전력 0.642428 mW로 최종안보다 불리했다.
 - **Fall-through 출력:** latency를 1 clock 줄였지만 10 ns 출력 timing을 만족하지 못해 제외했다.
 
-기능 simulation만 빠른 후보가 아니라, 같은 기능을 유지하면서 면적과 실제 활동 기반 전력을 함께 낮추고 timing을 통과한 P8-DG-SCR을 최종안으로 선택했다.
+기능 simulation만 빠른 후보가 아니라, 같은 기능을 유지하면서 면적과 실제 활동 기반 전력을 함께 낮추고 timing을 통과한 P8-DG-SCR을 이 단계의 기준점으로 선택했다. 이후 P9 탐색은 이 기준점을 다시 같은 물리 조건에서 개선했다.
 
-## 9. 2차 설계과제에서의 재사용
+P8-GR과 P9-GRR은 모두 출력 상태 재사용을 시도하지만 내부 표현이 다르다. P8-GR은 source 주소 순서의 저장부 뒤에 순환 검색·변환 비용이 남았고, P9-GRR은 ACK와 pending 자체를 Gray rank 순서로 배열해 그 feedback 비용을 없앴다. 같은 71 FF라도 조합 경로가 달라 PPA 결과가 달라졌다.
 
-P8-DG-SCR은 특정 응용 계산을 포함하지 않은 독립 이벤트 전송 IP다. 2차 설계에서는 다음과 같이 전단 블록으로 재사용할 수 있다.
+## 9. P9-GRR: 출력 상태까지 중재에 재사용
+
+P8은 다음 우선순위를 나타내는 Gray epoch 4 FF와 수신기에 제시할 출력 주소 4 FF를 따로 보관했다. P9-GRR은 이 두 상태가 동시에 필요한지를 다시 살폈다.
+
+![P9-GRR 구조](docs/architecture/aer_p9_grr_structure.svg)
+
+### 9.1 Gray 순번으로 저장한다는 뜻
+
+Gray 순서의 각 주소에 0부터 15까지 차례 번호(rank)를 붙인다.
+
+```text
+내부 rank:  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+원래 주소:  0, 1, 3, 2, 6, 7, 5, 4, 12, 13, 15, 14, 10, 11, 9, 8
+```
+
+P9-GRR은 동기화된 request, ACK와 pending을 모두 이 rank 순서로 고정 배선한다. 이는 새 논리 gate로 주소를 매번 변환하는 것이 아니라 선의 연결 위치를 처음부터 바꾸는 것이다. 선택된 rank의 pending을 같은 위치에서 바로 지울 수 있어, 중재 결과를 다시 source 주소로 변환하던 feedback 논리가 사라진다. 외부에는 `rank XOR (rank >> 1)`만 적용해 원래 source ID를 출력한다.
+
+### 9.2 출력 register가 다음 공정성 pointer도 맡는다
+
+엄격한 순환 중재기는 마지막으로 전송한 rank의 바로 다음 위치부터 원형으로 pending을 찾는다. P9-GRR은 `out_rank_q[3:0]`에 현재 출력의 rank를 저장하고, 다음 선택 때 같은 값을 마지막 처리 위치로 다시 사용한다. 따라서 P8의 별도 Gray epoch 4 FF가 필요 없다.
+
+```text
+reset release 2 + request CDC 32 + ACK 16 + pending 16 + output rank 4 + valid 1
+    = 71 FF
+```
+
+줄어든 것은 중복 순번 상태 4 FF뿐이다. Source별 pending 16개와 registered output 한 칸, early ACK, 4-bit 버스 한 개, 최대 1 event/clock 처리율은 유지된다. 계속 pending인 source는 receiver stall을 제외한 최대 16번의 service decision 안에 반드시 선택된다. 다만 P9도 실제 발화 도착 순서를 보존하는 FCFS는 아니다.
+
+### 9.3 P9-GRR과 P9-OHT의 post-route Pareto
+
+같은 FPR 180 nm 잠정 조건에서 hold-target sweep까지 수행한 최종 물리 결과다. P9-GRR은 `holdTargetSlack=0.020 ns`, P9-OHT는 `0.012 ns` 설정의 clean run을 사용했다.
+
+| 항목 | P8-DG-SCR / 0.021 | P9-GRR / 0.020 | P9-OHT / 0.012 |
+|---|---:|---:|---:|
+| 상태 FF | 75 | **71** | 75 |
+| Post-route instance | 297 | **281** | 290 |
+| 셀 면적 | 7,364.650 µm² | **6,988.766 µm²** | 7,291.469 µm² |
+| Vectorless power | 0.79657531 mW | 0.77624020 mW | **0.77267187 mW** |
+| 동일 workload mapped-SAIF power | 0.59663396 mW | **0.57886987 mW** | 0.58959029 mW |
+| Core setup slack | +3.278 ns | +4.810 ns | **+6.201 ns** |
+| Overall/CDC setup slack | +0.200 ns | +0.159 ns | **+0.300 ns** |
+| Hold/CDC hold slack | +0.009 ns | +0.012 ns | +0.010 ns |
+| DRC / connectivity | 0 / 0 | **0 / 0** | **0 / 0** |
+
+P9-OHT는 P8의 75 FF 상태를 유지하되 중재 선택 경로를 top-down one-hot tree로 표현한 대안이다. P9-GRR보다 vectorless power가 0.46% 낮고 core timing 여유가 크다. 반대로 P9-GRR은 OHT보다 셀 면적이 4.15% 작고, 동일 workload mapped-SAIF power도 1.82% 낮다. 따라서 OHT는 저전력 기본 가정과 timing을 우선하는 유효한 Pareto 대안이고, P9-GRR은 면적과 관찰 workload 전력을 함께 본 현재 주 설계다.
+
+아래 화면은 구조를 그린 예상도가 아니라, 최종 P9-GRR `0.020 ns` post-route database를 Innovus에서 복원해 직접 출력한 Metal1-Metal6 배치·배선 화면이다.
+
+![P9-GRR 최종 Innovus post-route 화면](docs/architecture/p9grr_180nm_innovus_postroute.png)
+
+P9-OHT의 독립 clean run 화면도 [별도 PNG](docs/architecture/p9oht_180nm_innovus_postroute.png)로 보존한다.
+
+Vectorless power는 실제 event trace 없이 도구가 각 신호의 활동률을 기본값으로 가정한 추정치다. Mapped-SAIF power는 동일한 101-event workload에서 기록한 switching activity를 배치·배선 회로에 연결한 추정치다. 후자가 이번 workload에는 더 구체적이지만 실제 ECG spike 분포, pad 부하와 실리콘 측정을 대신하지 않는다. 두 수치를 섞어 하나의 보장된 절감률로 주장하지 않는다.
+
+## 10. 2차 설계과제에서의 재사용
+
+P9-GRR은 특정 응용 계산을 포함하지 않은 독립 이벤트 전송 IP다. 2차 설계에서는 다음과 같이 전단 블록으로 재사용할 수 있다.
 
 ```text
 뉴런 또는 센서 이벤트 16개
-    → P8-DG-SCR이 동기화·저장·중재
+    → P9-GRR이 동기화·저장·중재
     → source ID[3:0] + valid/ready
     → 좌표 변환, N×M 메모리, SNN 연산 또는 분류기
 ```
 
-후단은 원래 source ID를 받으므로 Gray decoder가 필요 없다. 현재 RTL은 16 sources와 4-bit 주소로 고정돼 있다. 2차 과제의 뉴런 수가 달라지면 source 수와 tree 깊이를 parameter화하고, 공정성·CDC·PPA를 다시 검증해야 한다.
+후단은 원래 source ID를 받으므로 Gray decoder가 필요 없다. 재사용되는 범위는 비동기 이벤트의 동기화·보관·중재와 단일 주소 스트림 생성까지다. 좌표 변환, 메모리 접근, 막전위 갱신, SNN 연산과 분류 기능까지 P9-GRR이 대신하는 것은 아니다. 현재 RTL은 16 sources와 4-bit 주소로 고정돼 있으므로 2차 과제의 뉴런 수가 달라지면 source 수와 중재 구조를 parameter화하고 공정성·CDC·PPA를 다시 검증해야 한다.
 
 원래 도착 순서를 항상 보존해야 하는 응용에는 timestamp 또는 FCFS queue가 별도로 필요하다. 같은 source에서 ACK 전에 여러 이벤트가 연속 발생할 수 있다면 source-side accumulator나 추가 FIFO가 필요하다.
 
-## 10. 적용 범위와 한계
+## 11. 적용 범위와 한계
 
 - Event 보존은 source가 ACK까지 REQ를 유지하고 source당 한 번에 요청 하나만 제시한다는 계약 안에서 성립한다.
-- P8은 FCFS가 아니며 원래 발화 시각을 payload로 보내지 않는다.
+- P9-GRR은 FCFS가 아니며 원래 발화 시각을 payload로 보내지 않는다.
 - CDC 검증은 디지털 phase sweep이며 실리콘 metastability MTBF sign-off가 아니다.
 - Reset 해제 뒤 정상 동작 전까지 clock 두 번이 필요하다.
 - Recovery/removal slack은 STA가 둔 reset 입력 도착 가정에서의 값이다. 임의 위상에서 들어오는 모든 비동기 deassertion의 안전성을 그 숫자만으로 증명하지 않으며, 2단 release 구조와 별도로 RDC/실리콘 검증이 필요하다.
-- Post-route 전력은 기본 활동률을 사용한 도구 추정값이다. 실제 ECG/SNN spike trace, pad/receiver load와 실리콘 측정 결과가 아니다.
+- Post-route vectorless와 mapped-SAIF 전력은 모두 도구 추정값이다. 실제 ECG/SNN spike 분포, pad/receiver load와 실리콘 측정 결과가 아니다.
 - 완료 범위는 디지털 코어 RTL, 합성, LEC, 배치·배선과 STA다. Pad ring, package, 제조용 GDS, foundry sign-off DRC/LVS와 실리콘 제작은 포함하지 않는다.
-- 180 nm 결과는 잠정 reference 비교다. 주최측 공식 45 nm/다른 PDK가 확정되면 P7과 P8을 함께 재합성·재배치해야 한다.
+- 180 nm 결과는 잠정 reference 비교다. 주최측 공식 PDK가 확정되면 P8, P9-GRR과 P9-OHT를 같은 조건에서 함께 재합성·재배치해야 한다.
 
-## 11. 주요 파일과 재현 근거
+## 12. 주요 파일과 재현 근거
 
 | 내용 | 경로 |
 |---|---|
-| 최종 P8-DG-SCR RTL | [rtl/improved/aer_pending_direct_gray_sync_core_reset.sv](rtl/improved/aer_pending_direct_gray_sync_core_reset.sv) |
+| 현재 P9-GRR RTL | [rtl/experiments/aer_pending_gray_rank_reuse_sync_core_reset.sv](rtl/experiments/aer_pending_gray_rank_reuse_sync_core_reset.sv) |
+| P9-GRR 구조 SVG | [docs/architecture/aer_p9_grr_structure.svg](docs/architecture/aer_p9_grr_structure.svg) |
+| P9 상태 압축·물리 탐색 | [results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md](results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md) |
+| P9 hold/PPA 전체 sweep | [results/P9_PHYSICAL_HOLD_PARETO_SWEEP_2026-08-21.md](results/P9_PHYSICAL_HOLD_PARETO_SWEEP_2026-08-21.md) |
+| P9 최종 Cadence 원시 보고서 | [reports/p9_final/](reports/p9_final/) |
+| P9-GRR Cadence 재현 절차 | [scripts/cadence/P9GRR_FLOW_NOTES.md](scripts/cadence/P9GRR_FLOW_NOTES.md) |
+| 직전 기준 P8-DG-SCR RTL | [rtl/improved/aer_pending_direct_gray_sync_core_reset.sv](rtl/improved/aer_pending_direct_gray_sync_core_reset.sv) |
 | P8 구조 SVG | [docs/architecture/aer_p8_dgscr_structure.svg](docs/architecture/aer_p8_dgscr_structure.svg) |
 | P8 상세 결과 | [results/P8_DG_SCR_2026-08-21.md](results/P8_DG_SCR_2026-08-21.md) |
 | P8 증거 manifest | [results/P8_DG_SCR_MANIFEST_2026-08-21.md](results/P8_DG_SCR_MANIFEST_2026-08-21.md) |

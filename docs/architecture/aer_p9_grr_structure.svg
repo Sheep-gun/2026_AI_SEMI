@@ -1,0 +1,206 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080" role="img" aria-labelledby="title desc">
+  <title id="title">P9-GRR Gray-rank register reuse AER 컨트롤러 구조</title>
+  <desc id="desc">16개 비동기 source 요청을 2단 동기화한 뒤 Gray 순번으로 고정 재배열해 ACK와 pending을 저장하고, 엄격한 순환 중재기가 선택한 rank를 출력 register와 다음 공정성 pointer로 함께 재사용하는 구조</desc>
+
+  <defs>
+    <marker id="arrow-blue" markerWidth="11" markerHeight="11" refX="10" refY="5.5" orient="auto">
+      <path d="M0 0 L11 5.5 L0 11 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-teal" markerWidth="11" markerHeight="11" refX="10" refY="5.5" orient="auto">
+      <path d="M0 0 L11 5.5 L0 11 Z" fill="#0f766e"/>
+    </marker>
+    <marker id="arrow-violet" markerWidth="11" markerHeight="11" refX="10" refY="5.5" orient="auto">
+      <path d="M0 0 L11 5.5 L0 11 Z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-slate" markerWidth="11" markerHeight="11" refX="10" refY="5.5" orient="auto">
+      <path d="M0 0 L11 5.5 L0 11 Z" fill="#475569"/>
+    </marker>
+    <filter id="shadow" x="-12%" y="-12%" width="124%" height="132%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .title { font:700 32px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#0f172a; }
+      .subtitle { font:400 17px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#475569; }
+      .stage { font:700 14px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#64748b; letter-spacing:1px; }
+      .block-title { font:700 20px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#0f172a; }
+      .card-title { font:700 17px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#0f172a; }
+      .body { font:400 15px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#334155; }
+      .small { font:400 13px 'Noto Sans KR','Malgun Gothic',sans-serif; fill:#475569; }
+      .signal { font:700 14px Consolas,'Noto Sans KR',monospace; fill:#0f172a; }
+      .flow { stroke:#2563eb; stroke-width:3; fill:none; marker-end:url(#arrow-blue); }
+      .ack { stroke:#0f766e; stroke-width:3; fill:none; marker-end:url(#arrow-teal); }
+      .pointer { stroke:#7c3aed; stroke-width:3; stroke-dasharray:9 6; fill:none; marker-end:url(#arrow-violet); }
+      .ready { stroke:#475569; stroke-width:2.5; stroke-dasharray:7 6; fill:none; marker-end:url(#arrow-slate); }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1080" fill="#f8fafc"/>
+
+  <text x="50" y="54" class="title">P9-GRR: Gray 순번 저장부와 출력 Register를 재사용한 AER 컨트롤러</text>
+  <text x="50" y="86" class="subtitle">입출력 기능은 유지하고 별도 epoch 4 FF를 제거: 75 FF → 71 FF · 엄격한 순환 공정성 · 단일 4-bit 주소 버스</text>
+  <rect x="1350" y="24" width="400" height="70" rx="14" fill="#eef2ff" stroke="#818cf8"/>
+  <text x="1550" y="51" text-anchor="middle" class="card-title">핵심 재사용</text>
+  <text x="1550" y="78" text-anchor="middle" class="small">출력 rank 4 FF = 전송 주소 상태 + 다음 탐색 pointer</text>
+
+  <text x="50" y="132" class="stage">1  비동기 요청</text>
+  <line x1="50" y1="143" x2="250" y2="143" stroke="#cbd5e1"/>
+  <text x="320" y="132" class="stage">2  동기화</text>
+  <line x1="320" y1="143" x2="510" y2="143" stroke="#cbd5e1"/>
+  <text x="580" y="132" class="stage">3  GRAY 순번으로 저장</text>
+  <line x1="580" y1="143" x2="880" y2="143" stroke="#cbd5e1"/>
+  <text x="950" y="132" class="stage">4  공정한 선택</text>
+  <line x1="950" y1="143" x2="1260" y2="143" stroke="#cbd5e1"/>
+  <text x="1330" y="132" class="stage">5  상태 재사용과 전송</text>
+  <line x1="1330" y1="143" x2="1760" y2="143" stroke="#cbd5e1"/>
+
+  <!-- 1. Sources -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="180" width="200" height="430" rx="20" fill="#ecfdf5" stroke="#0f766e" stroke-width="2"/>
+  </g>
+  <text x="150" y="220" text-anchor="middle" class="block-title">비동기 source 16개</text>
+  <text x="150" y="247" text-anchor="middle" class="small">서로 다른 시점에 발화</text>
+  <g fill="#fff" stroke="#5eead4">
+    <rect x="82" y="282" width="136" height="48" rx="9"/>
+    <rect x="82" y="346" width="136" height="48" rx="9"/>
+    <rect x="82" y="466" width="136" height="48" rx="9"/>
+  </g>
+  <text x="150" y="312" text-anchor="middle" class="signal">source 0</text>
+  <text x="150" y="376" text-anchor="middle" class="signal">source 1</text>
+  <text x="150" y="433" text-anchor="middle" class="block-title">⋮</text>
+  <text x="150" y="496" text-anchor="middle" class="signal">source 15</text>
+  <text x="150" y="552" text-anchor="middle" class="body">4-phase REQ / ACK</text>
+  <text x="150" y="578" text-anchor="middle" class="small">ACK까지 REQ 유지</text>
+
+  <!-- 2. CDC -->
+  <g filter="url(#shadow)">
+    <rect x="320" y="225" width="190" height="300" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  </g>
+  <text x="415" y="266" text-anchor="middle" class="block-title">2FF CDC</text>
+  <text x="415" y="293" text-anchor="middle" class="small">16 lane × 2단 = 32 FF</text>
+  <rect x="350" y="330" width="55" height="64" rx="9" fill="#fff" stroke="#93c5fd"/>
+  <rect x="425" y="330" width="55" height="64" rx="9" fill="#fff" stroke="#93c5fd"/>
+  <text x="377" y="368" text-anchor="middle" class="signal">FF1</text>
+  <text x="452" y="368" text-anchor="middle" class="signal">FF2</text>
+  <path d="M405 362 H415" class="flow"/>
+  <text x="415" y="440" text-anchor="middle" class="body">비동기 REQ를 두 번 샘플링</text>
+  <text x="415" y="468" text-anchor="middle" class="small">두 번째 출력만 core에서 사용</text>
+  <text x="415" y="493" text-anchor="middle" class="small">물리 pair 제약은 그대로 유지</text>
+
+  <!-- 3. Rank-indexed protocol storage -->
+  <g filter="url(#shadow)">
+    <rect x="580" y="180" width="300" height="430" rx="18" fill="#f0fdfa" stroke="#0d9488" stroke-width="2"/>
+  </g>
+  <text x="730" y="219" text-anchor="middle" class="block-title">Gray 순번 저장부</text>
+  <text x="730" y="247" text-anchor="middle" class="small">source ID를 Gray 차례의 rank 위치로 고정 재배열</text>
+  <rect x="615" y="278" width="230" height="70" rx="11" fill="#fff" stroke="#5eead4"/>
+  <text x="730" y="307" text-anchor="middle" class="card-title">고정 배선 permutation</text>
+  <text x="730" y="333" text-anchor="middle" class="small">0, 1, 3, 2, 6, 7, …, 9, 8</text>
+  <g fill="#fff" stroke="#2dd4bf">
+    <rect x="615" y="375" width="108" height="96" rx="11"/>
+    <rect x="737" y="375" width="108" height="96" rx="11"/>
+  </g>
+  <text x="669" y="408" text-anchor="middle" class="card-title">ACK</text>
+  <text x="669" y="438" text-anchor="middle" class="signal">16 FF</text>
+  <text x="791" y="408" text-anchor="middle" class="card-title">Pending</text>
+  <text x="791" y="438" text-anchor="middle" class="signal">16 FF</text>
+  <text x="730" y="510" text-anchor="middle" class="body">순번 위치 그대로 접수·보관·삭제</text>
+  <text x="730" y="539" text-anchor="middle" class="small">선택 결과를 source ID로 되돌리는</text>
+  <text x="730" y="562" text-anchor="middle" class="small">feedback 변환 논리를 제거</text>
+
+  <!-- 4. Strict cyclic selector -->
+  <g filter="url(#shadow)">
+    <rect x="950" y="180" width="310" height="430" rx="18" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  </g>
+  <text x="1105" y="219" text-anchor="middle" class="block-title">엄격한 순환 중재기</text>
+  <text x="1105" y="247" text-anchor="middle" class="small">마지막 rank 다음부터 원형으로 검색</text>
+  <g fill="#fff" stroke="#fb923c" stroke-width="1.6">
+    <rect x="990" y="282" width="230" height="53" rx="10"/>
+    <rect x="990" y="355" width="230" height="53" rx="10"/>
+    <rect x="990" y="428" width="230" height="53" rx="10"/>
+  </g>
+  <text x="1105" y="314" text-anchor="middle" class="body">현재 4-lane의 뒤쪽 먼저 확인</text>
+  <text x="1105" y="387" text-anchor="middle" class="body">비면 다음 4-lane group 순환</text>
+  <text x="1105" y="460" text-anchor="middle" class="body">첫 pending rank 하나를 선택</text>
+  <text x="1105" y="518" text-anchor="middle" class="card-title">지속 요청: 최대 16회 안에 선택</text>
+  <text x="1105" y="548" text-anchor="middle" class="small">receiver stall을 제외한 service decision 기준</text>
+  <text x="1105" y="573" text-anchor="middle" class="small">FCFS는 아니지만 starvation은 방지</text>
+
+  <!-- 5. Reused output state -->
+  <g filter="url(#shadow)">
+    <rect x="1330" y="180" width="235" height="430" rx="18" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+  </g>
+  <text x="1447" y="219" text-anchor="middle" class="block-title">출력 rank 재사용</text>
+  <rect x="1365" y="270" width="165" height="95" rx="11" fill="#fff" stroke="#a78bfa"/>
+  <text x="1447" y="306" text-anchor="middle" class="signal">out_rank_q[3:0]</text>
+  <text x="1447" y="337" text-anchor="middle" class="body">출력 상태 + 공정성 pointer</text>
+  <rect x="1365" y="399" width="165" height="78" rx="11" fill="#fff" stroke="#a78bfa"/>
+  <text x="1447" y="430" text-anchor="middle" class="card-title">Gray encoder</text>
+  <text x="1447" y="458" text-anchor="middle" class="signal">rank ⊕ (rank &gt;&gt; 1)</text>
+  <text x="1447" y="520" text-anchor="middle" class="body">별도 epoch 4 FF 제거</text>
+  <text x="1447" y="548" text-anchor="middle" class="small">valid=1인 동안 주소 안정</text>
+  <text x="1447" y="573" text-anchor="middle" class="small">등록 출력·stall 보존 유지</text>
+
+  <!-- Receiver -->
+  <g filter="url(#shadow)">
+    <rect x="1630" y="255" width="130" height="275" rx="18" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  </g>
+  <text x="1695" y="294" text-anchor="middle" class="block-title">수신기</text>
+  <rect x="1649" y="330" width="92" height="82" rx="10" fill="#fff" stroke="#94a3b8"/>
+  <text x="1695" y="362" text-anchor="middle" class="signal">주소 4 bit</text>
+  <text x="1695" y="391" text-anchor="middle" class="small">버스 1개</text>
+  <text x="1695" y="455" text-anchor="middle" class="body">최대 1 event</text>
+  <text x="1695" y="481" text-anchor="middle" class="body">/ clock</text>
+
+  <!-- Forward datapath: arrows live only in inter-block gaps. -->
+  <path d="M250 360 H305" class="flow"/>
+  <path d="M510 360 H565" class="flow"/>
+  <path d="M880 360 H935" class="flow"/>
+  <path d="M1260 360 H1315" class="flow"/>
+  <path d="M1565 360 H1615" class="flow"/>
+  <text x="277" y="338" text-anchor="middle" class="signal">REQ</text>
+  <text x="537" y="338" text-anchor="middle" class="signal">sync</text>
+  <text x="907" y="338" text-anchor="middle" class="signal">rank pending</text>
+  <text x="1287" y="338" text-anchor="middle" class="signal">grant rank</text>
+  <text x="1590" y="330" text-anchor="middle" class="signal">addr</text>
+
+  <!-- Early ACK stays below the blocks and returns without crossing datapath. -->
+  <path d="M730 610 V690 H150 V625" class="ack"/>
+  <text x="450" y="660" text-anchor="middle" class="card-title">Early ACK</text>
+  <text x="450" y="683" text-anchor="middle" class="small">rank ACK를 원래 source 순서로 고정 배선해 되돌림</text>
+
+  <!-- Reused rank pointer feedback stays on its own lower track. -->
+  <path d="M1447 610 V755 H1105 V625" class="pointer"/>
+  <text x="1276" y="726" text-anchor="middle" class="card-title">마지막 전송 rank를 다음 탐색 시작점으로 재사용</text>
+  <text x="1276" y="748" text-anchor="middle" class="small">별도 Gray epoch register가 필요 없음</text>
+
+  <!-- Receiver backpressure has a short isolated track. -->
+  <path d="M1695 530 V650 H1515 V625" class="ready"/>
+  <text x="1605" y="637" text-anchor="middle" class="small">out_ready / stall</text>
+
+  <!-- State accounting and reset contract. -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="820" width="1710" height="205" rx="20" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+  </g>
+  <text x="85" y="860" class="block-title">상태 71 FF와 reset 분할</text>
+  <rect x="85" y="886" width="340" height="104" rx="12" fill="#fee2e2" stroke="#f87171"/>
+  <text x="255" y="921" text-anchor="middle" class="card-title">비동기 reset 2 FF</text>
+  <text x="255" y="950" text-anchor="middle" class="body">reset release synchronizer</text>
+  <text x="255" y="976" text-anchor="middle" class="small">즉시 assertion · 2-clock release</text>
+
+  <rect x="465" y="886" width="340" height="104" rx="12" fill="#dbeafe" stroke="#60a5fa"/>
+  <text x="635" y="921" text-anchor="middle" class="card-title">resetless 32 FF</text>
+  <text x="635" y="950" text-anchor="middle" class="body">request 2FF CDC</text>
+  <text x="635" y="976" text-anchor="middle" class="small">reset 중에도 실제 입력 관찰</text>
+
+  <rect x="845" y="886" width="455" height="104" rx="12" fill="#dcfce7" stroke="#4ade80"/>
+  <text x="1072" y="921" text-anchor="middle" class="card-title">동기 clear 37 FF</text>
+  <text x="1072" y="950" text-anchor="middle" class="body">ACK 16 + pending 16 + output rank 4 + valid 1</text>
+  <text x="1072" y="976" text-anchor="middle" class="small">보호된 release clock 동안 0으로 정리</text>
+
+  <rect x="1340" y="886" width="385" height="104" rx="12" fill="#f5f3ff" stroke="#a78bfa"/>
+  <text x="1532" y="921" text-anchor="middle" class="card-title">P8 대비 정확히 4 FF 감소</text>
+  <text x="1532" y="950" text-anchor="middle" class="body">별도 epoch 4 FF만 제거</text>
+  <text x="1532" y="976" text-anchor="middle" class="small">pending 16 + 출력 1칸의 저장 능력은 유지</text>
+
+  <text x="900" y="1057" text-anchor="middle" class="small">Gray는 payload를 바꾸는 압축 code가 아니라 순환 선택 순서를 정의한다. 수신기에는 원래 source ID가 출력된다.</text>
+</svg>

@@ -1,0 +1,8 @@
+recovery_command_status=0
+recovery_command_message=
+removal_command_status=0
+removal_command_message=
+expected_async_reset=reset_release_q[1:0] (2 FF only)
+expected_resetless=req_meta_q[15:0],req_sync_q[15:0] (32 FF)
+expected_sync_clear=ack_rank_q[15:0],pending_rank_q[15:0],out_rank_q[3:0],out_valid_q (37 FF)
+note=Only reset_release_q has recovery/removal arcs; synchronous core clear is checked as data setup/hold.

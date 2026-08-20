@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Fri Aug 21 04:06:08 2026
+# Process ID: 13116
+# Current directory: <LOCAL_WORKSPACE>/sim/p9_grr_oi_fair_rtl_work
+# Command line: xsim.exe -log <LOCAL_WORKSPACE>\sim\logs\p9_grr_oi_fair_rtl.log -mode tcl -source {xsim.dir/p9_grr_oi_fair_rtl_sim/xsim_script.tcl}
+# Log file: <LOCAL_WORKSPACE>/sim/logs/p9_grr_oi_fair_rtl.log
+# Journal file: <LOCAL_WORKSPACE>/sim/p9_grr_oi_fair_rtl_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/p9_grr_oi_fair_rtl_sim/xsim_script.tcl
+# xsim {p9_grr_oi_fair_rtl_sim} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+METRIC p9_grr_exhaustive_cases=1048576
+METRIC p9_grr_full_cycle_toggles=16
+METRIC p9_grr_worst_service_decisions=16
+METRIC p9_grr_errors=0
+P9_GRAY_RANK_FAIR_TEST_PASS
+$finish called at time : 1048896 ns : File "<LOCAL_WORKSPACE>/tb/aer_p9_gray_rank_fair_tb.sv" Line 71
+exit
+INFO: [Common 17-206] Exiting xsim at Fri Aug 21 04:06:14 2026...

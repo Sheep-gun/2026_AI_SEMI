@@ -1,0 +1,4 @@
+state_bits=71
+fairness_state=registered_output_address_reuse
+arbitration=strict_binary_ring_grouped_4x4
+P9_BINARY_RING_SYNTH_PASS

@@ -1,0 +1,3 @@
+state_bits=71
+consume=onehot_decode_vector_mask
+P9_GRR_OHD_SYNTH_PASS

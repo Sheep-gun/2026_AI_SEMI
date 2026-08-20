@@ -176,6 +176,14 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P7 and P8 180 nm PPA remain valid relative evidence under one controlled library and flow. Once the organizer responds, both designs must be rerun under the same official 45 nm or other target conditions before using the numbers as submission-final PPA.
 
+## DD-023: Replace P8 with P9-GRR and retain P9-OHT as a physical Pareto alternative
+
+**Decision:** Preserve P8's source handshake, CDC, pending capacity, early ACK, registered single-lane output, peak throughput and bounded fairness. Reindex request, ACK and pending storage in fixed Gray-rank order, then reuse the four-bit registered output rank as the last-service pointer for strict cyclic selection. Use P9-GRR as the main design and retain P9-OHT's 75-FF one-hot tree as the timing/vectorless-power alternative.
+
+**Why:** The reachable protocol/output state requires 71 FF under the fixed contract, and GRR reaches that bound without moving storage outside the controller. RTL/gate regressions, 1,048,576 selector cases, CDC, reset, Conformal and Innovus checks all pass. Against an equally hold-optimized P8, final GRR reduces post-route cell area 5.10%, vectorless power 2.55% and identical-workload mapped-SAIF power 2.98%, while increasing core setup slack from +3.278 to +4.810 ns. OHT remains Pareto-valid because its vectorless power is 0.46% below GRR and core slack is +6.201 ns, although its area and mapped-SAIF power are higher.
+
+**Consequence:** P8 becomes the fixed prior baseline; P9-GRR is the current competition architecture under the provisional FPR 180 nm comparison. P9-OHT is not discarded or mislabeled as a failure. The official PDK migration must rerun P8, GRR and OHT with matched libraries, corners, constraints and activity before submission-final PPA claims.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

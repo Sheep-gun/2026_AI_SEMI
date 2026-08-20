@@ -1,0 +1,23 @@
+#-----------------------------------------------------------
+# xsim v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:45 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Fri Aug 21 04:06:33 2026
+# Process ID: 30896
+# Current directory: <LOCAL_WORKSPACE>/sim/p9_grr_oi_reset_rtl_work
+# Command line: xsim.exe -log <LOCAL_WORKSPACE>\sim\logs\p9_grr_oi_reset_rtl.log -mode tcl -source {xsim.dir/p9_grr_oi_reset_rtl_sim/xsim_script.tcl}
+# Log file: <LOCAL_WORKSPACE>/sim/logs/p9_grr_oi_reset_rtl.log
+# Journal file: <LOCAL_WORKSPACE>/sim/p9_grr_oi_reset_rtl_work\xsim.jou
+#-----------------------------------------------------------
+source xsim.dir/p9_grr_oi_reset_rtl_sim/xsim_script.tcl
+# xsim {p9_grr_oi_reset_rtl_sim} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+METRIC p8_dgscr_clockless_reset_checks=4
+METRIC p8_dgscr_restart_transfers=2
+METRIC p8_dgscr_reset_errors=0
+P8_DGSCR_RESET_TEST_PASS
+$finish called at time : 206 ns : File "<LOCAL_WORKSPACE>/tb/aer_p8_dgscr_reset_tb.sv" Line 166
+exit
+INFO: [Common 17-206] Exiting xsim at Fri Aug 21 04:06:40 2026...
