@@ -8,6 +8,8 @@
 
 상세 수치와 검증 근거는 [P9 상태 압축·물리 탐색 문서](results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md), 설계 전 과정은 [대회 보고서](reports/AER_COMPETITION_REPORT_KR.md)에 정리한다.
 
+회로 동작을 처음부터 이해하려면 [P9-GRR 세 핵심 기술 상세 설명](docs/P9_GRR_CORE_TECHNOLOGIES_KR.md)을 먼저 읽으면 된다. 이 문서는 T0를 기준으로 2FF의 아날로그 상태, pending·early ACK·output register의 clock별 동작, Gray-rank 중재와 pointer 재사용의 PPA 손익을 설명한다.
+
 ## 1. AER이 필요한 이유
 
 이 설계의 입력은 16개 뉴런이 각각 발생시키는 발화 이벤트다. 막전위나 파형 전체를 전송하는 것이 아니라, 이벤트가 생겼을 때 **어느 뉴런이 발화했는지**만 보낸다.
@@ -221,33 +223,78 @@ P8의 instance 수는 CDC max-delay와 hold를 함께 닫기 위한 buffer 때�
 
 P8-GR과 P9-GRR은 모두 출력 상태 재사용을 시도하지만 내부 표현이 다르다. P8-GR은 source 주소 순서의 저장부 뒤에 순환 검색·변환 비용이 남았고, P9-GRR은 ACK와 pending 자체를 Gray rank 순서로 배열해 그 feedback 비용을 없앴다. 같은 71 FF라도 조합 경로가 달라 PPA 결과가 달라졌다.
 
-## 9. P9-GRR: 출력 상태까지 중재에 재사용
+## 9. P9-GRR의 세 핵심 기술
 
-P8은 다음 우선순위를 나타내는 Gray epoch 4 FF와 수신기에 제시할 출력 주소 4 FF를 따로 보관했다. P9-GRR은 이 두 상태가 동시에 필요한지를 다시 살폈다.
+P9-GRR은 네 개의 독립 기술이 아니라 다음 세 축으로 이해하는 것이 정확하다.
+
+1. Source별 2FF 입력 동기화
+2. Pending 16개와 출력 register 1개를 묶은 2단 elastic buffer
+3. Gray-rank strict-cyclic 중재와 출력 rank pointer 재사용
+
+출력 register는 별도의 네 번째 기술이 아니다. 이벤트를 보관하는 기능은 두 번째
+buffer 축에 포함되고, 저장된 rank를 다음 중재 위치로 재사용하는 기능은 세 번째
+중재 축에 포함된다.
 
 ![P9-GRR 구조](docs/architecture/aer_p9_grr_structure.svg)
 
-### 9.1 Gray 순번으로 저장한다는 뜻
+### 9.1 세 축이 각각 담당하는 역할
 
-Gray 순서의 각 주소에 0부터 15까지 차례 번호(rank)를 붙인다.
+| 축 | 회로가 실제로 하는 일 | T0 대비 얻는 것 | PPA 비용·절감 |
+|---|---|---|---|
+| 2FF 입력 동기화 | 비동기 REQ를 FF 두 개에 통과시켜 controller는 두 번째 FF만 사용 | Metastability가 내부로 퍼질 확률 감소, synchronous ASIC flow 사용 | Source 16개 × 2 FF = 32 FF와 입력 지연 추가 |
+| 2단 elastic buffer | Source별 pending은 대기 이벤트를, output register는 receiver 앞의 현재 이벤트를 보관 | Early ACK, 최대 17개 보관, stall 중 주소 고정, 최대 1 event/clock | Pending·ACK·output FF와 clock/control 비용 추가 |
+| Gray-rank 공정 중재 | Pending을 Gray 순번으로 배열하고 마지막 rank 다음부터 원형 검색 | Fixed-priority starvation 제거, 포화 traffic의 주소 전환 감소 | Gray XOR와 cyclic selector 비용은 추가되지만 output rank를 pointer로 재사용해 별도 4 FF 제거 |
+
+회로 전체 흐름은 다음과 같다.
 
 ```text
-내부 rank:  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-원래 주소:  0, 1, 3, 2, 6, 7, 5, 4, 12, 13, 15, 14, 10, 11, 9, 8
+T0-PPA
+비동기 REQ → fixed priority → grant/address latch → receiver ACK
+
+P9-GRR
+비동기 REQ → 2FF → pending 16 → Gray-rank 중재 → output register → valid/ready receiver
 ```
 
-P9-GRR은 동기화된 request, ACK와 pending을 모두 이 rank 순서로 고정 배선한다. 이는 새 논리 gate로 주소를 매번 변환하는 것이 아니라 선의 연결 위치를 처음부터 바꾸는 것이다. 선택된 rank의 pending을 같은 위치에서 바로 지울 수 있어, 중재 결과를 다시 source 주소로 변환하던 feedback 논리가 사라진다. 외부에는 `rank XOR (rank >> 1)`만 적용해 원래 source ID를 출력한다.
+Pending이 source별 보조 주머니라면 output register는 receiver 앞의 전송 쟁반이다.
+두 저장소를 합쳐야 `pending 16 + output 1 = 최대 17개`라는 수용량과 early ACK,
+stall 격리가 만들어진다.
 
-### 9.2 출력 register가 다음 공정성 pointer도 맡는다
+Gray-rank는 이 주머니들을 확인하는 원형 순서표다.
 
-엄격한 순환 중재기는 마지막으로 전송한 rank의 바로 다음 위치부터 원형으로 pending을 찾는다. P9-GRR은 `out_rank_q[3:0]`에 현재 출력의 rank를 저장하고, 다음 선택 때 같은 값을 마지막 처리 위치로 다시 사용한다. 따라서 P8의 별도 Gray epoch 4 FF가 필요 없다.
+```text
+내부 rank:  0, 1, 2, 3, 4, 5, 6, 7, ...
+source ID:  0, 1, 3, 2, 6, 7, 5, 4, ...
+```
+
+Source 6은 rank 4 위치에 고정 연결된다. 중재기가 rank 4를 선택하면 같은 위치의
+pending을 바로 지우고, 외부에는 `Gray(4)=source ID 6`을 출력한다. Output register에
+저장된 rank 4는 현재 주소를 만드는 동시에 다음 탐색을 rank 5부터 시작하게 하는
+책갈피가 된다.
 
 ```text
 reset release 2 + request CDC 32 + ACK 16 + pending 16 + output rank 4 + valid 1
     = 71 FF
 ```
 
-줄어든 것은 중복 순번 상태 4 FF뿐이다. Source별 pending 16개와 registered output 한 칸, early ACK, 4-bit 버스 한 개, 최대 1 event/clock 처리율은 유지된다. 계속 pending인 source는 receiver stall을 제외한 최대 16번의 service decision 안에 반드시 선택된다. 다만 P9도 실제 발화 도착 순서를 보존하는 FCFS는 아니다.
+각 기술의 transistor-level 동작, clock별 상태 변화, T0 대비 기능·PPA 손익은
+[P9-GRR 핵심 기술 상세 설명](docs/P9_GRR_CORE_TECHNOLOGIES_KR.md)에 단계별로
+정리한다.
+
+### 9.2 T0와 비교할 때의 정확한 의미
+
+T0-PPA는 source별 2FF, pending, registered valid/ready output과 공정성 pointer가
+없기 때문에 P9보다 훨씬 작다. P9-GRR은 T0의 raw PPA를 이긴 구조가 아니라,
+T0에 없던 입력 안전성·이벤트 보관·starvation 상한·동기식 후단 처리율을 추가하고
+Gray-rank 배열과 상태 재사용으로 그 추가 비용을 줄인 구조다.
+
+| 기능 | T0-PPA | P9-GRR |
+|---|---|---|
+| 비동기 요청 | 비동기 중재·relative timing | Source별 2FF 뒤 synchronous core |
+| 대기 공간 | Source별 pending 없음 | Pending 16 + output 1 |
+| ACK | Receiver transaction과 직접 연결 | 내부 접수 뒤 early ACK |
+| 중재 | Fixed priority | Stall 제외 최대 16 service decisions의 strict cyclic |
+| Receiver stall | 현재 link와 source에 직접 전파 | Output 유지, 빈 pending까지 추가 접수 |
+| 후단 처리율 | 4-phase transaction 간격 | Full backlog에서 최대 1 event/clock |
 
 ### 9.3 P9-GRR과 P9-OHT의 post-route Pareto
 
@@ -307,6 +354,7 @@ P9-GRR은 특정 응용 계산을 포함하지 않은 독립 이벤트 전송 IP
 |---|---|
 | 현재 P9-GRR RTL | [rtl/experiments/aer_pending_gray_rank_reuse_sync_core_reset.sv](rtl/experiments/aer_pending_gray_rank_reuse_sync_core_reset.sv) |
 | P9-GRR 구조 SVG | [docs/architecture/aer_p9_grr_structure.svg](docs/architecture/aer_p9_grr_structure.svg) |
+| P9-GRR 세 핵심 기술 상세 설명 | [docs/P9_GRR_CORE_TECHNOLOGIES_KR.md](docs/P9_GRR_CORE_TECHNOLOGIES_KR.md) |
 | P9 상태 압축·물리 탐색 | [results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md](results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md) |
 | P9 hold/PPA 전체 sweep | [results/P9_PHYSICAL_HOLD_PARETO_SWEEP_2026-08-21.md](results/P9_PHYSICAL_HOLD_PARETO_SWEEP_2026-08-21.md) |
 | P9 최종 Cadence 원시 보고서 | [reports/p9_final/](reports/p9_final/) |

@@ -1,5 +1,11 @@
 # P9 상태 압축형 AER 탐색
 
+P9-GRR의 동작은 `2FF`, `pending`, `Gray`, `register` 네 개를 서로 독립된 기술로
+나누지 않는다. 기능 기준으로 ① source별 2FF 입력 동기화, ② pending 16개와
+output register 1개의 2단 elastic buffer, ③ Gray-rank strict-cyclic 중재와
+output-rank pointer 재사용의 세 축으로 정리한다. 회로가 실제로 움직이는 순서와
+T0 대비 손익은 [`docs/P9_GRR_CORE_TECHNOLOGIES_KR.md`](../docs/P9_GRR_CORE_TECHNOLOGIES_KR.md)에 설명한다.
+
 ## 1. 목적과 유지한 계약
 
 P9 탐색의 목적은 P8-DG-SCR의 기능을 줄이는 것이 아니라, 같은 기능을 표현하는

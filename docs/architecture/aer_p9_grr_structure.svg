@@ -37,7 +37,7 @@
   <rect width="1800" height="1080" fill="#f8fafc"/>
 
   <text x="50" y="54" class="title">P9-GRR: Gray 순번 저장부와 출력 Register를 재사용한 AER 컨트롤러</text>
-  <text x="50" y="86" class="subtitle">입출력 기능은 유지하고 별도 epoch 4 FF를 제거: 75 FF → 71 FF · 엄격한 순환 공정성 · 단일 4-bit 주소 버스</text>
+  <text x="50" y="86" class="subtitle">입력 2FF · pending+출력 2단 buffer · Gray-rank 순환 중재와 출력 pointer 재사용</text>
   <rect x="1350" y="24" width="400" height="70" rx="14" fill="#eef2ff" stroke="#818cf8"/>
   <text x="1550" y="51" text-anchor="middle" class="card-title">핵심 재사용</text>
   <text x="1550" y="78" text-anchor="middle" class="small">출력 rank 4 FF = 전송 주소 상태 + 다음 탐색 pointer</text>
@@ -198,8 +198,8 @@
   <text x="1072" y="976" text-anchor="middle" class="small">보호된 release clock 동안 0으로 정리</text>
 
   <rect x="1340" y="886" width="385" height="104" rx="12" fill="#f5f3ff" stroke="#a78bfa"/>
-  <text x="1532" y="921" text-anchor="middle" class="card-title">P8 대비 정확히 4 FF 감소</text>
-  <text x="1532" y="950" text-anchor="middle" class="body">별도 epoch 4 FF만 제거</text>
+  <text x="1532" y="921" text-anchor="middle" class="card-title">출력 rank 상태 재사용</text>
+  <text x="1532" y="950" text-anchor="middle" class="body">별도 공정성 pointer 4 FF 불필요</text>
   <text x="1532" y="976" text-anchor="middle" class="small">pending 16 + 출력 1칸의 저장 능력은 유지</text>
 
   <text x="900" y="1057" text-anchor="middle" class="small">Gray는 payload를 바꾸는 압축 code가 아니라 순환 선택 순서를 정의한다. 수신기에는 원래 source ID가 출력된다.</text>
