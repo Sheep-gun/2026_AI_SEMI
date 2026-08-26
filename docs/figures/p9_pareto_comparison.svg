@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">P9-GRR과 P9-OHT 동일 기능 PPA Pareto 비교</title>
+  <desc id="desc">면적, SAIF 전력, core arrival와 전력 breakdown을 이용한 두 P9 구현 비교</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 22px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.grid{stroke:#cbd5e1;stroke-width:1}.grr{fill:#10b981}.oht{fill:#2563eb}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#f8fafc"/>
+  <text x="65" y="62" class="title">동일 service contract의 직접 PPA 비교: GRR vs OHT</text>
+  <text x="65" y="98" class="sub">T0는 기능이 다르므로 이 Pareto 그래프에서 제외</text>
+
+  <rect x="55" y="145" width="760" height="560" rx="20" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="435" y="190" text-anchor="middle" class="h">Post-route 정규화 비교 · GRR=100</text>
+  <g class="t">
+    <text x="105" y="275">Cell area</text><line x1="300" y1="255" x2="745" y2="255" class="grid"/>
+    <rect x="300" y="230" width="380" height="34" class="grr"/><text x="690" y="254">100 · 669.294 µm²</text>
+    <rect x="300" y="275" width="403" height="34" class="oht"/><text x="713" y="299">105.979 · 709.308 µm²</text>
+
+    <text x="105" y="420">SAIF power</text><line x1="300" y1="400" x2="745" y2="400" class="grid"/>
+    <rect x="300" y="375" width="380" height="34" class="grr"/><text x="690" y="399">100 · 0.014382 mW</text>
+    <rect x="300" y="420" width="364" height="34" class="oht"/><text x="674" y="444">95.811 · 0.013780 mW</text>
+
+    <text x="105" y="565">Core arrival</text><line x1="300" y1="545" x2="745" y2="545" class="grid"/>
+    <rect x="300" y="520" width="380" height="34" class="grr"/><text x="690" y="544">100 · 2.807 ns</text>
+    <rect x="300" y="565" width="292" height="34" class="oht"/><text x="602" y="589">76.915 · 2.159 ns</text>
+  </g>
+  <rect x="105" y="630" width="280" height="45" rx="10" class="grr"/><text x="245" y="659" text-anchor="middle" class="h" fill="#ffffff">GRR · 면적형</text>
+  <rect x="425" y="630" width="280" height="45" rx="10" class="oht"/><text x="565" y="659" text-anchor="middle" class="h" fill="#ffffff">OHT · 속도/전력형</text>
+
+  <rect x="865" y="145" width="680" height="560" rx="20" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="1205" y="190" text-anchor="middle" class="h">Mapped-SAIF power breakdown</text>
+  <text x="910" y="250" class="t">Sequential total</text>
+  <rect x="1110" y="225" width="330" height="32" class="grr"/><text x="1450" y="249" class="small">0.01206</text>
+  <rect x="1110" y="270" width="342" height="32" class="oht"/><text x="1462" y="294" class="small">0.01251 mW</text>
+  <text x="910" y="390" class="t">Combinational total</text>
+  <rect x="1110" y="365" width="330" height="32" class="grr"/><text x="1450" y="389" class="small">0.002321</text>
+  <rect x="1110" y="410" width="180" height="32" class="oht"/><text x="1300" y="434" class="small">0.001269 mW</text>
+  <text x="910" y="530" class="t">Switching component</text>
+  <rect x="1110" y="505" width="330" height="32" class="grr"/><text x="1450" y="529" class="small">0.00135875</text>
+  <rect x="1110" y="550" width="207" height="32" class="oht"/><text x="1327" y="574" class="small">0.00085341 mW</text>
+  <text x="910" y="635" class="t">OHT는 4 FF 비용으로 순차전력이 증가</text>
+  <text x="910" y="670" class="t">하지만 조합 total 약 45.3%, switching 약 37.2% 감소</text>
+
+  <rect x="55" y="750" width="1490" height="105" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="85" y="792" class="h">최종 판단</text>
+  <text x="85" y="830" class="t">GRR은 최소 면적, OHT는 면적 +5.979%를 지불해 SAIF −4.189%와 core arrival −23.1%를 얻는다. 둘 다 10 ns에서 1 event/clock이며 별도 Fmax sweep은 하지 않았다.</text>
+</svg>

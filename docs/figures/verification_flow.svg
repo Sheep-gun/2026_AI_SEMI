@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
+  <title id="title">AER RTL에서 45나노미터 물리검증까지의 흐름</title>
+  <desc id="desc">RTL simulation, Genus, SAIF, Conformal, Innovus, post-route 검사를 단계별로 연결</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 20px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:15px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:13px "Malgun Gothic",sans-serif;fill:#486581}.box{stroke-width:2;rx:16}.line{fill:none;stroke:#2563eb;stroke-width:4}
+    </style>
+    <marker id="blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6L0 12Z" fill="#2563eb"/></marker>
+  </defs>
+  <rect width="1600" height="760" fill="#f8fafc"/>
+  <text x="65" y="62" class="title">어떤 조건에서 무엇을 검증했는가?</text>
+  <text x="65" y="98" class="sub">기능이 맞다는 주장과 물리적으로 배치·배선 가능하다는 주장을 단계별로 분리</text>
+
+  <g>
+    <rect x="55" y="190" width="210" height="210" class="box" fill="#e6fffa" stroke="#0f9d8b"/>
+    <text x="160" y="235" text-anchor="middle" class="h">1. RTL Simulation</text>
+    <text x="160" y="280" text-anchor="middle" class="t">T0 139 events</text><text x="160" y="315" text-anchor="middle" class="t">P9 101 events</text>
+    <text x="160" y="350" text-anchor="middle" class="small">Loss·duplicate·stall</text>
+
+    <rect x="315" y="190" width="210" height="210" class="box" fill="#fff7ed" stroke="#f97316"/>
+    <text x="420" y="235" text-anchor="middle" class="h">2. Genus</text>
+    <text x="420" y="280" text-anchor="middle" class="t">RTL → standard cells</text><text x="420" y="315" text-anchor="middle" class="t">Area·timing·power</text>
+    <text x="420" y="350" text-anchor="middle" class="small">GPDK45 libraries</text>
+
+    <rect x="575" y="190" width="210" height="210" class="box" fill="#eff6ff" stroke="#2563eb"/>
+    <text x="680" y="235" text-anchor="middle" class="h">3. VCD → SAIF</text>
+    <text x="680" y="280" text-anchor="middle" class="t">101-event activity</text><text x="680" y="315" text-anchor="middle" class="t">Gate에 mapping</text>
+    <text x="680" y="350" text-anchor="middle" class="small">도구 추정, 실측 아님</text>
+
+    <rect x="835" y="190" width="210" height="210" class="box" fill="#f5f3ff" stroke="#7c3aed"/>
+    <text x="940" y="235" text-anchor="middle" class="h">4. Conformal LEC</text>
+    <text x="940" y="280" text-anchor="middle" class="t">RTL ↔ mapped netlist</text><text x="940" y="315" text-anchor="middle" class="t">Output·state equivalent</text>
+    <text x="940" y="350" text-anchor="middle" class="small">Post-route LVS 아님</text>
+
+    <rect x="1095" y="190" width="210" height="210" class="box" fill="#ecfdf5" stroke="#10b981"/>
+    <text x="1200" y="235" text-anchor="middle" class="h">5. Innovus P&amp;R</text>
+    <text x="1200" y="280" text-anchor="middle" class="t">Floorplan·placement</text><text x="1200" y="315" text-anchor="middle" class="t">Clock·routing·RC</text>
+    <text x="1200" y="350" text-anchor="middle" class="small">Density 60%</text>
+
+    <rect x="1355" y="190" width="190" height="210" class="box" fill="#fefce8" stroke="#ca8a04"/>
+    <text x="1450" y="235" text-anchor="middle" class="h">6. Post-route</text>
+    <text x="1450" y="280" text-anchor="middle" class="t">Setup·hold·power</text><text x="1450" y="315" text-anchor="middle" class="t">DRC·connectivity</text>
+    <text x="1450" y="350" text-anchor="middle" class="small">DEF/SDF/SPEF</text>
+  </g>
+  <path d="M265 295H315M525 295H575M785 295H835M1045 295H1095M1305 295H1355" class="line" marker-end="url(#blue)"/>
+
+  <rect x="55" y="470" width="1490" height="210" rx="20" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="90" y="515" class="h">공통 45nm 측정 조건</text>
+  <text x="90" y="558" class="t">Setup: slow 0.9 V, 125℃ · Hold: fast 1.1 V, 0℃ · P9 clock: 10 ns · uncertainty: 0.20/0.02 ns</text>
+  <text x="90" y="600" class="t">I/O delay 1 ns · CDC FF1→FF2 max 0.8 ns · Metal1~Metal9 signal routing · Metal9/10 power ring</text>
+  <text x="90" y="642" class="small">Generic GPDK045 비교 환경. DRC 0과 connectivity 0은 현재 routing DB 검사이며 GDS/LVS/IR/EM/실리콘 sign-off가 아니다.</text>
+</svg>

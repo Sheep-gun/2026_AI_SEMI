@@ -66,8 +66,8 @@
   <path d="M1000 500 V390" class="control" marker-end="url(#orange)"/>
 
   <rect x="55" y="685" width="710" height="145" rx="18" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
-  <text x="85" y="727" class="h">P9-GRR과 같은 기능</text>
-  <text x="85" y="768" class="t">2FF · Pending 16 + 출력 1 · Early ACK · Gray 순번 공정성(≤16 결정)</text>
+  <text x="85" y="727" class="h">P9-GRR과 같은 service contract</text>
+  <text x="85" y="768" class="t">2FF · Pending 16 + 출력 1 · Early ACK · ≤16 successful grants</text>
   <text x="85" y="805" class="t">Receiver가 준비되면 1 event/clock, stall 중 주소와 valid 유지</text>
 
   <rect x="835" y="685" width="705" height="145" rx="18" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>

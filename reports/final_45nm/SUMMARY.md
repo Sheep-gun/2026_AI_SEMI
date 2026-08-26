@@ -25,7 +25,7 @@
 | Mapped-SAIF power | 해당 없음 | 0.014382 mW | **0.013780 mW** |
 | Overall setup | clockless | +0.472 ns | +0.458 ns |
 | Core setup | clockless | +6.824 ns | **+7.555 ns** |
-| Hold | 상대시간 검증 | +0.024 ns | +0.024 ns |
+| Hold | N/A, 내부 async path 일부 unconstrained | +0.024 ns | +0.024 ns |
 | Recovery / removal | 해당 없음 | +9.386 / +0.061 ns | +9.380 / +0.061 ns |
 | DRC / connectivity | 0 / 0 | 0 / 0 | 0 / 0 |
 | LEC | 21 output + 5 state 통과 | 21 output + 71 state 통과 | 21 output + 75 state 통과 |
@@ -33,9 +33,18 @@
 T0의 작은 면적과 전력은 P9의 기능을 같은 비용으로 구현했다는 뜻이 아니다. T0에는
 2FF, source별 pending, 공정성 보장과 동기식 1 event/clock 출력이 없다.
 
+T0는 선택한 5 ns I/O max-delay에서 post-route slack +4.126 ns를 만족했지만,
+Genus unconstrained report에 busy latch G/D 등 내부 self-timed path가 남아 있다.
+따라서 전체 bundled-data timing이나 asynchronous metastability sign-off로 해석하지
+않는다.
+
 P9-GRR과 P9-OHT는 같은 입출력·저장·공정성 계약을 사용하므로 직접 비교할 수 있다.
 OHT는 GRR보다 면적이 5.979% 크지만 vectorless 전력은 6.892%, mapped-SAIF 전력은
 4.189% 낮고 core setup 여유는 0.731 ns 크다.
+
+OHT의 sequential SAIF power는 별도 epoch 4 FF 때문에 증가했지만 combinational
+total은 약 45.3%, 전체 switching component는 약 37.2% 감소했다. 추가 state
+비용보다 one-hot tree의 조합 전력 감소가 커 총전력이 낮아졌다.
 
 ## 기능 검증
 
@@ -52,3 +61,5 @@ OHT는 GRR보다 면적이 5.979% 크지만 vectorless 전력은 6.892%, mapped-
     lec/t0, p9_grr, p9_oht             RTL-to-mapped equivalence
 
 설계 해석과 발표용 문장은 [최종 기술 보고서](../../docs/FINAL_REPORT_KR.md)를 따른다.
+수치별 원본 근거는 [주장-검증 대응표](../../docs/CLAIM_EVIDENCE_MATRIX_KR.md)에서
+확인할 수 있다.

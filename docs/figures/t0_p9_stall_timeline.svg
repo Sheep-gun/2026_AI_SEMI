@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860" role="img" aria-labelledby="title desc">
+  <title id="title">T0와 P9의 receiver stall 처리 비교</title>
+  <desc id="desc">T0는 receiver ACK까지 source를 잡고 P9는 내부 pending 기록 뒤 early ACK하여 source를 해제하는 timeline</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 22px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.axis{stroke:#94a3b8;stroke-width:2}.sig{fill:none;stroke:#2563eb;stroke-width:5}
+      .ack{fill:none;stroke:#0f9d8b;stroke-width:5}.stall{fill:#fee2e2;stroke:#ef4444;stroke-width:2}.save{fill:#dcfce7;stroke:#16a34a;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1600" height="860" fill="#f8fafc"/>
+  <text x="65" y="62" class="title">Receiver가 멈췄을 때 T0와 P9는 어떻게 다른가?</text>
+  <text x="65" y="98" class="sub">같은 source 6 event를 보내지만 ACK의 의미와 event 보관 위치가 다름</text>
+
+  <rect x="55" y="145" width="1490" height="275" rx="20" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="90" y="190" class="h">T0: receiver가 받을 때까지 source가 transaction을 유지</text>
+  <line x1="250" y1="240" x2="1480" y2="240" class="axis"/>
+  <text x="90" y="248" class="t">src_req[6]</text><path d="M250 260H360V220H1220V260H1480" class="sig"/>
+  <text x="90" y="318" class="t">aer_req</text><path d="M250 330H430V290H1180V330H1480" class="sig"/>
+  <text x="90" y="388" class="t">src_ack[6]</text><path d="M250 400H1050V360H1220V400H1480" class="ack"/>
+  <rect x="520" y="205" width="500" height="200" rx="14" class="stall"/>
+  <text x="770" y="275" text-anchor="middle" class="h">Receiver stall</text>
+  <text x="770" y="315" text-anchor="middle" class="t">aer_ack가 오지 않음</text>
+  <text x="770" y="355" text-anchor="middle" class="t">source 6 REQ도 계속 high</text>
+  <text x="1135" y="215" class="small">receiver ACK 뒤에야 source ACK</text>
+
+  <rect x="55" y="455" width="1490" height="310" rx="20" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="90" y="500" class="h">P9: 내부 보관을 확정하면 source를 먼저 해제</text>
+  <line x1="250" y1="550" x2="1480" y2="550" class="axis"/>
+  <text x="90" y="558" class="t">src_req[6]</text><path d="M250 570H360V530H620V570H1480" class="sig"/>
+  <text x="90" y="628" class="t">src_ack[6]</text><path d="M250 640H500V600H650V640H1480" class="ack"/>
+  <text x="90" y="698" class="t">out_valid</text><path d="M250 710H560V670H1220V710H1480" class="sig"/>
+  <rect x="480" y="515" width="230" height="220" rx="14" class="save"/>
+  <text x="595" y="590" text-anchor="middle" class="h">Pending/Output</text>
+  <text x="595" y="630" text-anchor="middle" class="t">Event 소유권 기록</text>
+  <text x="595" y="670" text-anchor="middle" class="t">Early ACK</text>
+  <rect x="760" y="515" width="390" height="220" rx="14" class="stall"/>
+  <text x="955" y="590" text-anchor="middle" class="h">Receiver stall</text>
+  <text x="955" y="630" text-anchor="middle" class="t">주소와 valid 고정</text>
+  <text x="955" y="670" text-anchor="middle" class="t">다른 빈 Pending은 접수 가능</text>
+  <text x="1210" y="650" class="small">ready 상승 edge에서 소비</text>
+
+  <text x="65" y="815" class="sub">P9의 Early ACK는 receiver 처리 완료가 아니라 controller가 event를 책임지고 보관했다는 의미다.</text>
+</svg>

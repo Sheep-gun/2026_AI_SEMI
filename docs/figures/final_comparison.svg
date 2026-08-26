@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" role="img" aria-labelledby="title desc">
   <title id="title">T0, P9-GRR, P9-OHT 최종 비교</title>
-  <desc id="desc">세 AER 설계의 구조와 역할, 45나노미터 물리설계 결과를 한 화면에 비교</desc>
+  <desc id="desc">T0의 전통 구조와 P9 두 구현의 입력 처리, 저장, 중재, 출력 service contract를 비교</desc>
   <defs>
     <style>
       .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
@@ -11,7 +11,7 @@
   </defs>
   <rect width="1600" height="960" fill="#f8fafc"/>
   <text x="70" y="62" class="title">최종 비교: T0 Baseline vs P9-GRR vs P9-OHT</text>
-  <text x="70" y="98" class="sub">T0는 전통 구조의 기준점, GRR과 OHT는 같은 개선 기능을 서로 다른 PPA 방향으로 구현한 두 최종안</text>
+  <text x="70" y="98" class="sub">T0는 전통 구조의 기준점, GRR과 OHT는 같은 service contract를 서로 다른 PPA 방향으로 구현한 두 최종안</text>
 
   <rect x="250" y="145" width="420" height="90" rx="16" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
   <rect x="690" y="145" width="420" height="90" rx="16" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
@@ -49,11 +49,9 @@
   </g>
 
   <rect x="70" y="735" width="1460" height="150" rx="18" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
-  <text x="105" y="777" class="head">GPDK45 post-route 결과</text>
-  <text x="105" y="822" class="label">T0</text><text x="250" y="822" class="metric">214.092 µm² · 0.002127 mW vectorless</text>
-  <text x="700" y="822" class="label">P9-GRR</text><text x="825" y="822" class="metric">669.294 µm² · 0.014382 mW SAIF</text>
-  <text x="105" y="860" class="label">P9-OHT</text><text x="250" y="860" class="metric">709.308 µm² · 0.013780 mW SAIF</text>
-  <text x="825" y="860" class="text">세 설계 모두 DRC 0 · Connectivity 0 · RTL-to-netlist LEC 통과</text>
+  <text x="105" y="777" class="head">비교를 해석하는 두 단계</text>
+  <text x="105" y="820" class="label">T0 → P9</text><text x="250" y="820" class="text">2FF·17-event 저장·공정성·stall 격리·1 event/clock을 추가한 기능/비용 비교</text>
+  <text x="105" y="858" class="label">GRR ↔ OHT</text><text x="250" y="858" class="text">같은 service contract에서 면적형과 속도·전력형을 직접 비교</text>
 
-  <text x="70" y="925" class="sub">주의: T0의 작은 수치는 2FF·Pending·공정성·1 event/clock 기능이 없는 최소 baseline 비용이다. 동급 PPA 승패는 GRR과 OHT끼리 비교한다.</text>
+  <text x="70" y="925" class="sub">Raw PPA는 별도 GRR/OHT Pareto 그림에서 비교한다. T0와 P9를 동일 기능의 승패 막대그래프로 표현하지 않는다.</text>
 </svg>

@@ -30,9 +30,9 @@
   <rect x="545" y="180" width="260" height="210" class="box" fill="#ecfdf5" stroke="#10b981"/>
   <text x="675" y="224" text-anchor="middle" class="h">Gray-rank 저장부</text>
   <text x="675" y="266" text-anchor="middle" class="t">ACK 16 + Pending 16</text>
-  <text x="675" y="305" text-anchor="middle" class="t">bit 위치가 source 주소</text>
+  <text x="675" y="305" text-anchor="middle" class="t">bit 위치는 Gray rank</text>
   <text x="675" y="344" text-anchor="middle" class="t">접수 즉시 Early ACK</text>
-  <text x="675" y="374" text-anchor="middle" class="small">rank 순서 재배열은 고정 배선</text>
+  <text x="675" y="374" text-anchor="middle" class="small">source 6 ↔ rank 4 고정 배선</text>
 
   <rect x="875" y="180" width="265" height="210" class="box" fill="#fff7ed" stroke="#f97316"/>
   <text x="1007" y="224" text-anchor="middle" class="h">4×4 Grouped 순환 중재</text>

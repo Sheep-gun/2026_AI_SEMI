@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
+  <title id="title">T0 P9-GRR P9-OHT die 크기 동일 축척 비교</title>
+  <desc id="desc">세 Innovus post-route DEF의 die 가로세로 길이를 동일한 스케일로 그린 비교</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 22px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.die{stroke-width:4}.core{stroke-width:2;stroke-dasharray:9 6}
+    </style>
+  </defs>
+  <rect width="1600" height="760" fill="#f8fafc"/>
+  <text x="65" y="62" class="title">동일 축척으로 본 post-route die 크기</text>
+  <text x="65" y="98" class="sub">DEF DIEAREA 기준 10 px/µm · Cell area는 아래 별도 표기한 표준셀 footprint 합</text>
+
+  <text x="260" y="165" text-anchor="middle" class="h">T0</text>
+  <rect x="107" y="230" width="306" height="274" rx="8" fill="#fff7ed" stroke="#f97316" class="die"/>
+  <rect x="157" y="280" width="206" height="171" fill="#fed7aa" stroke="#c2410c" class="core"/>
+  <text x="260" y="540" text-anchor="middle" class="t">Die 30.60×27.36 µm</text>
+  <text x="260" y="575" text-anchor="middle" class="t">Core 20.60×17.10 µm</text>
+  <text x="260" y="610" text-anchor="middle" class="t">92 instances · Cell area 214.092 µm²</text>
+
+  <text x="800" y="165" text-anchor="middle" class="h">P9-GRR</text>
+  <rect x="581" y="175" width="438" height="428" rx="8" fill="#ecfdf5" stroke="#10b981" class="die"/>
+  <rect x="631" y="225" width="338" height="325" fill="#bbf7d0" stroke="#047857" class="core"/>
+  <text x="800" y="640" text-anchor="middle" class="t">Die 43.80×42.75 µm · Core 33.80×32.49 µm</text>
+  <text x="800" y="677" text-anchor="middle" class="t">263 instances · Cell area 669.294 µm²</text>
+
+  <text x="1320" y="165" text-anchor="middle" class="h">P9-OHT</text>
+  <rect x="1091" y="175" width="458" height="428" rx="8" fill="#eff6ff" stroke="#2563eb" class="die"/>
+  <rect x="1141" y="225" width="358" height="325" fill="#bfdbfe" stroke="#1d4ed8" class="core"/>
+  <text x="1320" y="640" text-anchor="middle" class="t">Die 45.80×42.75 µm · Core 35.80×32.49 µm</text>
+  <text x="1320" y="677" text-anchor="middle" class="t">278 instances · Cell area 709.308 µm²</text>
+
+  <text x="65" y="730" class="small">T0와 P9는 기능이 다르므로 크기 차이는 추가 기능 비용을 보여 준다. GRR/OHT는 동일 service contract의 직접 면적 비교다.</text>
+</svg>

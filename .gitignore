@@ -34,6 +34,8 @@ webtalk*.log
 
 /docs/*
 !/docs/FINAL_REPORT_KR.md
+!/docs/CIRCUIT_OPERATION_KR.md
+!/docs/CLAIM_EVIDENCE_MATRIX_KR.md
 !/docs/PPT_ASSET_GUIDE_KR.md
 !/docs/figures/
 !/docs/figures/**

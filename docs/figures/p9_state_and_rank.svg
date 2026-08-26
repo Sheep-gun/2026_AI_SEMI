@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Gray rank 매핑과 GRR OHT 상태 수 비교</title>
+  <desc id="desc">Source와 Gray rank 대응, source6 rank4 예, 공통 67 state에 GRR 4 또는 OHT 8 state를 더하는 구성</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 22px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.cell{stroke:#cbd5e1;stroke-width:1.5}.bar{stroke:#ffffff;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#f8fafc"/>
+  <text x="65" y="62" class="title">Gray rank는 내부 순서표이고, Register 재사용이 GRR 면적을 줄인다</text>
+  <text x="65" y="98" class="sub">Source ID는 외부 주소, rank는 공정성 탐색 위치</text>
+
+  <rect x="55" y="145" width="780" height="660" rx="20" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="445" y="190" text-anchor="middle" class="h">Rank → Source ID 매핑</text>
+  <g class="t">
+    <rect x="95" y="235" width="170" height="65" class="cell" fill="#e2e8f0"/><text x="180" y="275" text-anchor="middle">Rank</text>
+    <rect x="265" y="235" width="170" height="65" class="cell" fill="#e2e8f0"/><text x="350" y="275" text-anchor="middle">Source</text>
+    <rect x="475" y="235" width="170" height="65" class="cell" fill="#e2e8f0"/><text x="560" y="275" text-anchor="middle">Rank</text>
+    <rect x="645" y="235" width="150" height="65" class="cell" fill="#e2e8f0"/><text x="720" y="275" text-anchor="middle">Source</text>
+  </g>
+  <g class="t">
+    <text x="180" y="345" text-anchor="middle">0,1,2,3</text><text x="350" y="345" text-anchor="middle">0,1,3,2</text>
+    <text x="180" y="405" text-anchor="middle">4,5,6,7</text><text x="350" y="405" text-anchor="middle">6,7,5,4</text>
+    <text x="560" y="345" text-anchor="middle">8,9,10,11</text><text x="720" y="345" text-anchor="middle">12,13,15,14</text>
+    <text x="560" y="405" text-anchor="middle">12,13,14,15</text><text x="720" y="405" text-anchor="middle">10,11,9,8</text>
+  </g>
+  <rect x="95" y="465" width="700" height="145" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="125" y="510" class="h">Worked example: source 6 ↔ rank 4</text>
+  <text x="125" y="552" class="t">REQ → req_rank[4] · ACK ← ack_rank[4] · 보관 → pending_rank[4]</text>
+  <text x="125" y="588" class="t">rank 4 선택 → 같은 pending_rank[4]를 바로 clear → out_addr=Gray(4)=6</text>
+  <text x="95" y="665" class="h">Gray 전환 범위</text>
+  <text x="95" y="705" class="t">Full backlog에서 이웃 rank는 외부 주소 1-bit 전환. Sparse traffic은 rank를 건너뛰므로 여러 bit 전환 가능.</text>
+  <text x="95" y="748" class="t">내부 out_rank는 binary rank이므로 7→8에서 0111→1000, 4 bit가 바뀔 수 있음.</text>
+
+  <rect x="885" y="145" width="660" height="660" rx="20" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="1215" y="190" text-anchor="middle" class="h">P9 상태 구성</text>
+  <text x="925" y="240" class="t">공통 상태 67</text>
+  <rect x="925" y="270" width="520" height="75" rx="10" fill="#93c5fd" class="bar"/>
+  <text x="1185" y="315" text-anchor="middle" class="h">2FF 32 + ACK 16 + Pending 16 + valid 1 + reset 2 = 67</text>
+
+  <text x="925" y="410" class="h">P9-GRR = 71</text>
+  <rect x="925" y="440" width="520" height="70" rx="10" fill="#93c5fd" class="bar"/>
+  <rect x="1445" y="440" width="55" height="70" rx="10" fill="#10b981" class="bar"/>
+  <text x="1185" y="483" text-anchor="middle" class="t">공통 67</text><text x="1472" y="483" text-anchor="middle" class="small">rank 4</text>
+  <text x="925" y="545" class="t">Out_rank 4 FF가 현재 출력과 다음 strict-cyclic pointer를 겸함</text>
+
+  <text x="925" y="625" class="h">P9-OHT = 75</text>
+  <rect x="925" y="655" width="520" height="70" rx="10" fill="#93c5fd" class="bar"/>
+  <rect x="1445" y="655" width="50" height="70" fill="#f97316" class="bar"/>
+  <rect x="1495" y="655" width="50" height="70" rx="10" fill="#7c3aed" class="bar"/>
+  <text x="1185" y="698" text-anchor="middle" class="t">공통 67</text><text x="1470" y="698" text-anchor="middle" class="small">epoch</text><text x="1520" y="698" text-anchor="middle" class="small">addr</text>
+  <text x="925" y="760" class="t">별도 Gray epoch 4 FF + output address 4 FF</text>
+  <text x="65" y="855" class="sub">GRR과 OHT의 면적 차이는 4 FF뿐 아니라 selector, buffer와 물리 매핑 차이도 포함한다.</text>
+</svg>
