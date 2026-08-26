@@ -1,288 +1,319 @@
-# 뉴런 발화 이벤트를 빠르고 공정하게 전달하는 AER 컨트롤러
+# 16개 뉴런의 발화를 하나의 주소 버스로 전달하는 AER 컨트롤러
 
-이 저장소는 16개 뉴런의 비동기 발화 요청을 하나의 4-bit 주소 버스로 모으는 AER
-컨트롤러를 다룬다. 최종 비교 대상은 세 개뿐이다.
+이 문서는 AER을 처음 접하는 독자가 앞에서부터 순서대로 읽을 수 있도록 작성했다.
+뒤에서 정의할 개선 회로나 결과를 앞장에서 먼저 사용하지 않는다.
 
-- **T0**: clock 없이 4-phase handshake로 움직이는 전통적 AER baseline
-- **P9-GRR**: 상태와 feedback 회로를 줄인 면적 중심 주 설계
-- **P9-OHT**: one-hot tree로 속도와 전력을 개선한 Pareto 대안
+## 1. AER이란 무엇인가?
 
-중간 후보를 제거한 것은 설명 깊이를 줄이기 위해서가 아니다. 본문에서는 AER과
-4-phase handshake부터 회로 상태식, event 하나의 처리 순서, 45nm PPA가 달라진
-이유와 검증 범위까지 설명한다.
+AER(Address-Event Representation)은 event가 발생한 source의 번호를 주소로
+바꾸어 전달하는 방식이다. 뉴런 회로에서는 “몇 번 뉴런이 발화했는가”를 보내는
+통신 규격으로 사용할 수 있다.
 
-## 1. AER은 무엇을 전송하는가
+본 설계에는 16개의 뉴런 source가 있다. Source 번호는 0부터 15까지이므로 4 bit로
+표현할 수 있다.
 
-AER은 Address-Event Representation의 약자다. 뉴런이 발화했을 때 막전위 파형
-전체를 보내는 대신 “몇 번 뉴런이 발화했는가”라는 주소를 event로 보낸다.
+    source 6 발화
+        → src_req[6] = 1
+        → controller가 여러 요청 중 하나를 선택
+        → 공용 주소 버스에 4'b0110 출력
+        → receiver가 source 6 event로 해석
 
-16개 뉴런의 번호는 0~15이므로 4 bit면 표현할 수 있다.
+![AER 공용 주소 버스](docs/figures/aer_concept.svg)
 
-    뉴런 6 발화
-        → src_req[6] 상승
-        → controller가 요청을 접수하고 중재
-        → out_addr = 4'b0110
-        → receiver가 6번 뉴런의 event로 해석
+뉴런마다 별도의 주소 버스를 만들면 source가 늘어날수록 핀과 배선이 반복된다.
+AER은 source별 요청선은 받되 실제 event 정보는 하나의 공용 주소 버스로 보낸다.
 
-이 RTL의 payload는 4-bit source ID뿐이다. 발화 크기, 막전위와 timestamp는
-포함하지 않는다. Timestamp는 event가 발생한 시각을 뜻하는 별도 정보다. P9는
-timestamp를 저장하지 않으므로 서로 다른 source가 실제로 어느 순서로 발화했는지
-정확한 FCFS 순서를 복원하지 않는다.
+이 회로가 보내는 값은 source ID다. 막전위, 발화 크기와 timestamp는 포함하지
+않는다. Timestamp는 event가 발생한 시각을 나타내는 별도 정보다. 따라서 주소
+출력 순서만 보고 서로 다른 source의 정확한 발화 시간 차이를 복원할 수는 없다.
 
-뉴런마다 전용 주소 버스를 만들면 source 수가 늘수록 배선과 핀이 증가한다.
-AER은 요청선 16개를 유지하되 실제 event 정보는 하나의 공용 4-bit 주소 버스로
-전달한다. 여러 요청이 겹칠 수 있으므로 단순 encoder가 아니라 하나를 선택하고
-나머지를 보존하는 중재기가 필요하다.
+또한 AER controller는 단순 encoder가 아니다. 여러 뉴런이 동시에 발화할 수
+있으므로 다음 두 기능이 필요하다.
 
-![AER 공용 주소 버스 개념](docs/figures/aer_concept.svg)
+1. 동시에 들어온 요청 중 이번에 보낼 source 하나를 선택한다.
+2. 선택되지 않은 요청이 사라지지 않도록 protocol이나 내부 상태로 관리한다.
 
-## 2. 4-phase handshake는 무엇인가
+이 선택 기능을 중재(arbitration)라고 한다.
 
-Handshake는 공통 clock 횟수를 세는 대신 REQ와 ACK의 상태 변화로 “보냈다”와
-“받았다”를 확인하는 약속이다.
+| 기본 규격 | 값 |
+|---|---:|
+| Source 수 | 16 |
+| 요청선 | Source별 1 bit |
+| 주소 폭 | 4 bit |
+| 공용 주소 버스 | 1개 |
+| 주소 의미 | 원래 source 번호 |
+| 포함하지 않는 정보 | 막전위, 발화 크기, timestamp |
 
-1. Source가 REQ를 0→1로 올린다.
-2. Controller 또는 receiver가 ACK를 0→1로 올린다.
-3. Source가 ACK를 확인한 뒤 REQ를 1→0으로 내린다.
-4. ACK가 1→0으로 내려가며 다음 요청을 받을 idle 상태로 돌아간다.
+## 2. 동기식과 비동기식
 
-![전통 AER 4-phase handshake](docs/figures/aer_4phase_handshake.svg)
+### 2.1 동기식 회로
 
-REQ와 ACK가 모두 0으로 돌아오므로 return-to-zero 방식이라고 부른다. Source는
-ACK를 받을 때까지 REQ를 유지해야 한다. REQ를 짧은 pulse로만 만들면 P9의
-동기화 FF가 한 번도 1을 읽지 못하거나 T0가 주소를 latch하기 전에 요청이
-사라질 수 있다.
+동기식 회로는 공통 clock을 시간 기준으로 사용한다. Flip-flop은 clock edge에서
+입력을 저장하고, 조합논리는 다음 edge가 오기 전까지 계산을 완료한다.
 
-T0와 P9의 source ACK 의미는 다르다.
+    clock edge N
+        → 입력 상태 저장
+        → 조합논리 계산
+        → clock edge N+1에서 결과 저장
 
-    T0: receiver가 현재 주소 transaction을 완료한 뒤 source ACK
+동기식 회로는 계산이 실제로 끝났는지를 매번 감지하지 않는다. 설계자가 가장 느린
+경로도 한 clock 안에 안정되도록 주기를 정한다. STA는 표준셀과 배선 지연을
+계산하여 setup과 hold 조건을 확인한다.
 
-    P9: controller 내부 Pending 또는 Output에 event 보관을 확정한 뒤 Early ACK
-        실제 receiver 소비는 나중에 가능
+장점:
 
-따라서 P9의 ACK는 “최종 전송 완료”가 아니라 “controller가 event의 소유권을
-넘겨받았다”는 뜻이다.
+- 합성, STA와 배치배선 tool flow가 잘 정립돼 있다.
+- 큰 회로를 clock 단위 pipeline으로 나누기 쉽다.
+- 상태가 언제 바뀌는지 명확하다.
 
-## 3. T0: 전통적 clockless AER
+단점:
+
+- Event가 없어도 clock tree가 전환될 수 있다.
+- 계산이 일찍 끝나도 다음 edge까지 기다린다.
+- 비동기 외부 입력은 clock-domain crossing 회로를 거쳐야 한다.
+
+### 2.2 비동기식 회로
+
+비동기식 회로에는 전체를 지휘하는 공통 clock이 없다. 입력 변화와 gate/latch의
+실제 지연, 상대 회로의 응답이 다음 동작을 일으킨다.
+
+    요청 발생
+        → 조합논리와 저장소가 반응
+        → 상대 회로가 수신 완료를 응답
+        → 다음 transaction 시작
+
+Clock이 없다는 말은 시간이 없거나 계산이 즉시 끝난다는 뜻이 아니다. Transistor와
+배선에는 실제 지연이 있고, data가 먼저 안정된 뒤 request가 올라가야 하는
+상대시간 조건도 필요하다.
+
+장점:
+
+- Event가 있을 때만 움직이는 구조를 만들기 쉽다.
+- 전역 clock 배선이 필요하지 않다.
+- 각 블록이 실제 응답 속도에 맞춰 진행할 수 있다.
+
+단점:
+
+- 거의 동시에 들어오는 요청의 metastability-safe 중재가 어렵다.
+- 상대시간 조건과 protocol 검증이 복잡하다.
+- 일반적인 synchronous ASIC flow만으로 완전한 sign-off가 어렵다.
+
+### 2.3 한 시스템에서 함께 사용할 수 있다
+
+동기식과 비동기식은 서로 배타적이지 않다. 외부 interface는 비동기 handshake를
+사용하고 내부 계산은 clock으로 처리할 수 있다. 두 영역 사이에는 비동기 signal을
+안전하게 넘기는 clock-domain crossing 회로가 필요하다.
+
+Handshake 신호를 사용한다고 내부 전체가 비동기식이 되는 것은 아니다. 상태가
+global clock edge에 맞춰 바뀌는지, request/acknowledge 전이에 따라 바뀌는지를
+구분해야 한다.
+
+| 항목 | 동기식 | 비동기식 |
+|---|---|---|
+| 공통 시간 기준 | Clock | 없음 |
+| 상태 변화 기준 | Clock edge | Request/ACK와 회로 지연 |
+| 완료 기준 | 다음 edge 전 timing 만족 | ACK 또는 완료 신호 |
+| 검증 중심 | Setup, hold, clock tree | Protocol, relative timing, arbitration |
+
+## 3. 4-phase handshake 방식이란?
+
+4-phase handshake는 두 회로가 공통 clock을 사용하지 않아도 event 전달 완료를
+확인하는 protocol이다.
+
+1. 송신기가 REQ를 0에서 1로 올린다.
+2. 수신기가 REQ와 data를 확인하고 ACK를 0에서 1로 올린다.
+3. 송신기가 ACK를 확인한 뒤 REQ를 1에서 0으로 내린다.
+4. 수신기가 ACK를 1에서 0으로 내려 idle 상태로 복귀한다.
+
+    REQ↑ → ACK↑ → REQ↓ → ACK↓
+
+![4-phase handshake](docs/figures/aer_4phase_handshake.svg)
+
+Source는 ACK가 올 때까지 REQ를 유지해야 한다. REQ는 짧은 pulse가 아니라 event의
+소유권을 넘기는 protocol 상태다. ACK 전에 REQ를 내리면 controller가 요청을
+보지 못하거나 주소가 안정되기 전에 transaction이 사라질 수 있다.
+
+REQ와 ACK가 모두 0으로 돌아가야 다음 event를 시작할 수 있으므로
+return-to-zero 방식이라고 부른다.
+
+장점:
+
+- 공통 clock 없이도 전달 완료를 명확히 확인한다.
+- Receiver가 느리면 ACK를 늦춰 backpressure를 걸 수 있다.
+- REQ가 유지되므로 짧은 pulse보다 event 유실 위험이 낮다.
+
+비용:
+
+- Event마다 REQ와 ACK를 모두 0으로 복귀시켜야 한다.
+- 복귀 중에는 새 주소를 보내지 못하는 bubble이 생긴다.
+- Handshake는 전달 규약일 뿐, 여러 요청 중 누구를 고를지는 별도 중재기가
+  해결해야 한다.
+
+## 4. 전통적인 AER T0의 구현
+
+### 4.1 구현 구조
+
+T0에는 공통 clock이 없다. Source request가 바뀌면 조합논리, latch와 delay
+cell의 실제 지연을 따라 transaction이 진행된다.
 
 ![T0 구조](docs/figures/t0_structure.svg)
 
-T0에는 전체 동작을 지휘하는 공통 clock이 없다. REQ가 바뀌면 조합논리와 latch의
-물리 지연을 따라 다음 신호가 바뀌고, receiver ACK가 돌아오면 transaction이
-끝난다.
-
-T0의 한 event는 다음 순서로 전달된다.
+전체 흐름:
 
     src_req
       → fixed-priority selector
       → grant/address latch
       → 주소 안정
-      → delay cell을 거쳐 aer_req 상승
-      → receiver가 주소를 읽고 aer_ack 상승
-      → 선택된 source에 src_ack 반환
-      → REQ↓, aer_req↓, aer_ack↓
+      → delay cell
+      → aer_req 상승
+      → receiver aer_ack
+      → 선택된 source src_ack
 
-### 3.1 고정 우선순위
+#### Fixed priority
 
 T0는 가장 작은 번호의 요청을 먼저 고른다. Source 1, 6, 12가 동시에 요청하면
-source 1을 선택한다. Source 0이 반복 요청하면 source 15는 계속 밀릴 수 있다.
-이를 starvation이라고 하며 T0에는 대기 시간 상한이 없다.
+source 1을 선택한다.
 
-### 3.2 Latch와 교차 결합 되먹임
+#### Latch
 
-선택 주소가 receiver transaction 중 흔들리지 않도록 grant 4 bit와 busy 1 bit를
-TLATX1 latch 5개에 저장한다. Latch 내부의 교차 결합 되먹임은 한쪽 node가
-높아지면 반대쪽을 낮추고, 낮아진 반대쪽이 다시 첫 번째 node를 높이는 양의
-되먹임이다. 입력 gate가 닫힌 뒤에도 0 또는 1을 유지할 수 있다.
+선택 주소가 transaction 중 바뀌지 않도록 grant 주소 4 bit와 busy 1 bit를
+TLATX1 latch 5개에 저장한다. 일반적인 latch의 저장 원리는 교차 결합 되먹임으로
+설명할 수 있지만, 공개 Liberty와 RTL만으로 TLATX1의 내부 transistor topology를
+확인했다고 주장하지 않는다.
 
-### 3.3 Delay cell과 bundled-data
+#### Delay cell과 bundled-data
 
-Receiver는 aer_req 상승을 보고 주소를 읽는다. 따라서 주소가 먼저 안정되고
-aer_req가 나중에 올라가야 한다.
+Receiver는 aer_req 상승을 보고 주소를 읽으므로 주소가 먼저 안정돼야 한다.
 
     Data path: REQ → priority → grant latch → aer_addr
     Control path: REQ → DLY4X1 chain → busy → aer_req
 
-GPDK45 T0는 capture 경로 5개와 request launch 1개, 총 DLY4X1 6개를 보존한다.
-설정한 5 ns 입력-출력 max-delay 검사에서는 최악 slack +4.126 ns를 만족했다.
+GPDK45 구현에는 capture delay 5개와 request launch delay 1개, 총 DLY4X1 6개가
+보존됐다. 선택한 5 ns I/O max-delay 검사에서는 post-route slack +4.126 ns를
+만족했다.
 
-다만 내부 latch gate/data 경로 일부는 Genus 보고서에서 unconstrained다. 현재
-45nm 결과는 선택한 I/O max-delay와 물리 배치·배선이 완료됐다는 증거이지,
-모든 bundled-data 상대시간 조건과 arbitrary asynchronous 경합을 sign-off했다는
-뜻이 아니다.
+다만 busy latch의 내부 self-timed path 일부는 Genus에서 unconstrained다. 이
+수치는 모든 bundled-data timing과 metastability 안전성이 sign-off됐다는 뜻이
+아니다.
 
-### 3.4 T0에 남은 한계
+### 4.2 장점
 
-- Fixed priority starvation
-- Source별 Pending 또는 FIFO 없음
-- Receiver stall이 현재 source까지 직접 전파
-- 매 transaction마다 REQ와 ACK를 0으로 되돌리는 빈 구간
-- Characterized MUTEX 부재
-- Near-simultaneous request의 transistor-level metastability MTBF 미검증
+1. **전역 clock이 없다.** Event가 없을 때 clock tree를 계속 전환하지 않는다.
+2. **상태가 적다.** Grant 4 bit와 busy 1 bit, 총 latch 5개만 저장한다.
+3. **구조가 직접적이다.** Source와 receiver가 모두 4-phase로 transaction을
+   끝낸다.
+4. **작은 baseline을 제공한다.** Post-route 92 instances, cell area
+   214.092 µm², vectorless power 0.002127 mW였다.
+5. **개선 비용의 기준이 된다.** 이후 추가하는 입력 보호, 저장, 공정성과 처리율의
+   하드웨어 비용을 분리해 볼 수 있다.
 
-T0는 이 한계를 숨기지 않고 전통적 AER의 구조와 비용을 측정하는 baseline으로
-사용한다.
+### 4.3 단점과 한계
 
-## 4. P9: 비동기 입력과 동기식 core를 결합한다
+1. **Starvation**: 낮은 번호가 반복 요청하면 높은 번호의 대기 시간 상한이 없다.
+2. **내부 저장 부재**: 선택되지 않은 source가 REQ를 계속 유지해야 한다.
+3. **Backpressure 직접 전파**: Receiver가 멈추면 source와 공유 link가 함께
+   멈춘다.
+4. **Return-to-zero bubble**: 매 event 사이에 REQ와 ACK 복귀 시간이 필요하다.
+5. **MUTEX 부재**: 안정된 동시 요청은 fixed priority로 고르지만 거의 동시에
+   바뀐 request의 analog metastability-safe 중재를 증명하지 않았다.
+6. **Timing 검증 범위**: 일부 내부 async path가 unconstrained다.
+7. **FCFS 미지원**: Timestamp가 없으므로 실제 도착 시각 순서를 보존하지 않는다.
 
-P9는 source 쪽 4-phase protocol을 유지하지만 내부 중재와 receiver 출력은
-10 ns clock 기반으로 구성한다.
+T0는 이 한계를 숨기지 않고 전통적 AER의 baseline으로 사용한다.
 
-![P9 비동기-동기 경계](docs/figures/p9_hybrid_boundary.svg)
+## 5. P9-GRR과 P9-OHT
 
-    비동기 source REQ
-      → Source별 2FF
-      → ACK + Pending
-      → 공정한 중재
-      → registered address + valid/ready
-      → receiver
+### 5.1 T0로부터의 개선 아이디어
 
-Source와 P9 사이는 level-held 4-phase이고, P9와 receiver 사이는 동기식
-valid/ready다. 이 protocol 변환이 return-to-zero bubble과 receiver backpressure를
-source에서 분리한다.
+T0의 한계를 해결하려면 다음 네 가지가 필요하다.
 
-### 4.1 Source별 2FF
+| T0의 문제 | 개선 아이디어 |
+|---|---|
+| 비동기 request를 중재기가 직접 사용 | Source별 2FF로 clock 영역에 전달 |
+| Source별 대기칸 없음 | Pending과 output register에 event 저장 |
+| Fixed priority starvation | Gray 기반 공정한 순환 중재 |
+| Receiver 4-phase bubble | Registered valid/ready 출력 |
 
-비동기 REQ가 clock edge와 거의 동시에 바뀌면 FF1 내부 node가 잠시 0과 1의
-중간 전압에 머물 수 있다. 저장은 시작됐지만 아직 유효한 digital 값이 아닌
-metastable 상태다.
+이 네 가지를 결합한 개선 controller를 P9라고 부른다. Source 쪽은 4-phase를
+유지하지만 내부와 receiver 출력은 10 ns clock으로 처리한다.
 
-    src_req_async[i] → FF1(req_meta) → FF2(req_sync) → core
+![비동기 source와 동기식 core](docs/figures/p9_hybrid_boundary.svg)
 
-FF1의 출력은 넓은 조합논리가 아니라 FF2 하나에만 연결된다. FF2가 다음 clock에
-읽을 때까지 FF1에는 거의 한 clock 동안 안정될 시간이 생긴다. 2FF는
-metastability 확률을 0으로 만들지 않지만 불안정한 값이 전체 회로로 퍼질 확률을
-크게 낮춘다.
+#### 2FF
 
-16 source × 2 FF = 32 FF이므로 면적과 clock 전력이 추가된다. 안전성을 위해
-지불하는 비용이다. 또한 2FF는 독립적인 1-bit REQ에 적용한 것이며 여러 bit
-payload bus를 bit별로 2FF에 넣는 방식과는 다르다.
+비동기 REQ가 clock edge와 겹치면 FF1 내부가 잠시 0과 1 사이의 metastable
+상태가 될 수 있다. FF2가 다음 clock에 다시 읽어 FF1이 안정될 시간을 확보한다.
+확률을 0으로 만들지는 않으며 Source가 ACK까지 REQ를 유지해야 한다.
 
-### 4.2 Pending과 중복 접수 방지
+    16 sources × 2 FF = 32 FF
+
+#### Pending과 Early ACK
 
 Pending은 source별 event 보조 주머니다.
 
-    pending[6]=1
-      → source 6 event 하나가 controller 안에서 대기 중
-
-새 event는 다음 조건에서만 접수한다.
-
     accept = req_sync AND NOT ack AND NOT pending
-
-REQ가 1이어도 이미 ACK했거나 Pending이 차 있으면 다시 접수하지 않는다.
-
     ack_next = (ack AND req_sync) OR accept
 
-Accept가 발생하면 ACK를 올리고, source가 REQ를 유지하는 동안 ACK도 유지한다.
-REQ가 내려가면 ACK가 내려가 다음 event를 받을 준비를 한다.
+Accept가 발생하면 event를 Pending이나 output에 기록하고 Source에 Early ACK를
+보낸다. 이 ACK는 receiver 처리 완료가 아니라 controller가 event를 책임지고
+보관했다는 의미다.
 
-ACK와 Pending은 서로 다른 상태다.
+    Pending 16 + Output register 1 = 최대 17 events
 
-| ACK | Pending | 의미 |
-|---:|---:|---|
-| 0 | 0 | 요청과 대기 event 없음 |
-| 1 | 1 | 요청 접수, event 대기, source가 REQ 유지 |
-| 0 | 1 | Source handshake 종료, event는 내부 대기 |
-| 1 | 0 | Event는 Output으로 이동, source가 아직 REQ 유지 |
+Receiver가 stall이면 현재 output 주소와 valid를 유지하고, 비어 있는 다른
+Pending에는 새 event를 받을 수 있다.
 
-### 4.3 최대 17개와 Early ACK
+![T0와 개선형의 stall 차이](docs/figures/t0_p9_stall_timeline.svg)
 
-Pending 16개와 output register 1개를 합쳐 최대 17개 event를 보관한다.
-Output이 비어 있으면 새 accept를 같은 다음 clock edge에 바로 output으로 보내는
-cut-through가 가능하다. Output이 막혀 있으면 Pending에 보관한다.
+#### Valid/ready
 
-어느 경우든 state에 event가 기록된 뒤에만 Early ACK를 올린다.
+Receiver 전송은 clock edge에서 out_valid=1과 out_ready=1이 함께 성립할 때다.
+Backlog가 충분하고 ready=1이면 현재 event를 소비하는 edge에 다음 event를
+채워 최대 1 event/clock을 유지한다.
 
-한 source pending에는 한 event만 들어간다. 같은 source의 더 빠른 burst에는
-source-side accumulator 또는 별도 FIFO가 필요하다.
+#### Gray 공정성
 
-### 4.4 Valid/ready와 1 event/clock
-
-Output은 4-bit 주소와 1-bit valid를 register에 저장한다.
-
-| Valid | Ready | 동작 |
-|---:|---:|---|
-| 0 | 0 또는 1 | 출력 event 없음 |
-| 1 | 0 | Receiver stall, 주소와 valid 유지 |
-| 1 | 1 | Clock edge에서 event 한 개 소비 |
-
-Receiver가 stall이면 현재 output은 고정되지만 비어 있는 다른 Pending에는 event를
-접수할 수 있다. Backlog가 충분하고 ready=1이면 현재 output을 소비하는 clock에
-다음 Pending을 채워 빈 clock 없이 최대 1 event/clock을 유지한다.
-
-## 5. Gray 순번은 무엇을 바꾸는가
-
-P9의 공정성 순서는 reflected Gray 관계를 이용한다.
+내부 우선순위는 다음 Gray 관계를 이용한다.
 
     0 → 1 → 3 → 2 → 6 → 7 → 5 → 4
       → 12 → 13 → 15 → 14 → 10 → 11 → 9 → 8 → 0
 
-이웃 주소는 한 bit만 다르므로 인접 순번을 연속 처리할 때 주소 bus의 충·방전
-전환 수를 줄일 수 있다. 그러나 sparse traffic에서 중간 순번을 건너뛰면 여러
-bit가 바뀔 수 있다. “Gray를 사용하면 모든 내부 signal이 항상 한 bit만
-바뀐다”는 뜻이 아니다.
+Gray는 timestamp나 payload가 아니라 내부 우선순위 순서표다. 지속 요청은
+receiver stall을 제외한 최대 16회의 성공적인 service 안에 기회를 얻는다.
 
-Gray는 payload나 timestamp가 아니다. 원래 source ID를 어떤 순서로 우선할지
-정하는 내부 순번표다.
-
-## 6. P9-GRR: 면적을 줄인 방법
+### 5.2 P9-GRR
 
 GRR은 Gray-rank Register Reuse의 약자다.
 
 ![P9-GRR 구조](docs/figures/p9_grr_structure.svg)
 
-### 6.1 Rank-indexed REQ·ACK·Pending
-
-Source 6의 Gray rank는 4다.
+Source 6은 Gray rank 4에 대응한다.
 
     source 6 REQ     → req_rank[4]
     source 6 ACK     ← ack_rank[4]
     source 6 Pending → pending_rank[4]
 
-중재기가 rank 4를 고르면 pending_rank[4]를 바로 지운다. Rank를 source 번호로
-되돌린 뒤 어떤 pending bit인지 다시 찾는 feedback 회로가 필요 없다. 이 순서
-재배열은 고정 배선이므로 추가 state나 동적 gate가 아니다.
+Rank 4를 선택하면 같은 pending_rank[4]를 바로 지운다. Rank를 source 번호로
+바꾸고 clear 위치를 다시 찾는 feedback 회로를 줄일 수 있다.
 
-### 6.2 4×4 Grouped strict-cyclic selector
+16개 rank는 네 개씩 네 group으로 나눈다. 현재 group에서 마지막 rank 뒤쪽을
+먼저 보고, 없으면 다음 non-empty group을 찾는다. Out_rank 4 FF는 현재 출력과
+다음 strict-cyclic 탐색 pointer를 겸한다.
 
-16개 rank를 네 개씩 네 group으로 나눈다. 현재 group의 last rank 뒤쪽 tail을
-먼저 확인하고, 없으면 다음 non-empty group과 그 안의 첫 rank를 고른다. 긴
-16단 linear scan을 피하면서 실제 마지막 선택 다음부터 도는 strict cyclic
-순서를 유지한다.
+    공통 상태 67 + out_rank 4 = 71 state points
 
-### 6.3 Output rank pointer 재사용
+![Gray rank와 상태 구성](docs/figures/p9_state_and_rank.svg)
 
-Out_rank 4 FF는 현재 출력 주소와 다음 중재 시작점을 동시에 나타낸다.
+GRR의 면적 이점은 Gray를 썼다는 사실 하나가 아니라 rank-indexed storage,
+4×4 grouped selector와 output-rank 재사용을 합친 결과다.
 
-    out_rank=4
-      → out_addr=Gray(4)=source 6
-      → 다음 탐색은 rank 5부터
-
-별도 output address 4 FF와 fairness pointer 4 FF를 따로 두지 않는다.
-
-GRR state 구성:
-
-    Request synchronizer 32
-    ACK                 16
-    Pending             16
-    Output rank          4
-    Output valid         1
-    Reset release        2
-    -----------------------
-    합계                 71
-
-![Gray rank와 GRR/OHT 상태 구성](docs/figures/p9_state_and_rank.svg)
-
-GRR의 면적 이점은 Gray 자체보다 rank-indexed feedback과 pointer 재사용에서
-발생한다.
-
-## 7. P9-OHT: 속도와 전력을 얻은 방법
+### 5.3 P9-OHT
 
 OHT는 One-Hot Top-down Tree의 약자다.
 
 ![P9-OHT 구조](docs/figures/p9_oht_structure.svg)
 
-OHT는 source 번호 순서로 ACK와 Pending을 저장하고 16개 후보를 다음처럼 좁힌다.
+OHT는 16개 후보를 다음처럼 병렬 tree에서 좁힌다.
 
     Candidate 16
       → Pair valid 8
@@ -290,149 +321,140 @@ OHT는 source 번호 순서로 ACK와 Pending을 저장하고 16개 후보를 �
       → Half valid 2
       → Selected source one-hot
 
-One-hot은 선택된 위치 하나만 1인 16-bit 표현이다.
+One-hot은 선택된 위치 하나만 1인 16-bit 표현이다. 최종 one-hot vector는 출력
+주소를 만드는 동시에 Pending clear mask가 된다.
 
-    Source 6 선택
-    selected_onehot = 0000_0000_0100_0000
+OHT는 별도 Gray epoch 4 FF와 output address 4 FF를 가진다.
 
-이 값은 출력 주소를 만드는 동시에 Pending clear mask가 된다. Receiver stall 중에는
-can_load_output=0이므로 clear mask도 0이 되어 Pending을 잘못 지우지 않는다.
+    공통 상태 67 + epoch 4 + output address 4 = 75 state points
 
-OHT는 다음 선호 branch를 나타내는 Gray epoch 4 FF와 output address 4 FF를
-별도로 저장한다.
+Epoch는 방금 고른 source 다음 번호를 가리키는 pointer가 아니다. Successful
+grant마다 Gray schedule을 한 단계 진행시키고 tree 각 단계의 선호 branch를
+정한다. 따라서 GRR과 같은 service contract와 starvation bound를 제공하지만
+sparse contention의 source 간 출력 순서가 완전히 같지는 않다.
 
-OHT state 구성:
+### 5.4 개선 결과
 
-    Request synchronizer 32
-    ACK                 16
-    Pending             16
-    Gray epoch           4
-    Output address       4
-    Output valid         1
-    Reset release        2
-    -----------------------
-    합계                 75
+공통 101-event 시험은 sparse 16, receiver stall 8, saturation 64와 hotspot
+13개 event로 구성했다.
 
-GRR보다 4 FF와 관련 배선이 많아 면적은 커진다. 대신 half→quarter→pair→source
-branch를 병렬로 판단해 critical path가 짧아지고 특정 workload의 switching이
-감소했다.
+| 설계 | Event | Error | LEC | DRC/Connectivity |
+|---|---:|---:|---|---:|
+| P9-GRR | 101 | 0 | 21 outputs + 71 states | 0/0 |
+| P9-OHT | 101 | 0 | 21 outputs + 75 states | 0/0 |
 
-동일 101-event 시험의 주소 bit 전환 합은 GRR 114회, OHT 106회였다. 이 숫자
-하나가 전체 전력 차이를 모두 설명하지는 않지만 OHT의 낮은 mapped-SAIF 전력과
-방향이 일치한다.
+Saturation phase의 64 events는 630 ns output span으로 처리됐다. 63개의 전송
+간격이 각각 10 ns이므로 pipeline이 찬 뒤 1 event/clock과 일치한다.
 
-## 8. 세 설계의 기능 비교
+OHT의 주소 bit 전환 합은 106회, GRR은 114회였다. 이 차이만으로 전체 전력을
+설명할 수는 없지만 OHT의 낮은 switching 방향과 일치한다.
 
-![최종 기능 비교](docs/figures/final_comparison.svg)
+### 5.5 P9와 T0의 PPA 분석
 
-| 항목 | T0 | P9-GRR | P9-OHT |
-|---|---|---|---|
-| Source interface | 비동기 4-phase | 비동기 4-phase | 비동기 4-phase |
-| Receiver interface | 비동기 4-phase | 동기식 valid/ready | 동기식 valid/ready |
-| 입력 보호 | Relative timing 조건 | Source별 2FF | Source별 2FF |
-| Event 저장 | Source별 없음 | Pending 16 + Output 1 | Pending 16 + Output 1 |
-| ACK 의미 | Receiver 완료 | 내부 보관 완료 | 내부 보관 완료 |
-| 중재 | Fixed priority | Last rank 기반 strict cyclic | 별도 Gray epoch 기반 tree |
-| Starvation 상한 | 없음 | Stall 제외 ≤16 decisions | Stall 제외 ≤16 grants |
-| 최대 출력 | Handshake 지연에 의존 | Full backlog 1 event/clock | Full backlog 1 event/clock |
+측정 조건:
 
-## 9. GPDK45 검증 조건
-
-- Setup: slow 0.9 V, 125°C
-- Hold: fast 1.1 V, 0°C
-- P9 clock: 10 ns
-- Setup/hold uncertainty: 0.20/0.02 ns
-- I/O delay: 1 ns
-- CDC FF1→FF2 max delay: 0.8 ns
-- Placement density: 60%
-- Signal routing: Metal1~Metal9
-- Power ring: Metal9/Metal10, width 1 µm, spacing 2 µm
-
-GPDK045는 generic 교육용 PDK다. 특정 파운드리 sign-off나 실리콘 실측을 뜻하지
-않는다.
-
-## 10. 기능 검증 결과
-
-| 설계 | 시험 | 표본 | 결과 | 증명하는 범위 |
-|---|---|---:|---|---|
-| T0 | 단일·동시·burst·stall·saturation·hotspot·reset | 139 events | 139/139, error 0 | Digital protocol에서 loss/duplicate 없음 |
-| P9-GRR | Sparse·stall·saturation·hotspot | 101 events | 101/101, error 0 | Early ACK, 저장, 공정성과 1 event/clock |
-| P9-OHT | GRR과 동일 workload | 101 events | 101/101, error 0 | 같은 기능 계약과 OHT 선택 경로 |
-
-P9 saturation phase는 64 events를 10 ns clock에서 630 ns output span으로
-처리했다. 첫 event 이후 63개 간격이 각각 한 clock이므로 full backlog
-1 event/clock과 일치한다.
-
-## 11. GPDK45 post-route PPA
-
-T0와 P9의 숫자는 기능이 달라 직접적인 우열 표가 아니다. P9 기능을 추가하는 데
-들어간 비용을 보여 준다. 동일 기능의 직접 비교는 GRR과 OHT 사이에서 수행한다.
+- Generic GPDK045/GSCLIB045
+- Setup slow 0.9 V, 125℃
+- Hold fast 1.1 V, 0℃
+- P9 clock 10 ns
+- Placement density 60%
+- Signal routing Metal1~Metal9
 
 | 항목 | T0 | P9-GRR | P9-OHT |
 |---|---:|---:|---:|
 | Instances | 92 | **263** | 278 |
 | Cell area | 214.092 µm² | **669.294 µm²** | 709.308 µm² |
 | Vectorless power | 0.002127 mW | 0.020641 mW | **0.019218 mW** |
-| Mapped-SAIF power | 해당 없음 | 0.014382 mW | **0.013780 mW** |
+| Mapped-SAIF power | 없음 | 0.014382 mW | **0.013780 mW** |
 | Core setup slack | Clockless | +6.824 ns | **+7.555 ns** |
-| Hold slack | N/A | +0.024 ns | +0.024 ns |
-| DRC / connectivity | 0 / 0 | 0 / 0 | 0 / 0 |
-| LEC | 21 output + 5 state | 21 output + 71 state | 21 output + 75 state |
+| P9 hold slack | N/A | +0.024 ns | +0.024 ns |
 
-OHT는 GRR보다 면적이 5.979% 크지만 vectorless 전력은 6.892%, 실제 workload
-mapped-SAIF 전력은 4.189% 낮고 core setup 여유는 0.731 ns 크다.
+T0는 가장 작고 전력이 낮다. 그러나 2FF, 17-event 저장, 공정성, stall 격리와
+1 event/clock 기능이 없는 최소 baseline이다. 따라서 T0와 P9의 표는 “추가 기능에
+얼마의 하드웨어 비용이 들었는가”를 보여 주며 동일 기능의 승패가 아니다.
 
-![P9-GRR/P9-OHT PPA Pareto](docs/figures/p9_pareto_comparison.svg)
+동일 service contract인 두 P9는 직접 비교할 수 있다.
 
-- 면적 우선: P9-GRR
-- Timing·전력 우선: P9-OHT
-- 전통 구조 기준점: T0
+- OHT area: GRR보다 5.979% 증가
+- OHT vectorless power: 6.892% 감소
+- OHT mapped-SAIF power: 4.189% 감소
+- OHT core arrival: 23.1% 감소
+- OHT core slack: 0.731 ns 증가
 
-T0의 hold는 동기식 hold slack으로 표시할 수 없다. 선택한 5 ns I/O max-delay는
-통과했지만 latch 내부에 unconstrained 경로가 남아 있으므로 완전한 asynchronous
-relative-timing sign-off로 주장하지 않는다.
+OHT는 별도 epoch 4 FF 때문에 sequential power가 증가했지만 combinational
+total이 약 45.3%, switching component가 약 37.2% 감소해 총전력이 낮아졌다.
 
-## 12. 실제 물리설계
+![GRR과 OHT PPA Pareto](docs/figures/p9_pareto_comparison.svg)
 
-- [T0 45nm post-route](docs/figures/t0_45nm_postroute.png)
-- [P9-GRR 45nm post-route](docs/figures/p9_grr_45nm_postroute.png)
-- [P9-OHT 45nm post-route](docs/figures/p9_oht_45nm_postroute.png)
+최종 선택:
 
-세 그림은 Innovus GUI 화면을 임의로 그린 것이 아니라 최종 Innovus DEF의 실제
-cell 중심과 routing 좌표를 렌더링한 것이다. 색은 발표 가독성을 위한 표시다.
+- 면적과 반복 배치를 우선하면 P9-GRR
+- Timing과 switching 전력을 우선하면 P9-OHT
+- 전통 구조의 기준점은 T0
 
-[동일 축척 die 크기 비교](docs/figures/layout_scale_comparison.svg)에서는 T0,
-GRR과 OHT의 DIEAREA를 같은 물리 축척으로 확인할 수 있다.
+## 6. 향후 2차 과제에 적용
 
-## 13. 결론
+현재 개선 IP 한 개는 16개 source를 처리한다. 이는 4×4 뉴런 배열의 local event
+수집기로 재사용할 수 있다. 4×4는 최종 센서 크기가 아니라 큰 배열을 나누는 기본
+tile이다.
 
-T0는 작은 clockless 회로로 전통 AER transaction을 수행하지만 fixed priority,
-no-pending, return-to-zero bubble, receiver backpressure와 경합 안전성 한계가
-남는다.
+### 6.1 16×16 배열
 
-P9는 Source별 2FF, Pending, Early ACK, registered output과 Gray 기반 공정
-중재를 결합해 event를 보관하고 starvation을 막으며 최대 1 event/clock을
-달성한다.
+16×16 배열은 뉴런 256개다. 이를 4×4 tile로 나누면 16개의 tile이 된다.
 
-P9-GRR은 rank-indexed 저장과 output-rank 재사용으로 면적을 줄인 주 설계다.
-P9-OHT는 별도 Gray epoch와 one-hot tree로 면적을 더 쓰지만 timing과 전력을
-개선한 대안이다.
+    16×16 sensor
+      → 4×4 tile 16개
+      → tile마다 개선 controller 1개
+      → 상위 tile arbiter
+      → global event address
 
-## 14. 문서와 근거를 읽는 순서
+![2차 과제 계층형 tile 구조](docs/figures/second_task_tile_hierarchy.svg)
 
-1. [최종 설계 보고서](docs/FINAL_REPORT_KR.md)  
-   참가신청서 형식에 맞춘 설계 목표·회로 구성·검증·PPA·완성도 설명
-2. [회로 동작 상세 설명](docs/CIRCUIT_OPERATION_KR.md)  
-   2FF, ACK/Pending 상태식, cut-through, Gray rank, GRR/OHT의 clock별 동작
-3. [주장-근거 대응표](docs/CLAIM_EVIDENCE_MATRIX_KR.md)  
-   발표 문장과 원본 simulation/Genus/Innovus/LEC 파일 연결
-4. [PPT 자산 안내](docs/PPT_ASSET_GUIDE_KR.md)  
-   권장 슬라이드 흐름과 사용할 SVG·PNG
-5. [45nm 정량 요약](reports/final_45nm/SUMMARY.md)
+Global 주소:
 
-로컬 RTL 재검증:
+| 필드 | 폭 |
+|---|---:|
+| Tile ID | 4 bit |
+| Local source ID | 4 bit |
+| 합계 | 8 bit |
+
+Local controller는 현재 검증한 16-source request, Pending, 공정성과 valid/ready
+interface를 그대로 재사용한다. 상위 arbiter는 16개 tile output 중 하나를
+선택한다.
+
+### 6.2 선택 기준
+
+- Tile 수가 많아 면적이 중요하면 GRR형을 기본으로 사용한다.
+- Traffic이 높거나 clock 여유가 중요하면 OHT형을 사용할 수 있다.
+- Traffic이 높은 일부 tile만 OHT형으로 구성하는 혼합 배치도 후속 비교 대상이다.
+
+### 6.3 새로 검증해야 할 것
+
+1. 여러 tile이 동시에 포화될 때의 상위 공정성
+2. Local Pending이 찬 상태의 동일-source burst
+3. Tile ID와 local source ID의 주소 조합
+4. 상위 receiver stall의 tile 전파
+5. Tile별 reset과 clock-domain crossing
+6. 실제 SNN traffic의 event rate와 SAIF power
+7. Timestamp가 필요한 경우 별도 payload/FIFO
+8. 16×16 top-level 배선 혼잡과 PPA
+9. 공식 PDK sign-off
+
+2차 과제에 그대로 가져가는 것은 전체 시스템 기능이 아니라 검증된 16-source
+event 수집·중재 IP다. 상위 시스템은 local IP 내부를 다시 설계하지 않고 tile
+주소와 상위 중재를 추가한다.
+
+## 자세한 문서와 근거
+
+1. [최종 설계 보고서](docs/FINAL_REPORT_KR.md)
+2. [회로 동작 상세 설명](docs/CIRCUIT_OPERATION_KR.md)
+3. [주장-검증 근거 대응표](docs/CLAIM_EVIDENCE_MATRIX_KR.md)
+4. [PPT 제작 안내](docs/PPT_ASSET_GUIDE_KR.md)
+5. [45nm 정량 근거](reports/final_45nm/SUMMARY.md)
+
+로컬 RTL 검증:
 
     powershell -ExecutionPolicy Bypass -File scripts/run_final_rtl_verification.ps1
 
-저장소에는 T0, P9-GRR, P9-OHT의 최종 RTL·검증·물리 근거만 유지한다. 과거 탐색
-내용은 Git 이력에서 복구할 수 있지만 최종 발표의 비교군에는 포함하지 않는다.
+GPDK045는 교육·비교용 generic PDK다. 현재 결과는 구조 비교를 위한 합성·P&R
+근거이며 foundry sign-off나 실리콘 실측값이 아니다.
