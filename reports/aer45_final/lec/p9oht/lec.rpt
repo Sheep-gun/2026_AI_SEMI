@@ -1,0 +1,155 @@
+                          CONFORMAL (R)
+                   Version 24.10-s500 (16-May-2025) (64 bit executable)
+   Copyright (c) Cadence Design Systems, Inc., 1997-2024. All Rights Reserved
+
+
+This program is proprietary and confidential information belonging to
+Cadence Design Systems, Inc., and may be used and disclosed only as authorized
+in a license agreement controlling such use and disclosure.
+
+// Warning: This version is 466 days old. You can download the latest version from http://downloads.cadence.com.
+
+0
+// Command: set_mapping_method -sensitive
+0
+// Command: set_undefined_cell black_box -noascend -both
+0
+// Command: read_library -liberty -both -append $lib
+// Parsing file <REMOTE_HOME>/aer_2026/pdk45_digital/gsclib045/timing/slow_vdd1v0_basicCells.lib ...
+// Warning: (RTL9.17) Cell doesn't have any output pins or all output pins are undriven (blackboxed) (occurrence:10)
+// Note: (RTL9.26) Liberty pin with internal_node use default input_map (occurrence:16)
+// Note: Read Liberty library successfully
+0
+CPU time     : 0.46    seconds
+Elapse time  : 0       seconds
+Memory usage : 86.92   M bytes
+// Command: read_design -systemverilog -golden -lastmod -noelab $rtl
+// Parsing file <REMOTE_WORKSPACE>/rtl/aer_pending_direct_gray_scr_onehot_tree.sv ...
+0
+// Command: elaborate_design -golden -root $top
+// Golden root module is set to 'aer_pending_direct_gray_scr_onehot_tree'
+// Warning: (DIR6.1) Ignored compiler directive is detected (occurrence:1)
+// Warning: (IGN4) Attribute instance(s) are ignored (occurrence:3)
+0
+// Command: read_design -verilog95 -revised -lastmod -noelab $netlist
+// Parsing file <REMOTE_WORKSPACE>/reports/p9oht/aer_pending_direct_gray_scr_onehot_tree_mapped.v ...
+0
+// Command: elaborate_design -revised -root $top
+// Revised root module is set to 'aer_pending_direct_gray_scr_onehot_tree'
+// Warning: (RTL14) Signal has input but it has no output (occurrence:1)
+0
+// Command: set_flatten_model -seq_constant
+0
+// Command: set_flatten_model -hier_seq_merge
+0
+// Command: set_system_mode lec
+// Processing Golden ...
+// Modeling Golden ...
+// Processing Revised ...
+// Modeling Revised ...
+// Balanced modeling (auto) mapped 150 out of 150 DFF/DLATs
+// Mapping key points ...
+================================================================================
+Mapped points: SYSTEM class
+--------------------------------------------------------------------------------
+Mapped points     PI     PO     DFF       Total   
+--------------------------------------------------------------------------------
+Golden            19     21     75        115     
+--------------------------------------------------------------------------------
+Revised           19     21     75        115     
+================================================================================
+0
+// Command: report_unmapped_points -summary
+There is no unmapped point
+0
+// Command: add_compared_points -all
+// 96 compared points added to compare list
+0
+// Command: compare
+================================================================================
+Compared points      PO     DFF       Total   
+--------------------------------------------------------------------------------
+Equivalent           21     75        96      
+================================================================================
+0
+// Command: report_verification -verbose
+================================================================================
+                            Verification Report
+--------------------------------------------------------------------------------
+Category                                                                  Count
+--------------------------------------------------------------------------------
+1. Non-standard modeling options used:                                      0
+     Tri-stated output:                                        checked
+     Revised X signals set to E:                               yes
+     Floating signals tied to Z:                               yes
+     Command "add clock" for clock-gating:                     not used
+--------------------------------------------------------------------------------
+2. Incomplete verification:                                                 0
+     All primary outputs are mapped:                           yes
+     Not-mapped DFF/DLAT is detected:                          no
+     All mapped points are added as compare points:            yes
+     All compared points are compared:                         yes
+     User added black box:                                     no
+     Black box mapped with different module name:              no
+     Empty module is not black boxed:                          no
+     Command "add ignore outputs" used:                        no
+     Always false constraints detected:                        no
+--------------------------------------------------------------------------------
+3. User modification to design:                                             0
+     Change gate type:                                         no
+     Change wire:                                              no
+     Primary input added by user:                              no
+--------------------------------------------------------------------------------
+4. Conformal Constraint Designer clock domain crossing checks recommended:  0
+     Multiple clocks in the design:                            no
+--------------------------------------------------------------------------------
+5. Design ambiguity:                                                        0
+     Duplicate module definition:                              no
+     Black box due to undefined cells:                         no
+     Golden design has abnormal ratio of unreachable gates:    no
+     Ratio of golden unreachable gates:                        0%
+     Revised design has abnormal ratio of unreachable gates:   no
+     Ratio of revised unreachable gates:                       0%
+     All primary input bus ordering is consistent:             yes
+     All primary output bus ordering is consistent:            yes
+     DFF/DLAT not compared due to disabled clock port(s):        0
+     Always X compared point is detected:                      not checked
+--------------------------------------------------------------------------------
+6. Compare Results:                                                        PASS
+     Number of EQ compare points:                              96
+     Number of NON-EQ compare points:                          0
+     Number of Aborted compare points:                         0
+     Number of Uncompared compare points :                     0
+================================================================================
+pass
+// Command: report_statistics
+Mapping and compare statistics
+================================================================================
+                     Compare Result       Golden            Revised
+--------------------------------------------------------------------------------
+Root module name                          aer_pending_...   aer_pending_...   
+
+Primary inputs                                19                 19
+   Mapped                                     19                 19
+
+Primary outputs                               21                 21
+   Mapped                                     21                 21
+      Equivalent                 21
+
+State key points                              75                 75
+   Mapped                                     75                 75
+      Equivalent                 75
+================================================================================
+0
+// Command: set noneq [get_compare_points -NONequivalent -count]
+0
+// Command: set abort [get_compare_points -abort -count]
+0
+// Command: set unknown [get_compare_points -unknown -count]
+0
+// Command: puts "AER45_LEC_COUNTS tag=$tag noneq=$noneq abort=$abort unknown=$unknown"
+AER45_LEC_COUNTS tag=p9oht noneq=0 abort=0 unknown=0
+// Command: if {$noneq>0||$abort>0||$unknown>0} {error "$tag LEC failed"}
+// Command: puts "AER45_LEC_PASS tag=$tag"
+AER45_LEC_PASS tag=p9oht
+// Command: exit 0

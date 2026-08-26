@@ -1,0 +1,98 @@
+*----------------------------------------------------------------------------------------
+*	Innovus 23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+*	
+*
+* 	Date & Time:	2026-Aug-26 17:39:05 (2026-Aug-26 08:39:05 GMT)
+*
+*----------------------------------------------------------------------------------------
+*
+*	Design: aer_pending_gray_rank_reuse_sync_core_reset
+*
+*	Liberty Libraries used: 
+*	        setup_view: <REMOTE_HOME>/aer_2026/pdk45_digital/gsclib045/timing/slow_vdd1v0_basicCells.lib
+*	        setup_view: <REMOTE_HOME>/aer_2026/pdk45_digital/gsclib045/timing/slow_vdd1v0_multibitsDFF.lib
+*
+*	Power Domain used: 
+*              Rail:        VDD      Voltage:        0.9 
+*
+*       Power View : setup_view
+*
+*       User-Defined Activity : N.A.
+*
+*       Activity File: N.A.
+*
+*       Hierarchical Global Activity: N.A.
+*
+*       Global Activity: N.A.
+*
+*       Sequential Element Activity: 0.200000
+*
+*       Primary Input Activity: 0.200000
+*
+*       Default icg ratio: N.A.
+*
+*       Global Comb ClockGate Ratio: N.A.
+*
+*	Power Units = 1mW
+*
+*	Time Units = 1e-09 secs 
+*
+*       report_power -outfile <REMOTE_WORKSPACE>/pnr/p9grr_both_h020/reports/postroute_power.rpt
+*
+-----------------------------------------------------------------------------------------
+
+
+Total Power 
+-----------------------------------------------------------------------------------------
+Total Internal Power:        0.01825121 	   75.2749%
+Total Switching Power:       0.00597829 	   24.6567%
+Total Leakage Power:         0.00001658 	    0.0684%
+Total Power:                 0.02424607 
+-----------------------------------------------------------------------------------------
+
+
+Group                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+Sequential                       0.01231   0.0009868   7.117e-06      0.0133       54.85 
+Macro                                  0           0           0           0           0 
+IO                                     0           0           0           0           0 
+Combinational                   0.004344    0.003223   8.993e-06    0.007576       31.25 
+Clock (Combinational)          0.0007872    0.001474   2.318e-07    0.002261       9.327 
+Clock (Sequential)             0.0008147   0.0002944   2.347e-07    0.001109       4.575 
+-----------------------------------------------------------------------------------------
+Total                            0.01825    0.005978   1.658e-05     0.02425         100 
+-----------------------------------------------------------------------------------------
+
+
+Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+VDD                       0.9    0.01825    0.005978   1.658e-05     0.02425         100 
+
+
+Clock                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+clk                             0.001602    0.001768   4.664e-07    0.003371        13.9 
+-----------------------------------------------------------------------------------------
+Total (excluding duplicates)    0.001602    0.001768   4.664e-07    0.003371        13.9 
+-----------------------------------------------------------------------------------------
+Clock: clk
+Clock Period: 0.010000 usec 
+Clock Toggle Rate:   200.0000 Mhz 
+Clock Static Probability:  0.5000
+
+
+
+-----------------------------------------------------------------------------------------
+*	Power Distribution Summary: 
+*                Highest Average Power:       CTS_ccl_a_buf_00002 (CLKBUFX3):        0.0009937 
+*                Highest Leakage Power: CDN_MBIT_out_rank_q_reg[0]_MB_out_rank_q_reg[1]_MB_out_rank_q_reg[2]_MB_out_rank_q_reg[3] (DFF4X1):        4.513e-07 
+*          Total Cap:      4.29768e-13 F
+*          Total instances in design:   302
+*          Total instances in design with no power:     0
+*          Total instances in design with no activity:     0
+*          Total Fillers and Decap:     0
+-----------------------------------------------------------------------------------------
+

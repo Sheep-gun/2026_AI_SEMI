@@ -184,6 +184,22 @@ These are design targets until simulation and synthesis produce measured evidenc
 
 **Consequence:** P8 becomes the fixed prior baseline; P9-GRR is the current competition architecture under the provisional FPR 180 nm comparison. P9-OHT is not discarded or mislabeled as a failure. The official PDK migration must rerun P8, GRR and OHT with matched libraries, corners, constraints and activity before submission-final PPA claims.
 
+## DD-024: Freeze GPDK045/GSCLIB045 as the provisional submission process
+
+**Decision:** Because the organizer did not answer the process question before the submission deadline, use the complete server-provided GPDK045/GSCLIB045 digital kit as the provisional submission target. Use slow 0.9 V/125°C for setup, fast 1.1 V/0°C for hold, a 10 ns clock, 0.20/0.02 ns setup/hold uncertainty, 1 ns I/O delay and 0.8 ns CDC-pair max delay.
+
+**Why:** The server kit includes setup/hold Liberty, technology/macro/multibit LEF, functional Verilog, QRC, GDS and CDL. It is the only complete 45 nm digital flow available before the deadline. All candidates can therefore be compared under one reproducible environment without claiming a foundry process.
+
+**Consequence:** Submission PPA uses the matched GPDK045 comparison. Every document must call it a generic/reference PDK, not official foundry sign-off. The earlier 180 nm results remain architecture-search history.
+
+## DD-025: Keep 4x4 P9 tiles and reject 8x8 IPRRA as the scaling default
+
+**Decision:** Preserve the verified 16-source P9-GRR as a 4x4 local tile for second-task reuse. For a 64-source 8x8 block, use the grouped row-tail strict round-robin candidate rather than the IPRRA tree.
+
+**Why:** The 64-source candidates share 265 FF, pending capacity, early ACK, registered output and strict-cyclic fairness. Across 36,992 selector cases and integrated simulation they are functionally identical. In GSCLIB045, IPRRA costs 12.643% more Genus area, has a 22.846% longer data path and consumes 0.230% more VCD power. The dedicated 8x8 grouped selector therefore dominates at this size.
+
+**Consequence:** A 16x16 second-task sensor should initially use sixteen 4x4 P9 tiles plus a tile-level arbiter. IPRRA remains a literature-backed scaling experiment, not the chosen 8x8 implementation. The 64-source grouped clean P&R point is the current larger-block reference.
+
 ## Candidate comparison
 
 | Candidate | Main benefit | Main cost/risk | First-round decision |

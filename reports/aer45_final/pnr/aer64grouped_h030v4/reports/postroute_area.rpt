@@ -1,0 +1,4 @@
+    Hinst Name           Module Name                           Inst Count           Total Area
+-------------------------------------------------------------------------------------------
+aer64_pending_grouped_rr                                             1095             2733.264
+  core                   aer64_pending_rr_core_SELECTOR_STYLE0       1093             2724.372

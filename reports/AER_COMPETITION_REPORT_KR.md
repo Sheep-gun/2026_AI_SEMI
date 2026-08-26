@@ -666,6 +666,31 @@ P9-GRR은 특정 응용 계산을 수행하는 회로가 아니라 여러 비동
 
 Gray code는 출력 payload가 아니라 선택 순서에만 사용되므로 후단에 decoder를 추가할 필요가 없다. 재사용 범위는 비동기 이벤트의 동기화·보관·중재와 주소 스트림 생성까지이며, 좌표 변환·메모리 접근·막전위 갱신·SNN 연산·분류 기능은 2차 과제의 후단에서 구현해야 한다. 현재 RTL은 16 sources와 4-bit 주소로 고정되어 있다. 다른 규모의 시스템에서는 parameterized RTL로 수정한 뒤 공정성, CDC와 PPA를 다시 검증해야 한다. 또한 원래 발화 순서나 정확한 시간 차가 필요한 응용에는 timestamp 또는 순서 보존 queue를 별도로 추가해야 한다.
 
+### 5.1 GPDK45 이관과 8x8 확장 검증
+
+주최측의 공정 문의 답변이 제출 기한 전까지 오지 않아, 서버가 제공한 완전한
+GPDK045/GSCLIB045 digital kit를 잠정 제출 환경으로 동결하였다. Setup은 slow
+0.9 V/125°C, hold는 fast 1.1 V/0°C를 사용했다. Clock은 구조 비교를 위해 기존과
+같은 10 ns로 유지하고 setup/hold uncertainty를 0.20/0.02 ns로 분리하였다.
+
+동일 조건의 최종 clean P&R 결과는 다음과 같다.
+
+| 후보 | instances | area | SAIF power | core setup | hold | DRC/conn |
+|---|---:|---:|---:|---:|---:|---:|
+| **P9-GRR** | **263** | **669.294 µm²** | 0.014382 mW | +6.824 ns | +0.024 ns | 0/0 |
+| P10-X1 | 263 | 669.978 µm² | 0.014518 mW | +7.061 ns | +0.024 ns | 0/0 |
+| P9-OHT | 278 | 709.308 µm² | **0.013780 mW** | **+7.555 ns** | +0.024 ns | 0/0 |
+
+따라서 P9-GRR은 최소 면적의 균형형 주 설계이고, P9-OHT는 5.98% 면적 비용으로
+4.19% 낮은 SAIF power와 더 큰 timing 여유를 얻는 Pareto 대안이다.
+
+2차 과제 확장성 확인을 위해 64-source 8x8 grouped selector와 IPRRA를 동일 265-FF
+controller에 넣었다. 36,992 selector case와 통합 RTL에서 동작은 일치했지만,
+IPRRA는 grouped보다 Genus area 12.64%, data path 22.85%, VCD power 0.23%가
+높았다. 8x8에서는 전용 grouped 구조가 우세하며, 4x4 P9를 local tile로 유지하는
+현재 재사용 방향이 타당하다. Grouped 64-source P&R은 2,733.264 µm²,
+0.057842 mW SAIF, core setup +5.142 ns와 DRC/connectivity 0/0을 달성했다.
+
 ### 6. 완료 범위와 남은 한계
 
 - T0-PPA는 grant capture 구간의 request stability가 필요하며 arbitrary near-simultaneous edge의 metastability sign-off를 완료하지 않았다.
@@ -676,7 +701,7 @@ Gray code는 출력 payload가 아니라 선택 순서에만 사용되므로 후
 - Recovery/removal slack은 STA의 reset 입력 도착 가정에서 계산한 값이며 임의 위상의 비동기 deassertion 전체를 증명하지 않는다. 공식 공정에서 RDC와 실리콘 조건을 다시 확인해야 한다.
 - Post-route vectorless와 mapped-SAIF power는 모두 도구 추정이며 실제 spike workload의 silicon energy/event가 아니다.
 - Pad ring, package, GDS, foundry sign-off DRC/LVS, silicon fabrication과 측정은 아직 수행하지 않았다.
-- 180 nm 결과는 서버 reference kit의 잠정 비교이며 공식 공정 확정 뒤 P8, P9-GRR과 P9-OHT를 같은 조건에서 함께 재실행해야 한다.
+- 최종 PPA는 서버 제공 GPDK045/GSCLIB045 generic kit의 비교값이며 특정 foundry 제조 sign-off가 아니다.
 
 ### 7. 결론
 
@@ -684,7 +709,15 @@ T0-PPA는 공통 clock 없이 요청과 응답으로 동작하는 전통적 AER�
 
 P4-C는 비동기 요청 동기화, source별 이벤트 보관, early ACK, 공정한 선택과 1 event/clock 출력을 제공하였다. P7-GE는 중재 상태를 4-bit Gray epoch로 줄여 공정성과 주소 전환 절감을 달성했다. P8-DG-SCR은 같은 P7 기능과 출력 순서를 유지한 채 Direct Gray, 공유 선택 tree와 reset partition을 결합했다. P9-GRR은 ACK·pending을 Gray rank로 배열하고 출력 rank를 공정성 pointer로 재사용해 별도 epoch 4 FF를 제거했다.
 
-서버 제공 FPR 180 nm reference kit에서 P9-GRR은 같은 경계탐색 절차로 hold를 재최적화한 P8(0.021 ns)보다 post-route instance를 5.39%, 셀 면적을 5.10%, vectorless power를 2.55%, 동일 workload mapped-SAIF power를 2.98% 줄였다. Core setup +4.810 ns, CDC setup +0.159 ns와 hold +0.012 ns로 timing을 통과했으며 clock-tree·DRC·connectivity 위반은 0이었다. P9-OHT는 vectorless power 0.77267187 mW와 core setup +6.201 ns로 다른 Pareto점을 제공하지만 면적과 mapped-SAIF power는 GRR보다 컸다. 기능, gate, CDC, reset, LEC와 물리 검증을 모두 통과한 P9-GRR을 현재 주 AER 컨트롤러로 채택하고 P8을 직전 기준점, OHT를 timing·vectorless-power 지향 대안으로 보존한다. 모든 180 nm 수치는 주최측 공식 공정 확정 전의 잠정 비교다.
+최종 GPDK45/GSCLIB045 비교에서도 P9-GRR은 최소 면적 균형형 주 설계를 유지했다.
+Post-route 669.294 µm², 동일 workload SAIF 0.014382 mW, setup/core/hold
++0.472/+6.824/+0.024 ns이며 recovery/removal, clock-tree, DRC와 connectivity를
+모두 통과했다. P9-OHT는 5.98% 더 큰 면적으로 SAIF 4.19% 절감과 더 큰 timing
+여유를 제공하는 대안이다. T0-PPA는 45 nm characterized latch/delay cell로 다시
+구현해 214.092 µm², DRC/connectivity 0/0과 LEC 21-output/5-state를 통과했다.
+기능, CDC, reset, LEC와 물리 검증을 모두 통과한 P9-GRR을 주 AER 컨트롤러로,
+OHT를 timing·저전력 Pareto 대안으로 제출한다. 모든 45 nm 수치는 generic PDK의
+상대 비교이며 실리콘 제조 sign-off 결과가 아니다.
 
 ### 8. 주요 근거 파일
 
@@ -694,6 +727,8 @@ P4-C는 비동기 요청 동기화, source별 이벤트 보관, early ACK, 공�
 - P9 상태 압축·물리 탐색: [`results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md`](../results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md)
 - P9 hold/PPA 전체 sweep: [`results/P9_PHYSICAL_HOLD_PARETO_SWEEP_2026-08-21.md`](../results/P9_PHYSICAL_HOLD_PARETO_SWEEP_2026-08-21.md)
 - P9 최종 Cadence 원시 보고서: [`reports/p9_final/`](p9_final/)
+- GPDK45 최종 비교 근거: [`reports/aer45_final/`](aer45_final/)
+- 45 nm 이관·8x8 IPRRA 분석: [`results/AER_45NM_MIGRATION_AND_8X8_IPRRA_2026-08-26.md`](../results/AER_45NM_MIGRATION_AND_8X8_IPRRA_2026-08-26.md)
 - P9-GRR Cadence 재현 절차: [`scripts/cadence/P9GRR_FLOW_NOTES.md`](../scripts/cadence/P9GRR_FLOW_NOTES.md)
 - P8-DG-SCR RTL: [`rtl/improved/aer_pending_direct_gray_sync_core_reset.sv`](../rtl/improved/aer_pending_direct_gray_sync_core_reset.sv)
 - T0-PPA RTL: [`rtl/traditional_async/aer_traditional_latch_paa.sv`](../rtl/traditional_async/aer_traditional_latch_paa.sv)

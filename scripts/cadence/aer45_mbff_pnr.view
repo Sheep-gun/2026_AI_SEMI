@@ -1,0 +1,22 @@
+set pdk_root "$::env(HOME)/aer_2026/pdk45_digital"
+set sdc_file $::env(AER45_SDC)
+set qrc_file "$pdk_root/gsclib045/qrc/qx/gpdk045.tch"
+set slow_basic "$pdk_root/gsclib045/timing/slow_vdd1v0_basicCells.lib"
+set fast_basic "$pdk_root/gsclib045/timing/fast_vdd1v0_basicCells.lib"
+set slow_mbff "$pdk_root/gsclib045/timing/slow_vdd1v0_multibitsDFF.lib"
+set fast_mbff "$pdk_root/gsclib045/timing/fast_vdd1v0_multibitsDFF.lib"
+foreach f [list $sdc_file $qrc_file $slow_basic $fast_basic $slow_mbff $fast_mbff] {
+    if {![file exists $f]} {error "AER45 MBFF MMMC input missing: $f"}
+}
+create_rc_corner -name rc_45nm -qx_tech_file $qrc_file \
+    -preRoute_res 1.0 -preRoute_cap 1.0 -preRoute_clkres 0.0 -preRoute_clkcap 0.0 \
+    -postRoute_res 1.0 -postRoute_cap 1.0 -postRoute_xcap 1.0 \
+    -postRoute_clkres 0.0 -postRoute_clkcap 0.0
+create_library_set -name libs_slow -timing [list $slow_basic $slow_mbff]
+create_library_set -name libs_fast -timing [list $fast_basic $fast_mbff]
+create_constraint_mode -name aer45_constraints -sdc_files [list $sdc_file]
+create_delay_corner -name corner_slow -library_set libs_slow -rc_corner rc_45nm
+create_delay_corner -name corner_fast -library_set libs_fast -rc_corner rc_45nm
+create_analysis_view -name setup_view -constraint_mode aer45_constraints -delay_corner corner_slow
+create_analysis_view -name hold_view -constraint_mode aer45_constraints -delay_corner corner_fast
+set_analysis_view -setup [list setup_view] -hold [list hold_view]

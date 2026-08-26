@@ -4,9 +4,9 @@
 
 비교 기준으로 공통 clock 없이 요청과 응답만으로 움직이는 전통적 AER **T0-PPA**를 구현했다. 이후 비동기 발화를 안전하게 접수하고 모든 뉴런에 처리 기회를 주는 동기식 구조를 발전시켰다. **P7-GE**가 공정한 Gray 순서 중재를 완성했고, **P8-DG-SCR**은 같은 기능을 유지하면서 Gray 상태·선택 tree·reset 구조를 다시 설계했다. 현재 주 설계 **P9-GRR**은 ACK와 pending을 Gray 순번으로 저장하고 출력 rank register를 공정성 pointer로도 재사용해 상태를 75 FF에서 71 FF로 줄인다.
 
-> 핵심 결과: 서버 제공 FPR 180 nm reference kit에서 같은 경계탐색 절차로 hold를 각각 재최적화한 P8-DG-SCR(0.021 ns) 대비 P9-GRR은 배치·배선 후 셀 면적 5.10%, 기본 활동률 전력 2.55%, 동일 workload mapped-SAIF 전력 2.98%를 줄였다. Core setup +4.810 ns, CDC setup +0.159 ns와 hold +0.012 ns로 timing을 만족했고 clock-tree·DRC·연결 위반은 0이었다. 이 180 nm 결과는 주최측 공식 공정이 확정되기 전의 잠정 비교값이다.
+> 최신 핵심 결과: 서버 제공 GPDK045/GSCLIB045 generic 45 nm에서 모든 핵심 후보를 다시 합성하고 Pareto 후보를 clean P&R했다. P9-GRR은 669.294 µm², 동일 workload SAIF 0.014382 mW, core setup +6.824 ns로 최소 면적 균형형 주 설계를 유지했다. P9-OHT는 면적이 5.98% 크지만 SAIF 4.19%가 낮고 core setup 여유가 0.731 ns 커 고속·저전력 대안이다. 모든 최종 setup·hold·recovery/removal, clock tree, DRC와 연결 검사를 통과했다. GPDK045는 generic 교육용 PDK이며 특정 foundry sign-off를 뜻하지 않는다.
 
-상세 수치와 검증 근거는 [P9 상태 압축·물리 탐색 문서](results/P9_STATE_COMPRESSION_EXPLORATION_2026-08-21.md), 설계 전 과정은 [대회 보고서](reports/AER_COMPETITION_REPORT_KR.md)에 정리한다.
+상세 수치와 검증 근거는 [45 nm 이관·8x8 IPRRA 분석](results/AER_45NM_MIGRATION_AND_8X8_IPRRA_2026-08-26.md), [최종 45 nm 근거](reports/aer45_final/SUMMARY.md), 설계 전 과정은 [대회 보고서](reports/AER_COMPETITION_REPORT_KR.md)에 정리한다. 기존 180 nm 결과는 구조 탐색 이력으로 보존한다.
 
 회로 동작을 처음부터 이해하려면 [P9-GRR 세 핵심 기술 상세 설명](docs/P9_GRR_CORE_TECHNOLOGIES_KR.md)을 먼저 읽으면 된다. 이 문서는 T0를 기준으로 2FF의 아날로그 상태, pending·early ACK·output register의 clock별 동작, Gray-rank 중재와 pointer 재사용의 PPA 손익을 설명한다.
 
@@ -296,7 +296,7 @@ Gray-rank 배열과 상태 재사용으로 그 추가 비용을 줄인 구조다
 | Receiver stall | 현재 link와 source에 직접 전파 | Output 유지, 빈 pending까지 추가 접수 |
 | 후단 처리율 | 4-phase transaction 간격 | Full backlog에서 최대 1 event/clock |
 
-### 9.3 P9-GRR과 P9-OHT의 post-route Pareto
+### 9.3 P9-GRR과 P9-OHT의 기존 post-route Pareto
 
 같은 FPR 180 nm 잠정 조건에서 hold-target sweep까지 수행한 최종 물리 결과다. P9-GRR은 `holdTargetSlack=0.020 ns`, P9-OHT는 `0.012 ns` 설정의 clean run을 사용했다.
 
@@ -321,6 +321,29 @@ P9-OHT는 P8의 75 FF 상태를 유지하되 중재 선택 경로를 top-down on
 P9-OHT의 독립 clean run 화면도 [별도 PNG](docs/architecture/p9oht_180nm_innovus_postroute.png)로 보존한다.
 
 Vectorless power는 실제 event trace 없이 도구가 각 신호의 활동률을 기본값으로 가정한 추정치다. Mapped-SAIF power는 동일한 101-event workload에서 기록한 switching activity를 배치·배선 회로에 연결한 추정치다. 후자가 이번 workload에는 더 구체적이지만 실제 ECG spike 분포, pad 부하와 실리콘 측정을 대신하지 않는다. 두 수치를 섞어 하나의 보장된 절감률로 주장하지 않는다.
+
+### 9.4 논문 기반 P10 탐색 뒤 갱신된 P9-GRR 물리점
+
+IPRRA 병렬 중재기와 XOR 수를 줄인 주소 순서를 실제 RTL로 비교했지만 P9-GRR을
+면적·전력·timing에서 동시에 이기지 못했다. 대신 이 비교 과정에서 기존 GRR의
+hold-target 탐색이 `0.020 ns`에서 끝났다는 문제를 찾았다. 같은 RTL을
+`0.008 ns`까지 다시 최적화했고 `0.007 ns`가 실패함을 확인했다.
+
+| 항목 | 기존 P9-GRR / 0.020 | 재최적화 P9-GRR / 0.008 | 변화 |
+|---|---:|---:|---:|
+| Post-route instances | 281 | **263** | -6.41% |
+| 셀 면적 | 6,988.766 µm² | **6,742.613 µm²** | -3.52% |
+| Vectorless power | 0.77624020 mW | **0.76127733 mW** | -1.93% |
+| 동일 workload mapped-SAIF power | 0.57886987 mW | **0.57559566 mW** | -0.57% |
+| Core setup slack | +4.810 ns | **+4.844 ns** | +0.034 ns |
+| Overall/CDC setup slack | +0.159 ns | **+0.317 ns** | +0.158 ns |
+| Hold/CDC hold slack | +0.012 ns | +0.001 ns | PASS |
+| DRC / connectivity / clock violation | 0 / 0 / 0 | **0 / 0 / 0** | 유지 |
+
+따라서 현재 FPR 180 nm 잠정 기준의 주력 RTL은 여전히 P9-GRR이고, 물리 구현
+기준점만 `holdTargetSlack=0.008 ns`로 갱신됐다. 상세한 논문 적용 범위, 전수검증,
+실패 경계와 원시 보고서는 [P10 탐색 보고서](results/P10_PAPER_DERIVED_PPA_EXPLORATION_2026-08-21.md)와
+[최종 근거 요약](reports/p10_final/SUMMARY.md)에 보존한다.
 
 ## 10. 2차 설계과제에서의 재사용
 

@@ -1,0 +1,83 @@
+*----------------------------------------------------------------------------------------
+*	Innovus 23.14-s088_1 (64bit) 02/28/2025 12:25 (Linux 3.10.0-693.el7.x86_64)
+*	
+*
+* 	Date & Time:	2026-Aug-26 16:52:54 (2026-Aug-26 07:52:54 GMT)
+*
+*----------------------------------------------------------------------------------------
+*
+*	Design: aer_pending_gray_rank_reuse_sync_core_reset
+*
+*	Liberty Libraries used: 
+*	        setup_view: <REMOTE_HOME>/aer_2026/pdk45_digital/gsclib045/timing/slow_vdd1v0_basicCells.lib
+*
+*	Power Domain used: 
+*              Rail:        VDD      Voltage:        0.9 
+*
+*       Power View : setup_view
+*
+*       User-Defined Activity : N.A.
+*
+*       Activity File: N.A.
+*
+*       Hierarchical Global Activity: N.A.
+*
+*       Global Activity: N.A.
+*
+*       Sequential Element Activity: 0.200000
+*
+*       Primary Input Activity: 0.200000
+*
+*       Default icg ratio: N.A.
+*
+*       Global Comb ClockGate Ratio: N.A.
+*
+*	Power Units = 1mW
+*
+*	Time Units = 1e-09 secs 
+*
+*       report_power -outfile <REMOTE_WORKSPACE>/pnr/p9grr_h020v4/reports/postroute_power.rpt
+*
+-----------------------------------------------------------------------------------------
+
+
+Total Power 
+-----------------------------------------------------------------------------------------
+Total Internal Power:        0.01696678 	   82.2002%
+Total Switching Power:       0.00366200 	   17.7415%
+Total Leakage Power:         0.00001203 	    0.0583%
+Total Power:                 0.02064081 
+-----------------------------------------------------------------------------------------
+
+
+Group                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+Sequential                       0.01414    0.000735   6.807e-06     0.01488        72.1 
+Macro                                  0           0           0           0           0 
+IO                                     0           0           0           0           0 
+Combinational                   0.002826    0.002927   5.226e-06    0.005758        27.9 
+Clock (Combinational)                  0           0           0           0           0 
+Clock (Sequential)                     0           0           0           0           0 
+-----------------------------------------------------------------------------------------
+Total                            0.01697    0.003662   1.203e-05     0.02064         100 
+-----------------------------------------------------------------------------------------
+
+
+Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+VDD                       0.9    0.01697    0.003662   1.203e-05     0.02064         100 
+
+
+-----------------------------------------------------------------------------------------
+*	Power Distribution Summary: 
+*                Highest Average Power:    reset_release_q_reg[1] (DFFRHQX1):        0.0003453 
+*                Highest Leakage Power:    reset_release_q_reg[0] (DFFRHQX1):        1.393e-07 
+*          Total Cap:      3.452e-13 F
+*          Total instances in design:   263
+*          Total instances in design with no power:     0
+*          Total instances in design with no activity:     0
+*          Total Fillers and Decap:     0
+-----------------------------------------------------------------------------------------
+

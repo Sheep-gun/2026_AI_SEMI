@@ -102,5 +102,13 @@ innovus.log*
 /reports/baseline/cadence/pnr_180nm/raw/
 /reports/improved_depth1/cadence/pnr_180nm/raw/
 
+# Local unsanitized/redundant Cadence transport and sweep caches. Curated
+# evidence is retained under reports/aer45_final and reports/p10_final.
+/reports/aer45_work/
+/reports/p10_candidates/
+
 # Other local simulator products
 *.vvp
+
+# Editor/tool backup copies
+*~

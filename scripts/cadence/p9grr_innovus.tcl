@@ -35,12 +35,18 @@ set synchronizer_cells [concat \
     [get_cells *req_meta_q_reg*] \
     [get_cells *req_sync_q_reg*] \
     [get_cells *reset_release_q_reg*]]
-set synchronizer_count [llength $synchronizer_cells]
+set synchronizer_count [expr {
+    [llength [get_db insts *req_meta_q_reg*]] +
+    [llength [get_db insts *req_sync_q_reg*]] +
+    [llength [get_db insts *reset_release_q_reg*]]
+}]
 puts "P9GRR_INNOVUS_SYNCHRONIZER_CELLS_FOUND=$synchronizer_count"
 if {$synchronizer_count != 34} {
     error "P9-GRR Innovus expected 34 synchronizer/reset-release cells; found $synchronizer_count"
 }
-set_dont_touch true $synchronizer_cells
+set_dont_touch true [get_cells *req_meta_q_reg*]
+set_dont_touch true [get_cells *req_sync_q_reg*]
+set_dont_touch true [get_cells *reset_release_q_reg*]
 for {set i 0} {$i < 16} {incr i} {
     set group_name [format {cdc_pair_%02d} $i]
     createInstGroup $group_name -softGuide -ar 1.0 -density 0.5
@@ -82,7 +88,7 @@ timeDesign -preCTS -outDir [file join $report_dir prects]
 set_ccopt_property source_max_capacitance 0.250
 clock_opt_design
 optDesign -postCTS
-setOptMode -holdTargetSlack 0.020
+setOptMode -holdTargetSlack 0.008
 optDesign -postCTS -hold
 timeDesign -postCTS -outDir [file join $report_dir postcts]
 
@@ -90,7 +96,7 @@ setNanoRouteMode -routeBottomRoutingLayer 1
 setNanoRouteMode -routeTopRoutingLayer 6
 routeDesign
 setAnalysisMode -analysisType onChipVariation
-setOptMode -holdTargetSlack 0.020
+setOptMode -holdTargetSlack 0.008
 optDesign -postRoute -hold
 setExtractRCMode -engine postRoute -coupled true
 extractRC

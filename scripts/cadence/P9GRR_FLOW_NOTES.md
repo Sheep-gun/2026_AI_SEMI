@@ -45,12 +45,15 @@ innovus -files "$BUNDLE/scripts/cadence/p9grr_innovus_capture.tcl"
 - `db/`: Innovus post-route database
 - `outputs/p9grr_180nm_innovus_postroute.png`: Innovus native capture
 
-현재 재현 기준은 hold target `0.020 ns`의 full clean run이다. Post-route에서
-281 instances, 6,988.766 µm², vectorless power 0.77624020 mW,
-mapped-SAIF power 0.57886987 mW, overall/core setup `+0.159/+4.810 ns`,
-overall/CDC hold `+0.012/+0.012 ns`를 얻었다. DRC/connectivity/clock
+현재 재현 기준은 논문 기반 P10 후보와 같은 절차로 다시 탐색한 hold target
+`0.008 ns`의 full clean run이다. Post-route에서 263 instances,
+6,742.613 µm², vectorless power 0.76127733 mW, mapped-SAIF power
+0.57559566 mW, overall/core setup `+0.317/+4.844 ns`, overall/CDC hold
+`+0.001/+0.001 ns`를 얻었다. `0.007 ns` run은 hold/CDC hold
+`-0.001/-0.001 ns`로 실패해 경계가 확인됐다. DRC/connectivity/clock
 violations는 `0/0/0`이고, Conformal은 primary output 21개와 state point
-71개를 모두 equivalent로 판정했다.
+71개를 모두 equivalent로 판정했다. 최신 원시 보고서는
+`reports/p10_final/p9grr_h008/`에 보존한다.
 
 이것은 FPR 180 nm reference 환경의 비교 결과이며 공식 제출 PDK sign-off를 뜻하지
 않는다. 다른 library 또는 corner로 이관하면 CDC pair constraint, clock driver,
