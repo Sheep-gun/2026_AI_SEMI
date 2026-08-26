@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">P9-OHT AER 컨트롤러 구조</title>
+  <desc id="desc">2FF와 pending은 P9-GRR과 공유하지만 one-hot top-down tree와 별도 Gray epoch를 사용하는 고속 저전력 대안</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 21px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.box{stroke-width:2;rx:16}.line{fill:none;stroke:#2563eb;stroke-width:4}
+      .ack{fill:none;stroke:#0f9d8b;stroke-width:4}.control{fill:none;stroke:#d97706;stroke-width:4;stroke-dasharray:10 7}
+    </style>
+    <marker id="blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#2563eb"/></marker>
+    <marker id="green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#0f9d8b"/></marker>
+    <marker id="orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#d97706"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="#f7fafc"/>
+  <text x="60" y="62" class="title">P9-OHT: One-Hot Top-down Tree AER</text>
+  <text x="60" y="98" class="sub">P9의 안전한 접수·공정성·buffer 기능은 유지하고, 선택 경로를 병렬 one-hot tree로 만든 고속·저전력 대안</text>
+
+  <rect x="55" y="190" width="180" height="190" class="box" fill="#e6fffa" stroke="#0f9d8b"/>
+  <text x="145" y="232" text-anchor="middle" class="h">16 Sources</text>
+  <text x="145" y="275" text-anchor="middle" class="t">4-phase REQ/ACK</text>
+  <text x="145" y="315" text-anchor="middle" class="t">비동기 발화</text>
+
+  <rect x="300" y="210" width="180" height="150" class="box" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="390" y="252" text-anchor="middle" class="h">Source별 2FF</text>
+  <text x="390" y="293" text-anchor="middle" class="t">불안정 전파 확률 감소</text>
+  <text x="390" y="329" text-anchor="middle" class="small">16 × 2 = 32 FF</text>
+
+  <rect x="545" y="180" width="245" height="210" class="box" fill="#ecfdf5" stroke="#10b981"/>
+  <text x="667" y="224" text-anchor="middle" class="h">Source-indexed 저장부</text>
+  <text x="667" y="266" text-anchor="middle" class="t">ACK 16 + Pending 16</text>
+  <text x="667" y="305" text-anchor="middle" class="t">접수 즉시 Early ACK</text>
+  <text x="667" y="344" text-anchor="middle" class="t">선택 bit를 one-hot clear</text>
+  <text x="667" y="374" text-anchor="middle" class="small">Source 번호 순서 그대로 저장</text>
+
+  <rect x="850" y="180" width="300" height="210" class="box" fill="#fff7ed" stroke="#f97316"/>
+  <text x="1000" y="224" text-anchor="middle" class="h">One-Hot Top-down Tree</text>
+  <text x="1000" y="266" text-anchor="middle" class="t">half → quarter → pair → source</text>
+  <text x="1000" y="305" text-anchor="middle" class="t">선호 branch를 위에서 아래로 선택</text>
+  <text x="1000" y="344" text-anchor="middle" class="t">선택 경로가 곧 pending clear mask</text>
+  <text x="1000" y="374" text-anchor="middle" class="small">병렬 branch logic으로 짧은 critical path</text>
+
+  <rect x="1215" y="180" width="230" height="210" class="box" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="1330" y="224" text-anchor="middle" class="h">Output Address Reg.</text>
+  <text x="1330" y="266" text-anchor="middle" class="t">주소 4 bit + valid 1 bit</text>
+  <text x="1330" y="305" text-anchor="middle" class="t">stall 중 출력 고정</text>
+  <text x="1330" y="344" text-anchor="middle" class="t">Gray epoch와 별도 상태</text>
+  <text x="1330" y="374" text-anchor="middle" class="small">GRR보다 상태 4 FF 증가</text>
+
+  <rect x="1485" y="210" width="85" height="150" class="box" fill="#eef2ff" stroke="#4f46e5"/>
+  <text x="1527" y="253" text-anchor="middle" class="h">수신기</text>
+  <text x="1527" y="294" text-anchor="middle" class="t">주소</text>
+  <text x="1527" y="329" text-anchor="middle" class="t">valid</text>
+
+  <path d="M235 285 H300" class="line" marker-end="url(#blue)"/>
+  <path d="M480 285 H545" class="line" marker-end="url(#blue)"/>
+  <path d="M790 285 H850" class="line" marker-end="url(#blue)"/>
+  <path d="M1150 285 H1215" class="line" marker-end="url(#blue)"/>
+  <path d="M1445 285 H1485" class="line" marker-end="url(#blue)"/>
+  <path d="M667 390 V490 H145 V380" class="ack" marker-end="url(#green)"/>
+  <text x="408" y="518" text-anchor="middle" class="t">내부 보관이 확정되면 source에 ACK</text>
+
+  <rect x="850" y="500" width="300" height="115" class="box" fill="#fffbeb" stroke="#d97706"/>
+  <text x="1000" y="542" text-anchor="middle" class="h">별도 Gray Epoch 4 FF</text>
+  <text x="1000" y="579" text-anchor="middle" class="t">다음에 선호할 branch 방향 저장</text>
+  <path d="M1000 500 V390" class="control" marker-end="url(#orange)"/>
+
+  <rect x="55" y="685" width="710" height="145" rx="18" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="85" y="727" class="h">P9-GRR과 같은 기능</text>
+  <text x="85" y="768" class="t">2FF · Pending 16 + 출력 1 · Early ACK · Gray 순번 공정성(≤16 결정)</text>
+  <text x="85" y="805" class="t">Receiver가 준비되면 1 event/clock, stall 중 주소와 valid 유지</text>
+
+  <rect x="835" y="685" width="705" height="145" rx="18" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="865" y="727" class="h">GRR과 다른 선택</text>
+  <text x="865" y="768" class="t">상태 4 FF를 더 쓰는 대신 one-hot branch 경로로 timing과 switching을 개선</text>
+  <text x="865" y="805" class="t">45nm 결과: GRR보다 면적 +5.98%, SAIF 전력 −4.19%, core 여유 +0.731 ns</text>
+</svg>

@@ -1,5 +1,0 @@
-    Hinst Name                              Module Name          Inst Count           Total Area
----------------------------------------------------------------------------------------------
-aer_pending_gray_rank_reuse_sync_core_reset                             302              823.878
-  RC_CG_HIER_INST0                          RC_CG_MOD                     1                6.498
-  RC_CG_HIER_INST1                          RC_CG_MOD_246                 1                6.498

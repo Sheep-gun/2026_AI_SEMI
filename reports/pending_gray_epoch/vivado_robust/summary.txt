@@ -1,6 +1,0 @@
-reg2reg_slack_ns=4.238
-reg2reg_datapath_delay_ns=5.611
-reg2reg_startpoint=req_sync_q_reg[5]/C
-reg2reg_endpoint=out_addr_q_reg[0]/D
-reset_mode=async_assert_sync_deassert_2ff
-P7_GE_ROBUST_SYNTH_PASS

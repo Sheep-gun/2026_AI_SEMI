@@ -1,4 +1,0 @@
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_improved_hierarchical_test_wrapper.sv" into library worklib
-INFO: [VRFC 10-311] analyzing module aer_improved_hybrid
-INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/YangGeon/Documents/2026_AI_SEMI/tb/aer_improved_hybrid_tb.sv" into library worklib
-INFO: [VRFC 10-311] analyzing module aer_improved_hybrid_tb

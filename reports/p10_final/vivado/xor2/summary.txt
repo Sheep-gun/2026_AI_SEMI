@@ -1,5 +1,0 @@
-reg2reg_slack_ns=3.968
-reg2reg_datapath_delay_ns=5.881
-reg2reg_startpoint=core/ack_rank_q_reg[14]/C
-reg2reg_endpoint=core/pending_rank_q_reg[11]/D
-state_ff_contract=71

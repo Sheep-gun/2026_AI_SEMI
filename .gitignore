@@ -1,114 +1,67 @@
-# Workspace-local tools and disposable review/build data
-/tmp/
-/tools/
-
-# Vivado / XSIM generated state
+# Local EDA and simulator state
 /.Xil/
-**/.Xil/
 /sim/work/
-/sim/async_work/
-/sim/async_race_work/
-/sim/async_race_gate_work/
-/sim/traditional_async_work/
-/sim/traditional_async_gate_work/
-/sim/improved_work/
-/sim/improved_gate_work/
-/sim/improved_cdc_phase_rtl_work/
-/sim/improved_cdc_phase_gate_work/
-/sim/improved_hierarchical_work/
-/sim/improved_hierarchical_gate_work/
-/sim/improved_hierarchical_cdc_rtl_work/
-/sim/improved_hierarchical_cdc_gate_work/
-/sim/improved_hierarchical_order_rtl_work/
-/sim/improved_hierarchical_order_gate_work/
-/sim/improved_depth1_work/
-/sim/improved_depth1_gate_work/
-/sim/improved_depth1_cdc_rtl_work/
-/sim/improved_depth1_cdc_gate_work/
-/sim/improved_depth1_order_rtl_work/
-/sim/improved_depth1_order_gate_work/
-sim/*_work/
 **/xsim.dir/
-*.wdb
-*.pb
-*.xpr
-/xvlog.log
-/xelab.log
-/xsim.log
-*.cache/
-*.runs/
-*.gen/
-*.hw/
-*.ip_user_files/
-*.sim/
-*.jou
-*.str
-webtalk*.log
-vivado*.log
-sim/logs/*.backup.log
-sim/logs/async_race_gate*.log
-sim/logs/traditional_structural_gate_compile.log
-sim/logs/traditional_structural_gate_elaborate.log
-sim/logs/traditional_structural_gate_tb_compile.log
-sim/logs/evd*.log
-sim/logs/epoch_variants*.log
-sim/logs/contract_fairness_p8_*.log
-sim/logs/p8_direct_gray_*.log
-sim/logs/p8_sparse_reset_*.log
-sim/logs/p8_dgt_*.log
-sim/logs/p8_dgpr_*.log
-sim/logs/p8_pareto_*.log
-
-# P8 exploratory implementation reports; the final DGSCR evidence is retained
-# separately under reports/p8_dg_scr and one sanitized Vivado result directory.
-/reports/epoch_variants/
-/reports/p8_pareto/
-/reports/p8_candidates/vivado_sparse_reset/
-/reports/p8_candidates/vivado_direct_gray/
-/reports/p8_candidates/vivado_direct_gray_shared_tree/
-/reports/p8_candidates/vivado_direct_gray_split_reset/
-/reports/p8_candidates/vivado_direct_gray_sync_core_reset/vivado.log
-/reports/p8_candidates/vivado_direct_gray_sync_core_reset/vivado.jou
-/sim/waves/contract_fairness_p8_sparse_reset.vcd
-/sim/waves/contract_fairness_p8_direct_gray.vcd
-/sim/waves/contract_fairness_p8_direct_gray_shared_tree.vcd
-/sim/waves/contract_fairness_p8_direct_gray_split_reset.vcd
-/sim/waves/contract_fairness_p8_xor2_sparse_reset.vcd
-/sim/waves/contract_fairness_p8_gray_ring_sparse_reset.vcd
-
-# Cadence Xcelium / Genus / Innovus generated state
 INCA_libs/
 xcelium.d/
 *.shm/
+*.wdb
+*.pb
+*.jou
 *.history
 genus.cmd*
 genus.log*
 innovus.cmd*
 innovus.log*
+vivado*.log
+webtalk*.log
+*.backup.log
 
-# Interactive Cadence transport bundles and unsanitized raw consoles
-/reports/traditional_async/cadence/genus_t0.log
-/reports/improved/cadence/logs/
-/reports/improved/cadence/outputs/
-/reports/improved/cadence/reports/
-/reports/improved/cadence/p1_final_artifacts.tgz
-/reports/improved/cadence/final/logs/
-/reports/improved/cadence/final/reports/sweep_*/
-!/reports/improved/cadence/final/reports/sweep_2p0ns/
-!/reports/improved/cadence/final/reports/sweep_2p0ns/**
-/reports/improved_hierarchical/cadence/p2_final_artifacts.tgz
-/reports/improved_hierarchical/cadence/final/logs/
-/reports/improved_hierarchical/cadence/pnr_180nm/raw/
-/reports/baseline/cadence/pnr_180nm/raw/
-/reports/improved_depth1/cadence/pnr_180nm/raw/
-
-# Local unsanitized/redundant Cadence transport and sweep caches. Curated
-# evidence is retained under reports/aer45_final and reports/p10_final.
+# Disposable local transport and scratch data
+/tmp/
+/tools/
 /reports/aer45_work/
-/reports/p10_candidates/
 
-# Other local simulator products
+# Miscellaneous generated files
 *.vvp
-
-# Editor/tool backup copies
 *~
+
+# Final-only repository view. Historical exploration remains in Git history;
+# local regenerated copies outside these paths stay untracked.
+/constraints/
+/results/
+/waves/
+
+/docs/*
+!/docs/FINAL_REPORT_KR.md
+!/docs/PPT_ASSET_GUIDE_KR.md
+!/docs/figures/
+!/docs/figures/**
+
+/rtl/*
+!/rtl/final/
+!/rtl/final/**
+
+/tb/*
+!/tb/final/
+!/tb/final/**
+
+/scripts/*
+!/scripts/run_final_rtl_verification.ps1
+!/scripts/render_final_def_layout.py
+!/scripts/cadence/
+/scripts/cadence/*
+!/scripts/cadence/final45/
+!/scripts/cadence/final45/**
+
+/reports/*
+!/reports/final_45nm/
+!/reports/final_45nm/**
+
+/sim/*
+!/sim/final/
+!/sim/final/**
+
+# Keep backup exclusions last so final-directory allow rules cannot override them.
+*~
+*.backup.log

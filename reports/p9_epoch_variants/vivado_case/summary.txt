@@ -1,8 +1,0 @@
-reg2reg_slack_ns=4.755
-reg2reg_datapath_delay_ns=5.094
-reg2reg_startpoint=core/req_sync_q_reg[1]/C
-reg2reg_endpoint=core/out_addr_q_reg[0]/D
-top=aer_pending_direct_gray_oht_epoch_case
-reset_mode=async_2ff_release_sync_core_clear_output_isolation
-epoch_mode=direct_reflected_gray
-P9_CANDIDATE_SYNTH_PASS

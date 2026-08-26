@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">P9-GRR AER 컨트롤러 구조</title>
+  <desc id="desc">2FF, source별 pending, Gray-rank 순환 중재, 출력 rank와 공정성 pointer 재사용으로 구성된 개선 AER</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 21px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.box{stroke-width:2;rx:16}.line{fill:none;stroke:#2563eb;stroke-width:4}
+      .ack{fill:none;stroke:#0f9d8b;stroke-width:4}.feedback{fill:none;stroke:#7c3aed;stroke-width:4;stroke-dasharray:10 7}
+    </style>
+    <marker id="blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#2563eb"/></marker>
+    <marker id="green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#0f9d8b"/></marker>
+    <marker id="purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#7c3aed"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="#f7fafc"/>
+  <text x="60" y="62" class="title">P9-GRR: Gray-rank Register Reuse AER</text>
+  <text x="60" y="98" class="sub">비동기 발화를 안전하게 접수하고, 공정하게 고른 뒤, 매 clock 최대 1개씩 전달하는 동기식 core</text>
+
+  <rect x="55" y="190" width="180" height="190" class="box" fill="#e6fffa" stroke="#0f9d8b"/>
+  <text x="145" y="232" text-anchor="middle" class="h">16 Sources</text>
+  <text x="145" y="275" text-anchor="middle" class="t">4-phase REQ/ACK</text>
+  <text x="145" y="315" text-anchor="middle" class="t">비동기 발화</text>
+  <text x="145" y="350" text-anchor="middle" class="small">ACK까지 REQ 유지</text>
+
+  <rect x="300" y="210" width="180" height="150" class="box" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="390" y="252" text-anchor="middle" class="h">Source별 2FF</text>
+  <text x="390" y="293" text-anchor="middle" class="t">불안정 전파 확률 감소</text>
+  <text x="390" y="329" text-anchor="middle" class="small">16 × 2 = 32 FF</text>
+
+  <rect x="545" y="180" width="260" height="210" class="box" fill="#ecfdf5" stroke="#10b981"/>
+  <text x="675" y="224" text-anchor="middle" class="h">Gray-rank 저장부</text>
+  <text x="675" y="266" text-anchor="middle" class="t">ACK 16 + Pending 16</text>
+  <text x="675" y="305" text-anchor="middle" class="t">bit 위치가 source 주소</text>
+  <text x="675" y="344" text-anchor="middle" class="t">접수 즉시 Early ACK</text>
+  <text x="675" y="374" text-anchor="middle" class="small">rank 순서 재배열은 고정 배선</text>
+
+  <rect x="875" y="180" width="265" height="210" class="box" fill="#fff7ed" stroke="#f97316"/>
+  <text x="1007" y="224" text-anchor="middle" class="h">4×4 Grouped 순환 중재</text>
+  <text x="1007" y="266" text-anchor="middle" class="t">마지막 rank 다음부터 탐색</text>
+  <text x="1007" y="305" text-anchor="middle" class="t">지속 요청 ≤ 16번 결정</text>
+  <text x="1007" y="344" text-anchor="middle" class="t">selected rank 즉시 clear</text>
+  <text x="1007" y="374" text-anchor="middle" class="small">긴 16단 선형 탐색 회피</text>
+
+  <rect x="1210" y="180" width="230" height="210" class="box" fill="#f5f3ff" stroke="#7c3aed"/>
+  <text x="1325" y="224" text-anchor="middle" class="h">Output Rank Register</text>
+  <text x="1325" y="266" text-anchor="middle" class="t">주소 4 bit + valid 1 bit</text>
+  <text x="1325" y="305" text-anchor="middle" class="t">stall 중 출력 고정</text>
+  <text x="1325" y="344" text-anchor="middle" class="t">다음 탐색 pointer 겸용</text>
+  <text x="1325" y="374" text-anchor="middle" class="small">별도 epoch 4 FF 제거</text>
+
+  <rect x="1480" y="210" width="90" height="150" class="box" fill="#eef2ff" stroke="#4f46e5"/>
+  <text x="1525" y="253" text-anchor="middle" class="h">수신기</text>
+  <text x="1525" y="294" text-anchor="middle" class="t">주소</text>
+  <text x="1525" y="329" text-anchor="middle" class="t">valid/ready</text>
+
+  <path d="M235 285 H300" class="line" marker-end="url(#blue)"/>
+  <path d="M480 285 H545" class="line" marker-end="url(#blue)"/>
+  <path d="M805 285 H875" class="line" marker-end="url(#blue)"/>
+  <path d="M1140 285 H1210" class="line" marker-end="url(#blue)"/>
+  <path d="M1440 285 H1480" class="line" marker-end="url(#blue)"/>
+  <path d="M675 390 V490 H145 V380" class="ack" marker-end="url(#green)"/>
+  <text x="415" y="518" text-anchor="middle" class="t">내부 보관이 확정되면 source에 ACK</text>
+  <path d="M1325 390 V570 H1007 V390" class="feedback" marker-end="url(#purple)"/>
+  <text x="1165" y="603" text-anchor="middle" class="t">현재 출력 rank를 다음 중재 시작점으로 재사용</text>
+
+  <rect x="55" y="675" width="710" height="155" rx="18" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="85" y="717" class="h">이벤트 저장 능력</text>
+  <text x="85" y="758" class="t">Pending 16개 + 출력 Register 1개 = 최대 17개 보관</text>
+  <text x="85" y="798" class="t">Receiver가 준비되면 full backlog에서 빈 clock 없이 1 event/clock</text>
+
+  <rect x="835" y="675" width="705" height="155" rx="18" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="865" y="717" class="h">PPA를 줄인 핵심</text>
+  <text x="865" y="758" class="t">REQ·ACK·Pending을 같은 rank 순서에 두어 변환·탐색 회로를 줄임</text>
+  <text x="865" y="798" class="t">Output rank가 주소 저장과 공정성 pointer 두 역할을 맡아 상태 4 FF 제거</text>
+</svg>

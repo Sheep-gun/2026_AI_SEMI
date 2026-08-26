@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="800" viewBox="0 0 1600 800" role="img" aria-labelledby="title desc">
+  <title id="title">T0 전통적 비동기 AER 구조</title>
+  <desc id="desc">16개 비동기 요청을 고정 우선순위로 선택하고 latch와 지연 셀을 거쳐 하나의 주소 버스로 전달하는 구조</desc>
+  <defs>
+    <style>
+      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
+      .h{font:700 22px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:17px "Malgun Gothic",sans-serif;fill:#243b53}
+      .small{font:15px "Malgun Gothic",sans-serif;fill:#486581}.box{stroke-width:2;rx:16}.line{fill:none;stroke:#2f80ed;stroke-width:4}
+      .ack{fill:none;stroke:#0f9d8b;stroke-width:4}.warn{font:17px "Malgun Gothic",sans-serif;fill:#7c2d12}
+    </style>
+    <marker id="blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#2f80ed"/></marker>
+    <marker id="green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#0f9d8b"/></marker>
+  </defs>
+  <rect width="1600" height="800" fill="#f7fafc"/>
+  <text x="70" y="65" class="title">T0: 전통적 clockless AER Baseline</text>
+  <text x="70" y="101" class="sub">공통 clock 없이 REQ·ACK의 변화가 다음 동작을 직접 일으키는 4-phase 단일 버스 구조</text>
+
+  <rect x="70" y="185" width="230" height="200" class="box" fill="#e6fffa" stroke="#0f9d8b"/>
+  <text x="185" y="225" text-anchor="middle" class="h">16개 이벤트 Source</text>
+  <text x="95" y="272" class="t">src_req[15:0]</text>
+  <text x="95" y="310" class="t">ACK까지 요청 유지</text>
+  <text x="95" y="348" class="small">동시에 여러 요청 가능</text>
+
+  <rect x="395" y="205" width="250" height="160" class="box" fill="#fff7ed" stroke="#f97316"/>
+  <text x="520" y="250" text-anchor="middle" class="h">고정 우선순위 중재</text>
+  <text x="520" y="292" text-anchor="middle" class="t">가장 작은 번호 선택</text>
+  <text x="520" y="330" text-anchor="middle" class="small">MUTEX 없음 · 경합 조건이 한계</text>
+
+  <rect x="745" y="205" width="230" height="160" class="box" fill="#eef2ff" stroke="#6366f1"/>
+  <text x="860" y="250" text-anchor="middle" class="h">Grant Latch</text>
+  <text x="860" y="292" text-anchor="middle" class="t">주소와 busy 보관</text>
+  <text x="860" y="330" text-anchor="middle" class="small">TLATX1 5개</text>
+
+  <rect x="1075" y="205" width="200" height="160" class="box" fill="#fefce8" stroke="#ca8a04"/>
+  <text x="1175" y="250" text-anchor="middle" class="h">지연 셀</text>
+  <text x="1175" y="292" text-anchor="middle" class="t">주소 먼저 안정</text>
+  <text x="1175" y="330" text-anchor="middle" class="small">DLY4X1 6개</text>
+
+  <rect x="1370" y="185" width="160" height="200" class="box" fill="#eff6ff" stroke="#2563eb"/>
+  <text x="1450" y="230" text-anchor="middle" class="h">수신기</text>
+  <text x="1450" y="275" text-anchor="middle" class="t">aer_addr</text>
+  <text x="1450" y="312" text-anchor="middle" class="t">aer_req</text>
+  <text x="1450" y="349" text-anchor="middle" class="t">aer_ack</text>
+
+  <path d="M300 285 H395" class="line" marker-end="url(#blue)"/><text x="347" y="270" text-anchor="middle" class="small">REQ</text>
+  <path d="M645 285 H745" class="line" marker-end="url(#blue)"/>
+  <path d="M975 285 H1075" class="line" marker-end="url(#blue)"/>
+  <path d="M1275 285 H1370" class="line" marker-end="url(#blue)"/>
+  <path d="M1450 385 V475 H185 V385" class="ack" marker-end="url(#green)"/>
+  <text x="820" y="505" text-anchor="middle" class="t">수신 완료 ACK가 source까지 돌아온 뒤 다음 이벤트 시작</text>
+
+  <rect x="70" y="575" width="1460" height="150" rx="18" fill="#fff7ed" stroke="#fb923c" stroke-width="2"/>
+  <text x="100" y="615" class="h">Baseline에 의도적으로 남겨 둔 한계</text>
+  <text x="100" y="657" class="warn">① 낮은 번호가 계속 요청하면 높은 번호가 굶을 수 있음  ② 내부 대기칸이 없어 수신기 정체가 source까지 전파됨</text>
+  <text x="100" y="696" class="warn">③ 매 이벤트마다 REQ와 ACK를 0으로 되돌림  ④ near-simultaneous 경합의 transistor-level metastability 안전성은 주장하지 않음</text>
+</svg>
