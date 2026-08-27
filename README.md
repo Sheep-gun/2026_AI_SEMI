@@ -258,7 +258,7 @@ Receiver가 준비된 상태에서는 현재 이벤트를 소비하는 clock edg
 
 ![T0와 개선형의 stall 차이](docs/figures/t0_p9_stall_timeline.svg)
 
-#### Gray 공정성
+#### Starvation - Gray 공정성
 
 내부 우선순위는 다음 Gray 관계를 이용한다.
 
@@ -303,13 +303,14 @@ Source 6이 선택되면 GRR은 다음 동작을 수행한다.
 
 ![Gray rank와 상태 구성](docs/figures/p9_state_and_rank.svg)
 
-### 5.3 P9-OHT
+### 5.3 P9-OHT: 병렬 One-Hot Tree를 사용한 속도·전력 중심 구조
 
 OHT는 One-Hot Top-down Tree의 약자다.
 
 ![P9-OHT 구조](docs/figures/p9_oht_structure.svg)
 
-OHT는 16개 후보를 다음처럼 병렬 tree에서 좁힌다.
+P9-OHT는 앞에서 설명한 P9의 2FF, Pending, Early ACK, 공정성 및 Valid/Ready 기능을 유지하면서, 중재기의 조합논리 경로와 신호 전환을 줄이는 데 초점을 둔 구조다.
+OHT에서 candidate는 기존 Pending과 이번 clock에 새로 접수한 이벤트를 합친 선택 후보다. 16개 후보를 한 번에 확인하지 않고 작은 단위로 묶어 요청이 있는 영역을 계산한다.
 
     Candidate 16
       → Pair valid 8
@@ -317,30 +318,54 @@ OHT는 16개 후보를 다음처럼 병렬 tree에서 좁힌다.
       → Half valid 2
       → Selected source one-hot
 
-One-hot은 선택된 위치 하나만 1인 16-bit 표현이다. 최종 one-hot vector는 출력
-주소를 만드는 동시에 Pending clear mask가 된다.
+- pair_valid: Source 2개 중 대기 이벤트가 있는가?
+- quarter_valid: Pair 2개, 즉 Source 4개 중 이벤트가 있는가?
+- half_valid: Quarter 2개, 즉 Source 8개 중 이벤트가 있는가?
+여기서 valid는 Receiver의 out_valid가 아니라, 해당 묶음 안에 선택할 이벤트가 있는지 나타내는 내부 신호다.
+어느 영역에 이벤트가 있는지 계산한 뒤에는 Gray Epoch가 선호하는 방향을 따라 다음 순서로 범위를 좁힌다.
 
-OHT는 별도 Gray epoch 4 FF와 output address 4 FF를 가진다.
+    Half 선택
+    → Quarter 선택
+    → Pair 선택
+    → 최종 Source 선택
 
-    공통 상태 67 + epoch 4 + output address 4 = 75 state points
+최종 선택 결과는 One-Hot 형태로 만든다. One-Hot은 선택된 source 위치 하나만 1이고 나머지는 모두 0인 16-bit 표현이다.
+예를 들어 source 6이 선택되면:
 
-Epoch는 방금 고른 source 다음 번호를 가리키는 pointer가 아니다. Successful
-grant마다 Gray schedule을 한 단계 진행시키고 tree 각 단계의 선호 branch를
-정한다. 따라서 GRR과 같은 service contract와 starvation bound를 제공하지만
-sparse contention의 source 간 출력 순서가 완전히 같지는 않다.
+    selected_onehot
+    = 0000_0000_0100_0000
+
+이 값은 두 가지 역할을 한다.
+- 선택된 source 번호를 4-bit 출력 주소로 변환
+- 해당 source의 Pending bit만 0으로 내려 대기 목록에서 제거
+
+    pending_next
+    = pending
+      AND NOT selected_onehot
+
+OHT는 다음 두 상태를 별도로 저장한다.
+- output address 4 FF: 현재 Receiver에게 보여 주는 source 주소
+- Gray epoch 4 FF: 다음 중재에서 우선해서 확인할 tree 방향
+Output address는 Receiver가 stall일 때 유지해야 하고, Gray Epoch는 다음 중재 방향을 나타내므로 서로 다른 역할을 한다.
+
+    P9 공통 상태 67
+    + Gray epoch 4
+    + Output address 4
+    = 총 75 state points
+
+Gray Epoch는 방금 처리한 source의 다음 번호를 직접 가리키는 pointer가 아니다. 이벤트를 성공적으로 출력할 때마다 Gray 순서로 한 단계 이동하며, 각 bit가 Half, Quarter, Pair와 Source 단계에서 먼저 확인할 방향을 정한다. 선호 영역이 비어 있으면 반대쪽의 요청이 있는 영역을 선택한다.
+따라서 OHT는 GRR보다 상태가 4 FF 많아 면적은 증가하지만, 후보를 병렬 tree에서 단계적으로 선택하여 조합논리 경로와 switching을 줄일 수 있다.
 
 ### 5.4 개선 결과
 
-공통 101-event 시험은 sparse 16, receiver stall 8, saturation 64와 hotspot
-13개 event로 구성했다.
+GRR과 OHT에는 동일한 101개 이벤트를 입력했다. 기본 전달을 확인하는 Sparse 16개, Receiver 정체를 확인하는 Stall 8개, 최대 처리속도를 확인하는 Saturation 64개, 반복 요청 상황의 공정성을 확인하는 Hotspot 13개로 구성하였다.
 
 | 설계 | Event | Error | LEC | DRC/Connectivity |
 |---|---:|---:|---|---:|
 | P9-GRR | 101 | 0 | 21 outputs + 71 states | 0/0 |
 | P9-OHT | 101 | 0 | 21 outputs + 75 states | 0/0 |
 
-Saturation phase의 64 events는 630 ns output span으로 처리됐다. 63개의 전송
-간격이 각각 10 ns이므로 pipeline이 찬 뒤 1 event/clock과 일치한다.
+Saturation 시험에서는 64개 이벤트가 계속 대기하고 Receiver가 항상 준비된 상태에서, 첫 번째부터 마지막 이벤트까지 630ns가 걸렸다. 64개 이벤트 사이의 63개 전송 간격이 각각 10ns였으므로, 출력이 시작된 뒤 매 clock마다 이벤트 하나를 연속으로 전달했음을 확인했다.
 
 OHT의 주소 bit 전환 합은 106회, GRR은 114회였다. 이 차이만으로 전체 전력을
 설명할 수는 없지만 OHT의 낮은 switching 방향과 일치한다.
