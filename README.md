@@ -140,7 +140,9 @@ return-to-zero 방식이라고도 부른다.
 - Handshake는 전달 규약일 뿐, 여러 요청 중 누구를 고를지는 별도 중재기가
   해결해야 한다.
 
-## 4. 전통적인 AER T0의 구현
+## 4. 전통적인 AER, T0의 구현
+
+전통적인 AER을 설계하여 T0라고 명명, 앞으로 만들 개선 모델과 비교하기 위한 baseline으로서 의미를 가진다.
 
 ### 4.1 구현 구조
 
@@ -168,13 +170,14 @@ source 1을 선택한다.
 #### Latch
 
 선택 주소가 transaction 중 바뀌지 않도록 grant 주소 4 bit와 busy 1 bit를
-TLATX1 latch 5개에 저장한다. 일반적인 latch의 저장 원리는 교차 결합 되먹임으로
-설명할 수 있지만, 공개 Liberty와 RTL만으로 TLATX1의 내부 transistor topology를
-확인했다고 주장하지 않는다.
+TLATX1 latch 5개에 저장한다. 여기서 grant는 여러 요청 중 이번에 처리하도록 선택된 source를,
+busy는 “현재 이 event를 전송하는 중인가?”를 나타내는 1-bit 상태를 뜻한다.
+busy가 1인 동안에는 새로운 요청을 선택하지 않고 기존 주소를 유지한다.
 
 #### Delay cell과 bundled-data
 
 Receiver는 aer_req 상승을 보고 주소를 읽으므로 주소가 먼저 안정돼야 한다.
+그러기 위해 경로를 다음과 같이 구성하였다
 
     Data path: REQ → priority → grant latch → aer_addr
     Control path: REQ → DLY4X1 chain → busy → aer_req
@@ -182,10 +185,6 @@ Receiver는 aer_req 상승을 보고 주소를 읽으므로 주소가 먼저 안
 GPDK45 구현에는 capture delay 5개와 request launch delay 1개, 총 DLY4X1 6개가
 보존됐다. 선택한 5 ns I/O max-delay 검사에서는 post-route slack +4.126 ns를
 만족했다.
-
-다만 busy latch의 내부 self-timed path 일부는 Genus에서 unconstrained다. 이
-수치는 모든 bundled-data timing과 metastability 안전성이 sign-off됐다는 뜻이
-아니다.
 
 ### 4.2 장점
 
@@ -195,20 +194,18 @@ GPDK45 구현에는 capture delay 5개와 request launch delay 1개, 총 DLY4X1 
    끝낸다.
 4. **작은 baseline을 제공한다.** Post-route 92 instances, cell area
    214.092 µm², vectorless power 0.002127 mW였다.
-5. **개선 비용의 기준이 된다.** 이후 추가하는 입력 보호, 저장, 공정성과 처리율의
-   하드웨어 비용을 분리해 볼 수 있다.
 
 ### 4.3 단점과 한계
 
-1. **Starvation**: 낮은 번호가 반복 요청하면 높은 번호의 대기 시간 상한이 없다.
-2. **내부 저장 부재**: 선택되지 않은 source가 REQ를 계속 유지해야 한다.
-3. **Backpressure 직접 전파**: Receiver가 멈추면 source와 공유 link가 함께
-   멈춘다.
+1. **Starvation**: Fixed priority를 사용하기 때문에 낮은 번호가 반복 요청하면 높은 번호의 대기 시간 상한이 없다.
+2. **내부 이벤트 대기 공간 부재**: 선택되지 않은 source는 ACK를 받을 때까지 REQ를 계속 유지해야 한다.
+   이 상태에서는 같은 source에서 새로운 이벤트가 발생해도 REQ가 이미 1이므로 두 이벤트를 구분할 수 없다.
+   따라서 source 쪽에 별도의 counter나 FIFO가 없다면 대기 중 발생한 추가 이벤트가 합쳐지거나 유실될 수 있다.
+3. **Backpressure 직접 전파**: Receiver가 현재 주소를 처리하지 못해 aer_ack를 늦게 보내면 T0는 busy와 aer_req를 유지한 채 기다린다.
+   이 동안 선택 주소가 공유 버스를 계속 차지하므로 다른 source의 요청을 처리할 수 없고, 선택된 source도 ACK를 받을 때까지 REQ를 내릴 수 없다.
+   즉 Receiver의 정체가 별도의 buffer 없이 공유 link와 source까지 그대로 전달된다.
 4. **Return-to-zero bubble**: 매 event 사이에 REQ와 ACK 복귀 시간이 필요하다.
-5. **MUTEX 부재**: 안정된 동시 요청은 fixed priority로 고르지만 거의 동시에
-   바뀐 request의 analog metastability-safe 중재를 증명하지 않았다.
-6. **Timing 검증 범위**: 일부 내부 async path가 unconstrained다.
-7. **FCFS 미지원**: Timestamp가 없으므로 실제 도착 시각 순서를 보존하지 않는다.
+5. **Timing 검증 범위**: Clock이 없어 일부 내부 self-timed 경로의 도착시간 기준을 정하기 어렵다.
 
 T0는 이 한계를 숨기지 않고 전통적 AER의 baseline으로 사용한다.
 
