@@ -206,6 +206,10 @@ GPDK45 구현에는 capture delay 5개와 request launch delay 1개, 총 DLY4X1 
    즉 Receiver의 정체가 별도의 buffer 없이 공유 link와 source까지 그대로 전달된다.
 4. **Return-to-zero bubble**: 매 event 사이에 REQ와 ACK 복귀 시간이 필요하다.
 5. **Timing 검증 범위**: Clock이 없어 일부 내부 self-timed 경로의 도착시간 기준을 정하기 어렵다.
+6. **비동기 경합 안전성 미보장(MUTEX 부재)**: T0의 fixed-priority 중재기는 안정된 상태의 동시 요청에서는 낮은 번호를 선택한다.
+   그러나 선택 주소를 latch하는 시점과 REQ가 거의 동시에 변하면 metastability에 빠질 수 있다. 이때 Metastability는 입력을 저장하는
+   순간에 값이 바뀌어, 출력이 바로 0이나 1로 결정되지 못하는 불안정한 상태이다. 현재 표준셀 라이브러리에는 이를 안전하게 중재하도록
+   특성화된 MUTEX가 없으므로, 임의의 동시 요청에 대한 transistor-level 안전성은 보장하지 않는다.
 
 T0는 이 한계를 숨기지 않고 전통적 AER의 baseline으로 사용한다.
 
@@ -217,83 +221,87 @@ T0의 한계를 해결하려면 다음 네 가지가 필요하다.
 
 | T0의 문제 | 개선 아이디어 |
 |---|---|
-| 비동기 request를 중재기가 직접 사용 | Source별 2FF로 clock 영역에 전달 |
-| Source별 대기칸 없음 | Pending과 output register에 event 저장 |
-| Fixed priority starvation | Gray 기반 공정한 순환 중재 |
-| Receiver 4-phase bubble | Registered valid/ready 출력 |
+| 비동기 요청의 불안정성: 요청이 latch 시점과 겹치면 값이 바로 0이나 1로 결정되지 않을 수 있다. (Metastability) | 2FF 동기화: REQ를 FF 두 개에 통과시켜 불안정한 값이 중재기로 퍼질 가능성을 낮춘다. |
+| 이벤트 대기 공간 부재: 선택되지 않은 source는 ACK까지 REQ를 유지해야 하며, 추가 발화를 구분하기 어렵다. | 이벤트 저장: Source별 Pending(아직 차례를 기다리는 이벤트의 대기실)에 아직 차례를 기다리는 이벤트를 보관한다. 중재기가 선택한 이벤트는 Output Register로 옮겨 Receiver에 전달하며, 이벤트가 Pending 또는 Output Register에 안전하게 저장되면 Source에 Early ACK를 보낸다. |
+| Starvation: 낮은 번호가 반복 요청하면 높은 번호가 계속 밀릴 수 있다. | 공정한 순환 중재: 우선순위를 계속 이동시켜 지속 요청을 최대 16번의 처리 안에 선택한다. |
+| Backpressure와 전송 공백: Receiver가 멈추면 공유 버스 전체가 멈추고, 매 전송마다 REQ·ACK 복귀 시간이 필요하다. | Output Register에 전송할 이벤트가 있으면 P9가 out_valid를 올리고, Receiver는 이벤트를 받을 준비가 되면 out_ready를 올린다. 두 신호가 모두 1인 clock에 이벤트가 전달된다. Receiver가 준비되지 않으면 현재 출력 주소를 유지하고 다른 이벤트는 Pending에 보관한다. |
 
 이 네 가지를 결합한 개선 controller를 P9라고 부른다. Source 쪽은 4-phase를
 유지하지만 내부와 receiver 출력은 10 ns clock으로 처리한다.
 
 ![비동기 source와 동기식 core](docs/figures/p9_hybrid_boundary.svg)
 
-#### 2FF
+#### 비동기 요청의 불안정성 - 2FF
 
-비동기 REQ가 clock edge와 겹치면 FF1 내부가 잠시 0과 1 사이의 metastable
-상태가 될 수 있다. FF2가 다음 clock에 다시 읽어 FF1이 안정될 시간을 확보한다.
-확률을 0으로 만들지는 않으며 Source가 ACK까지 REQ를 유지해야 한다.
+T0는 clock 없이 비동기 REQ를 중재기와 Grant Latch가 직접 처리한다. 따라서 REQ가 latch에 선택 주소를 고정하는 시점과 거의 동시에 변하면 metastability가 발생할 수 있다. P9는 이 문제를 완화하기 위해 비동기 REQ를 FF 두 개에 차례로 통과시킨다. FF1은 clock edge와 REQ 변화가 겹치면 metastable 상태가 될 수 있지만, FF2가 한 clock 뒤에 FF1을 읽도록 하여 FF1이 안정될 시간을 확보한다. 이후 중재기는 FF2의 출력인 req_sync만 사용한다.
 
     16 sources × 2 FF = 32 FF
 
-#### Pending과 Early ACK
+#### 내부 이벤트 대기 공간 부재 - Pending과 Early ACK
 
 Pending은 source별 event 보조 주머니다.
 
-    accept = req_sync AND NOT ack AND NOT pending
+    accept = req_sync AND NOT src_ack AND NOT pending
     ack_next = (ack AND req_sync) OR accept
 
-Accept가 발생하면 event를 Pending이나 output에 기록하고 Source에 Early ACK를
-보낸다. 이 ACK는 receiver 처리 완료가 아니라 controller가 event를 책임지고
-보관했다는 의미다.
+동기화된 요청이 들어왔고, 이번 요청을 아직 컨트롤러가 source에게 ACK하지 않았으며, 해당 Pending이 비어 있을 때 accept가 발생한다.
+Accept가 발생하면, Output Register가 비어 있는 경우에는 선택된 source 주소를 Output Register에 바로 저장한다. Output Register가 사용 중이면 해당 이벤트를 source별 Pending에 보관한다. 두 경우 모두 Controller 내부에 이벤트가 안전하게 저장된 뒤 Source에 Early ACK를 보낸다. 그러면 Source는
+src_req = 1로 유지할 필요 없이 req를 0으로 내릴 수 있다.
 
     Pending 16 + Output register 1 = 최대 17 events
 
-Receiver가 stall이면 현재 output 주소와 valid를 유지하고, 비어 있는 다른
-Pending에는 새 event를 받을 수 있다.
+#### Backpressure와 전송 공백 - Valid/ready
+
+out_valid=1은 Output Register에 유효한 이벤트가 저장되어 있다는 뜻이고, out_ready=1은 Receiver가 이벤트를 받을 준비가 됐다는 뜻이다. 두 신호가 모두 1인 clock edge에서 이벤트가 전달된다.
+Receiver가 준비되지 않아 out_ready=0이면 P9는 현재 출력 주소와 out_valid를 그대로 유지한다. 그동안 새로 들어온 이벤트는 비어 있는 source별 Pending에 저장할 수 있으므로 Receiver의 짧은 정체가 Source까지 즉시 전달되지 않는다.
+Receiver가 준비된 상태에서는 현재 이벤트를 소비하는 clock edge에 Pending에서 기다리던 이벤트나 새로 접수한 이벤트를 Output Register에 바로 저장할 수 있다. 따라서 대기 이벤트가 충분하면 빈 clock 없이 최대 1 event/clock으로 연속 전송한다. 다만 해당 source의 Pending이 이미 차 있으면 새로운 이벤트를 접수할 수 없으며, Output Register와 모든 Pending이 차면 Controller 전체의 Backpressure가 Source 쪽으로 전달된다.
 
 ![T0와 개선형의 stall 차이](docs/figures/t0_p9_stall_timeline.svg)
-
-#### Valid/ready
-
-Receiver 전송은 clock edge에서 out_valid=1과 out_ready=1이 함께 성립할 때다.
-Backlog가 충분하고 ready=1이면 현재 event를 소비하는 edge에 다음 event를
-채워 최대 1 event/clock을 유지한다.
 
 #### Gray 공정성
 
 내부 우선순위는 다음 Gray 관계를 이용한다.
 
-    0 → 1 → 3 → 2 → 6 → 7 → 5 → 4
-      → 12 → 13 → 15 → 14 → 10 → 11 → 9 → 8 → 0
+    0(0000) → 1(0001) → 3(0011) → 2(0010) → 6(0110) → 7(0111) → 5(0101) → 4(0100)
+      → 12(1100) → 13(1101) → 15(1111) → 14(1110) → 10(1010) → 11(1011) → 9(1001) → 8(1000) → 0(0000)
 
-Gray는 timestamp나 payload가 아니라 내부 우선순위 순서표다. 지속 요청은
-receiver stall을 제외한 최대 16회의 성공적인 service 안에 기회를 얻는다.
+Gray code는 연속된 두 값 사이에서 1 bit만 바뀌도록 구성한 2진법 순서 체계다. P9는 source를 Gray 순서로 배치하고, 처리 우선순위를 이 순서에 따라 계속 이동시킨다. 따라서 항상 낮은 번호를 먼저 처리하는 T0의 Fixed Priority와 달리 특정 source가 계속 우선권을 독점하지 않으며, 지속적으로 요청 중인 source는 Receiver stall을 제외한 최대 16회의 정상 처리 안에 기회를 얻는다. 또한 인접한 Gray 순번을 연속으로 처리하면 출력 주소에서 1 bit만 바뀌므로, 여러 bit가 동시에 전환되는 Binary 순서보다 주소 버스의 동적 전력을 줄일 수 있다. 다만 대기 요청이 드문 경우에는 중간 순번을 건너뛰므로 항상 1 bit만 바뀌는 것은 아니다.
 
-### 5.2 P9-GRR
+### 5.2 P9-GRR: 출력 Register를 재사용한 면적 중심 구조
 
 GRR은 Gray-rank Register Reuse의 약자다.
 
 ![P9-GRR 구조](docs/figures/p9_grr_structure.svg)
 
-Source 6은 Gray rank 4에 대응한다.
+P9-GRR은 앞에서 설명한 P9의 입력 동기화, 이벤트 저장, Early ACK, 공정성 및 Valid/Ready 기능을 유지하면서, 필요한 상태와 중재 회로를 줄인 구조다.
+일반적으로 현재 출력 주소와 다음 중재 시작점을 별도의 Register에 저장할 수 있다. GRR은 이를 하나의 out_rank Register로 합쳐 사용한다. 이를 위해 16개 source에 Gray 순서상의 위치인 rank를 부여한다.
+
+    0(0000) → 1(0001) → 3(0011) → 2(0010) → 6(0110) → 7(0111) → 5(0101) → 4(0100)
+      → 12(1100) → 13(1101) → 15(1111) → 14(1110) → 10(1010) → 11(1011) → 9(1001) → 8(1000) → 0(0000)
+
+예를 들어 source 6은 이 순서에서 다섯 번째이므로 rank 4에 해당한다.
 
     source 6 REQ     → req_rank[4]
     source 6 ACK     ← ack_rank[4]
     source 6 Pending → pending_rank[4]
 
-Rank 4를 선택하면 같은 pending_rank[4]를 바로 지운다. Rank를 source 번호로
-바꾸고 clear 위치를 다시 찾는 feedback 회로를 줄일 수 있다.
+Source 6이 선택되면 GRR은 다음 동작을 수행한다.
 
-16개 rank는 네 개씩 네 group으로 나눈다. 현재 group에서 마지막 rank 뒤쪽을
-먼저 보고, 없으면 다음 non-empty group을 찾는다. Out_rank 4 FF는 현재 출력과
-다음 strict-cyclic 탐색 pointer를 겸한다.
+    pending_rank[4] 선택
+    → out_rank에 4 저장
+    → pending_rank[4] 제거
+    → 외부 주소 out_addr에 source 6 출력
+    → 다음 중재는 rank 5부터 시작
+
+즉 out_rank=4는 두 가지 역할을 동시에 한다.
+- 현재 Receiver에게 출력할 source 6을 나타냄
+- 다음 중재를 rank 5부터 시작하게 하는 기준점
+따라서 현재 출력 주소와 공정성 탐색 위치를 별도의 4-bit Register 두 개에 저장할 필요가 없다.
+중재기는 16개 rank를 한 줄로 모두 확인하지 않고 네 개씩 네 group으로 나눈다. 현재 group에서 마지막으로 처리한 rank 뒤쪽을 먼저 확인하고, 요청이 없으면 다음 요청이 있는 group으로 이동한다. 이를 통해 긴 순차 탐색 회로를 줄이면서 순환 처리 순서를 유지한다.
 
     공통 상태 67 + out_rank 4 = 71 state points
 
 ![Gray rank와 상태 구성](docs/figures/p9_state_and_rank.svg)
-
-GRR의 면적 이점은 Gray를 썼다는 사실 하나가 아니라 rank-indexed storage,
-4×4 grouped selector와 output-rank 재사용을 합친 결과다.
 
 ### 5.3 P9-OHT
 
