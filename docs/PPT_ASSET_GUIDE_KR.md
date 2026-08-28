@@ -1,6 +1,6 @@
 # 최종 PPT 제작 안내
 
-PPT도 보고서와 같은 순서로 진행한다. 앞 슬라이드에서 정의하지 않은 회로 이름이나
+PPT와 메인 README는 같은 순서로 진행한다. 앞 슬라이드에서 정의하지 않은 회로 이름이나
 수치를 먼저 사용하지 않는다.
 
 ## 1부. AER이란 무엇인가?
@@ -363,7 +363,7 @@ controller로 사용한다.
 
 ## 발표 자료의 원본 근거
 
-- [최종 설계 보고서](FINAL_REPORT_KR.md)
+- [메인 README](../README.md)
 - [회로 동작 상세](CIRCUIT_OPERATION_KR.md)
 - [주장-근거 대응표](CLAIM_EVIDENCE_MATRIX_KR.md)
 - [45nm 수치](../reports/final_45nm/SUMMARY.md)

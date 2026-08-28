@@ -390,6 +390,21 @@ OHT의 주소 bit 전환 합은 106회, GRR은 114회였다. 이 차이만으로
 | Core setup slack | Clockless | +6.824 ns | **+7.555 ns** |
 | P9 hold slack | N/A | +0.024 ns | +0.024 ns |
 
+#### Innovus 물리 구현 결과
+
+아래 네 그림은 최종 발표자료에 사용한 Cadence Innovus 23.14 직접 출력 화면이다.
+Post-route 화면은 배치된 표준셀과 전원망·신호 배선을 보여 주고, Critical setup
+path 화면은 post-route timing 분석에서 가장 느린 core 경로를 노란색으로 표시한다.
+
+| P9-GRR post-route | P9-OHT post-route |
+|:---:|:---:|
+| ![P9-GRR Innovus post-route](docs/figures/p9_grr_45nm_innovus_postroute.png) | ![P9-OHT Innovus post-route](docs/figures/p9_oht_45nm_innovus_postroute.png) |
+| **P9-GRR critical setup path** | **P9-OHT critical setup path** |
+| ![P9-GRR critical setup path](docs/figures/p9_grr_45nm_critical_setup_path.png) | ![P9-OHT critical setup path](docs/figures/p9_oht_45nm_critical_setup_path.png) |
+
+- P9-GRR: core arrival 2.807 ns, setup slack +6.824 ns
+- P9-OHT: core arrival 2.159 ns, setup slack +7.555 ns
+
 T0는 가장 작고 전력이 낮다. 그러나 2FF, 17-event 저장, 공정성, stall 격리와
 1 event/clock 기능이 없는 최소 baseline이다. 따라서 T0와 P9의 표는 “추가 기능에
 얼마의 하드웨어 비용이 들었는가”를 보여 주며 동일 기능의 승패가 아니다.
@@ -465,9 +480,9 @@ interface를 그대로 재사용한다. 상위 arbiter는 16개 tile output 중 
 event 수집·중재 IP다. 상위 시스템은 local IP 내부를 다시 설계하지 않고 tile
 주소와 상위 중재를 추가한다.
 
-## 자세한 문서와 근거
+## 제출 자료와 검증 근거
 
-1. [최종 설계 보고서](docs/FINAL_REPORT_KR.md)
+1. [2026 AI SEMI 1차 설계 발표자료](2026_AI_SEMI_최태원의검_1차설계.pptx)
 2. [회로 동작 상세 설명](docs/CIRCUIT_OPERATION_KR.md)
 3. [주장-검증 근거 대응표](docs/CLAIM_EVIDENCE_MATRIX_KR.md)
 4. [PPT 제작 안내](docs/PPT_ASSET_GUIDE_KR.md)

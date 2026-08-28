@@ -60,6 +60,6 @@ total은 약 45.3%, 전체 switching component는 약 37.2% 감소했다. 추가
     pnr/t0, p9_grr, p9_oht             Innovus DEF/SDF/SPEF/netlist와 signoff reports
     lec/t0, p9_grr, p9_oht             RTL-to-mapped equivalence
 
-설계 해석과 발표용 문장은 [최종 기술 보고서](../../docs/FINAL_REPORT_KR.md)를 따른다.
+설계 해석과 발표용 문장은 [메인 README](../../README.md)를 따른다.
 수치별 원본 근거는 [주장-검증 대응표](../../docs/CLAIM_EVIDENCE_MATRIX_KR.md)에서
 확인할 수 있다.

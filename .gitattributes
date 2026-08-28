@@ -6,6 +6,7 @@
 *.wdb binary
 *.png binary
 *.pdf binary
+*.pptx binary
 
 # CommonMark uses two trailing spaces for an explicit line break.
 *.md whitespace=-trailing-space,-blank-at-eof
