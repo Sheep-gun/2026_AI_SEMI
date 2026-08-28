@@ -1,45 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860" role="img" aria-labelledby="title desc">
-  <title id="title">T0와 P9의 receiver stall 처리 비교</title>
-  <desc id="desc">T0는 receiver ACK까지 source를 잡고 P9는 내부 pending 기록 뒤 early ACK하여 source를 해제하는 timeline</desc>
+<svg xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" width="1600" height="720" viewBox="0 60 1600 720" role="img" aria-labelledby="title desc">
+  <title id="title">전통형 AER과 개선형 AER의 receiver stall 파형 비교</title>
+  <desc id="desc">전통형 AER의 src_req aer_req aer_ack src_ack 4단계 파형과 개선형 AER의 src_req src_ack out_valid out_ready 파형을 동일한 시간축에서 비교</desc>
   <defs>
-    <style>
-      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
-      .h{font:700 22px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
-      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.axis{stroke:#94a3b8;stroke-width:2}.sig{fill:none;stroke:#2563eb;stroke-width:5}
-      .ack{fill:none;stroke:#0f9d8b;stroke-width:5}.stall{fill:#fee2e2;stroke:#ef4444;stroke-width:2}.save{fill:#dcfce7;stroke:#16a34a;stroke-width:2}
-    </style>
-  </defs>
-  <rect width="1600" height="860" fill="#f8fafc"/>
-  <text x="65" y="62" class="title">Receiver가 멈췄을 때 T0와 P9는 어떻게 다른가?</text>
-  <text x="65" y="98" class="sub">같은 source 6 event를 보내지만 ACK의 의미와 event 보관 위치가 다름</text>
+</defs>
+  <rect width="1600" height="900" fill="#fff"/>
+  <g transform="translate(0,-80)">
+  <text x="70" y="181" font-weight="700" font-size="23" font-family="Malgun Gothic, Arial, sans-serif" fill="#1e2c4f">전통형 AER · source와 receiver 모두 4-phase</text>
+  <rect x="500" y="196" width="560" height="246" fill="#fef2f2"/>
+  <text x="780" y="219" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">Receiver가 aer_ack를 늦추는 구간</text>
+  <line x1="330" y1="230" x2="1505" y2="230" stroke="#c6d0da" stroke-width="1.5"/>
+  <line x1="330" y1="285" x2="1505" y2="285" stroke="#c6d0da" stroke-width="1.5"/><line x1="330" y1="340" x2="1505" y2="340" stroke="#c6d0da" stroke-width="1.5"/><line x1="330" y1="395" x2="1505" y2="395" stroke="#c6d0da" stroke-width="1.5"/>
+  <text x="78" y="266" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">src_req[6]</text><path d="M330 270H420V240H1320V270H1505" fill="none" stroke="#286b99" stroke-width="5" stroke-linejoin="miter"/>
+  <text x="78" y="321" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">aer_req</text><path d="M330 325H500V295H1390V325H1505" fill="none" stroke="#286b99" stroke-width="5" stroke-linejoin="miter"/>
+  <text x="78" y="376" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">aer_ack</text><path d="M330 380H1060V350H1450V380H1505" fill="none" stroke="#088b94" stroke-width="5" stroke-linejoin="miter"/>
+  <text x="78" y="431" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">src_ack[6]</text><path d="M330 435H1140V405H1390V435H1505" fill="none" stroke="#088b94" stroke-width="5" stroke-linejoin="miter"/>
+  <g stroke="#7f8ea1" stroke-width="2" stroke-dasharray="6 6"><line x1="420" y1="225" x2="420" y2="442"/><line x1="500" y1="225" x2="500" y2="442"/><line x1="1060" y1="225" x2="1060" y2="442"/><line x1="1140" y1="225" x2="1140" y2="442"/><line x1="1320" y1="225" x2="1320" y2="442"/><line x1="1390" y1="225" x2="1390" y2="442"/><line x1="1450" y1="225" x2="1450" y2="442"/></g>
+  <text x="420" y="463" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">REQ↑</text><text x="500" y="483" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">AER REQ↑</text>
+  <text x="1060" y="463" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">수신 ACK↑</text><text x="1140" y="483" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">source ACK↑</text>
+  <text x="1320" y="463" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">REQ↓</text><text x="1390" y="483" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">AER REQ↓</text><text x="1450" y="463" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">ACK↓</text>
 
-  <rect x="55" y="145" width="1490" height="275" rx="20" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
-  <text x="90" y="190" class="h">T0: receiver가 받을 때까지 source가 transaction을 유지</text>
-  <line x1="250" y1="240" x2="1480" y2="240" class="axis"/>
-  <text x="90" y="248" class="t">src_req[6]</text><path d="M250 260H360V220H1220V260H1480" class="sig"/>
-  <text x="90" y="318" class="t">aer_req</text><path d="M250 330H430V290H1180V330H1480" class="sig"/>
-  <text x="90" y="388" class="t">src_ack[6]</text><path d="M250 400H1050V360H1220V400H1480" class="ack"/>
-  <rect x="520" y="205" width="500" height="200" rx="14" class="stall"/>
-  <text x="770" y="275" text-anchor="middle" class="h">Receiver stall</text>
-  <text x="770" y="315" text-anchor="middle" class="t">aer_ack가 오지 않음</text>
-  <text x="770" y="355" text-anchor="middle" class="t">source 6 REQ도 계속 high</text>
-  <text x="1135" y="215" class="small">receiver ACK 뒤에야 source ACK</text>
-
-  <rect x="55" y="455" width="1490" height="310" rx="20" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
-  <text x="90" y="500" class="h">P9: 내부 보관을 확정하면 source를 먼저 해제</text>
-  <line x1="250" y1="550" x2="1480" y2="550" class="axis"/>
-  <text x="90" y="558" class="t">src_req[6]</text><path d="M250 570H360V530H620V570H1480" class="sig"/>
-  <text x="90" y="628" class="t">src_ack[6]</text><path d="M250 640H500V600H650V640H1480" class="ack"/>
-  <text x="90" y="698" class="t">out_valid</text><path d="M250 710H560V670H1220V710H1480" class="sig"/>
-  <rect x="480" y="515" width="230" height="220" rx="14" class="save"/>
-  <text x="595" y="590" text-anchor="middle" class="h">Pending/Output</text>
-  <text x="595" y="630" text-anchor="middle" class="t">Event 소유권 기록</text>
-  <text x="595" y="670" text-anchor="middle" class="t">Early ACK</text>
-  <rect x="760" y="515" width="390" height="220" rx="14" class="stall"/>
-  <text x="955" y="590" text-anchor="middle" class="h">Receiver stall</text>
-  <text x="955" y="630" text-anchor="middle" class="t">주소와 valid 고정</text>
-  <text x="955" y="670" text-anchor="middle" class="t">다른 빈 Pending은 접수 가능</text>
-  <text x="1210" y="650" class="small">ready 상승 edge에서 소비</text>
-
-  <text x="65" y="815" class="sub">P9의 Early ACK는 receiver 처리 완료가 아니라 controller가 event를 책임지고 보관했다는 의미다.</text>
+  <text x="70" y="535" font-weight="700" font-size="23" font-family="Malgun Gothic, Arial, sans-serif" fill="#1e2c4f">개선형 AER · source는 4-phase, receiver는 valid/ready</text>
+  <rect x="570" y="550" width="500" height="246" fill="#fef2f2"/>
+  <rect x="500" y="550" width="70" height="246" fill="#ecfdf5"/>
+  <text x="535" y="573" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">저장</text><text x="820" y="573" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">out_ready=0이어도 output register가 event 유지</text>
+  <line x1="330" y1="585" x2="1505" y2="585" stroke="#c6d0da" stroke-width="1.5"/><line x1="330" y1="640" x2="1505" y2="640" stroke="#c6d0da" stroke-width="1.5"/><line x1="330" y1="695" x2="1505" y2="695" stroke="#c6d0da" stroke-width="1.5"/><line x1="330" y1="750" x2="1505" y2="750" stroke="#c6d0da" stroke-width="1.5"/>
+  <text x="78" y="621" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">src_req[6]</text><path d="M330 625H420V595H710V625H1505" fill="none" stroke="#286b99" stroke-width="5" stroke-linejoin="miter"/>
+  <text x="78" y="676" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">src_ack[6]</text><path d="M330 680H570V650H790V680H1505" fill="none" stroke="#088b94" stroke-width="5" stroke-linejoin="miter"/>
+  <text x="78" y="731" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">out_valid</text><path d="M330 735H570V705H1180V735H1505" fill="none" stroke="#286b99" stroke-width="5" stroke-linejoin="miter"/>
+  <text x="78" y="786" font-weight="700" font-size="17" font-family="Consolas, Malgun Gothic, monospace" fill="#28394f">out_ready</text><path d="M330 790H1070V760H1505" fill="none" stroke="#2c3176" stroke-width="5" stroke-linejoin="miter"/>
+  <g stroke="#7f8ea1" stroke-width="2" stroke-dasharray="6 6"><line x1="420" y1="580" x2="420" y2="798"/><line x1="570" y1="580" x2="570" y2="798"/><line x1="710" y1="580" x2="710" y2="798"/><line x1="790" y1="580" x2="790" y2="798"/><line x1="1070" y1="580" x2="1070" y2="798"/><line x1="1180" y1="580" x2="1180" y2="798"/></g>
+  <text x="420" y="819" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">REQ↑</text><text x="570" y="839" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">보관 + Early ACK</text>
+  <text x="710" y="819" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">REQ↓</text><text x="790" y="839" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">ACK↓</text>
+  <text x="1070" y="819" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">ready↑</text><text x="1180" y="839" text-anchor="middle" font-weight="400" font-size="15" font-family="Malgun Gothic, Arial, sans-serif" fill="#607189">clock edge에서 소비</text>
+  <text x="70" y="878" font-weight="400" font-size="19" font-family="Malgun Gothic, Arial, sans-serif" fill="#52657d">Early ACK = receiver 완료가 아니라 controller 내부 보관 완료</text>
+  </g>
 </svg>

@@ -1,77 +1,621 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
-  <title id="title">P9-OHT AER 컨트롤러 구조</title>
-  <desc id="desc">2FF와 pending은 P9-GRR과 공유하지만 one-hot top-down tree와 별도 Gray epoch를 사용하는 고속 저전력 대안</desc>
-  <defs>
-    <style>
-      .title{font:700 34px "Malgun Gothic",sans-serif;fill:#102a43}.sub{font:18px "Malgun Gothic",sans-serif;fill:#486581}
-      .h{font:700 21px "Malgun Gothic",sans-serif;fill:#102a43}.t{font:16px "Malgun Gothic",sans-serif;fill:#243b53}
-      .small{font:14px "Malgun Gothic",sans-serif;fill:#486581}.box{stroke-width:2;rx:16}.line{fill:none;stroke:#2563eb;stroke-width:4}
-      .ack{fill:none;stroke:#0f9d8b;stroke-width:4}.control{fill:none;stroke:#d97706;stroke-width:4;stroke-dasharray:10 7}
-    </style>
-    <marker id="blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#2563eb"/></marker>
-    <marker id="green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#0f9d8b"/></marker>
-    <marker id="orange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#d97706"/></marker>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1600"
+   height="560"
+   viewBox="0 0 1600 560"
+   role="img"
+   aria-labelledby="title desc"
+   shape-rendering="geometricPrecision"
+   text-rendering="geometricPrecision"
+   version="1.1"
+   id="svg66"
+   sodipodi:docname="oht_aer_structure_simple.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview66"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.0942477"
+     inkscape:cx="793.69595"
+     inkscape:cy="220.69956"
+     inkscape:window-width="2560"
+     inkscape:window-height="1494"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg66" />
+  <title
+     id="title">OHT AER 핵심 구조</title>
+  <desc
+     id="desc">비동기 요청을 2FF로 동기화해 source-indexed 상태에 보관하고, One-Hot Tree가 16개 후보를 8, 4, 2, 1 단계로 병렬 축소한다. 별도 Gray Epoch가 각 단계의 선호 방향을 정하고, 선택 주소는 Output Register에 저장된다.</desc>
+  <defs
+     id="defs2">
+    <marker
+       id="arrowBlue"
+       markerWidth="11"
+       markerHeight="11"
+       refX="9"
+       refY="5.5"
+       orient="auto"
+       viewBox="0 0 11 11"
+       preserveAspectRatio="xMidYMid">
+      <path
+         d="M0,0 L11,5.5 L0,11 Z"
+         fill="#286b99"
+         id="path1" />
+    </marker>
+    <marker
+       id="arrowTeal"
+       markerWidth="11"
+       markerHeight="11"
+       refX="9"
+       refY="5.5"
+       orient="auto"
+       viewBox="0 0 11 11"
+       preserveAspectRatio="xMidYMid">
+      <path
+         d="M0,0 L11,5.5 L0,11 Z"
+         fill="#088b94"
+         id="path2" />
+    </marker>
+    <marker
+       id="arrowBlue-4"
+       markerWidth="11"
+       markerHeight="11"
+       refX="9"
+       refY="5.5"
+       orient="auto"
+       viewBox="0 0 11 11"
+       preserveAspectRatio="xMidYMid">
+      <path
+         d="M 0,0 11,5.5 0,11 Z"
+         fill="#286b99"
+         id="path1-8" />
+    </marker>
+    <marker
+       id="arrowBlue-45"
+       markerWidth="11"
+       markerHeight="11"
+       refX="9"
+       refY="5.5"
+       orient="auto"
+       viewBox="0 0 11 11"
+       preserveAspectRatio="xMidYMid">
+      <path
+         d="M 0,0 11,5.5 0,11 Z"
+         fill="#286b99"
+         id="path1-5" />
+    </marker>
   </defs>
-  <rect width="1600" height="900" fill="#f7fafc"/>
-  <text x="60" y="62" class="title">P9-OHT: One-Hot Top-down Tree AER</text>
-  <text x="60" y="98" class="sub">P9의 안전한 접수·공정성·buffer 기능은 유지하고, 선택 경로를 병렬 one-hot tree로 만든 고속·저전력 대안</text>
-
-  <rect x="55" y="190" width="180" height="190" class="box" fill="#e6fffa" stroke="#0f9d8b"/>
-  <text x="145" y="232" text-anchor="middle" class="h">16 Sources</text>
-  <text x="145" y="275" text-anchor="middle" class="t">4-phase REQ/ACK</text>
-  <text x="145" y="315" text-anchor="middle" class="t">비동기 발화</text>
-
-  <rect x="300" y="210" width="180" height="150" class="box" fill="#eff6ff" stroke="#2563eb"/>
-  <text x="390" y="252" text-anchor="middle" class="h">Source별 2FF</text>
-  <text x="390" y="293" text-anchor="middle" class="t">불안정 전파 확률 감소</text>
-  <text x="390" y="329" text-anchor="middle" class="small">16 × 2 = 32 FF</text>
-
-  <rect x="545" y="180" width="245" height="210" class="box" fill="#ecfdf5" stroke="#10b981"/>
-  <text x="667" y="224" text-anchor="middle" class="h">Source-indexed 저장부</text>
-  <text x="667" y="266" text-anchor="middle" class="t">ACK 16 + Pending 16</text>
-  <text x="667" y="305" text-anchor="middle" class="t">접수 즉시 Early ACK</text>
-  <text x="667" y="344" text-anchor="middle" class="t">선택 bit를 one-hot clear</text>
-  <text x="667" y="374" text-anchor="middle" class="small">Source 번호 순서 그대로 저장</text>
-
-  <rect x="850" y="180" width="300" height="210" class="box" fill="#fff7ed" stroke="#f97316"/>
-  <text x="1000" y="224" text-anchor="middle" class="h">One-Hot Top-down Tree</text>
-  <text x="1000" y="266" text-anchor="middle" class="t">half → quarter → pair → source</text>
-  <text x="1000" y="305" text-anchor="middle" class="t">선호 branch를 위에서 아래로 선택</text>
-  <text x="1000" y="344" text-anchor="middle" class="t">선택 경로가 곧 pending clear mask</text>
-  <text x="1000" y="374" text-anchor="middle" class="small">병렬 branch logic으로 짧은 critical path</text>
-
-  <rect x="1215" y="180" width="230" height="210" class="box" fill="#f5f3ff" stroke="#7c3aed"/>
-  <text x="1330" y="224" text-anchor="middle" class="h">Output Address Reg.</text>
-  <text x="1330" y="266" text-anchor="middle" class="t">주소 4 bit + valid 1 bit</text>
-  <text x="1330" y="305" text-anchor="middle" class="t">stall 중 출력 고정</text>
-  <text x="1330" y="344" text-anchor="middle" class="t">Gray epoch와 별도 상태</text>
-  <text x="1330" y="374" text-anchor="middle" class="small">GRR보다 상태 4 FF 증가</text>
-
-  <rect x="1485" y="210" width="85" height="150" class="box" fill="#eef2ff" stroke="#4f46e5"/>
-  <text x="1527" y="253" text-anchor="middle" class="h">수신기</text>
-  <text x="1527" y="294" text-anchor="middle" class="t">주소</text>
-  <text x="1527" y="329" text-anchor="middle" class="t">valid</text>
-
-  <path d="M235 285 H300" class="line" marker-end="url(#blue)"/>
-  <path d="M480 285 H545" class="line" marker-end="url(#blue)"/>
-  <path d="M790 285 H850" class="line" marker-end="url(#blue)"/>
-  <path d="M1150 285 H1215" class="line" marker-end="url(#blue)"/>
-  <path d="M1445 285 H1485" class="line" marker-end="url(#blue)"/>
-  <path d="M667 390 V490 H145 V380" class="ack" marker-end="url(#green)"/>
-  <text x="408" y="518" text-anchor="middle" class="t">내부 보관이 확정되면 source에 ACK</text>
-
-  <rect x="850" y="500" width="300" height="115" class="box" fill="#fffbeb" stroke="#d97706"/>
-  <text x="1000" y="542" text-anchor="middle" class="h">별도 Gray Epoch 4 FF</text>
-  <text x="1000" y="579" text-anchor="middle" class="t">다음에 선호할 branch 방향 저장</text>
-  <path d="M1000 500 V390" class="control" marker-end="url(#orange)"/>
-
-  <rect x="55" y="685" width="710" height="145" rx="18" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
-  <text x="85" y="727" class="h">P9-GRR과 같은 service contract</text>
-  <text x="85" y="768" class="t">2FF · Pending 16 + 출력 1 · Early ACK · ≤16 successful grants</text>
-  <text x="85" y="805" class="t">Receiver가 준비되면 1 event/clock, stall 중 주소와 valid 유지</text>
-
-  <rect x="835" y="685" width="705" height="145" rx="18" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
-  <text x="865" y="727" class="h">GRR과 다른 선택</text>
-  <text x="865" y="768" class="t">상태 4 FF를 더 쓰는 대신 one-hot branch 경로로 timing과 switching을 개선</text>
-  <text x="865" y="805" class="t">45nm 결과: GRR보다 면적 +5.98%, SAIF 전력 −4.19%, core 여유 +0.731 ns</text>
+  <!-- Input -->
+  <rect
+     x="17"
+     y="170"
+     width="165"
+     height="150"
+     rx="18"
+     fill="#eef8fb"
+     stroke="#088b94"
+     stroke-width="3"
+     id="rect3" />
+  <text
+     x="99.5"
+     y="253.53125"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="24px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text3">16 Sources</text>
+  <!-- Synchronizer -->
+  <rect
+     x="227"
+     y="170"
+     width="170"
+     height="150"
+     rx="18"
+     fill="#f1f5fb"
+     stroke="#286b99"
+     stroke-width="3"
+     id="rect5" />
+  <text
+     x="312"
+     y="255.79932"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="23px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text6">2FF 동기화</text>
+  <!-- Source-indexed state -->
+  <rect
+     x="442"
+     y="115"
+     width="265"
+     height="260"
+     rx="20"
+     fill="#eaf8f6"
+     stroke="#088b94"
+     stroke-width="3"
+     id="rect8" />
+  <text
+     x="578.3772"
+     y="183.20193"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="24px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text9">Source-indexed 상태</text>
+  <rect
+     x="485.87723"
+     y="208.20193"
+     width="185"
+     height="43"
+     rx="12"
+     fill="#ffffff"
+     stroke="#8bc8c0"
+     stroke-width="2"
+     id="rect9" />
+  <text
+     x="578.3772"
+     y="236.20193"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="18px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text10">Source 6 ↔ index 6</text>
+  <rect
+     x="478.87723"
+     y="277.20193"
+     width="62"
+     height="53"
+     rx="10"
+     fill="#ffffff"
+     stroke="#8bc8c0"
+     stroke-width="2"
+     id="rect10" />
+  <rect
+     x="547.8772"
+     y="277.20193"
+     width="62"
+     height="53"
+     rx="10"
+     fill="#ffffff"
+     stroke="#8bc8c0"
+     stroke-width="2"
+     id="rect11" />
+  <rect
+     x="616.8772"
+     y="277.20193"
+     width="62"
+     height="53"
+     rx="10"
+     fill="#ffffff"
+     stroke="#8bc8c0"
+     stroke-width="2"
+     id="rect12" />
+  <text
+     x="509.8772"
+     y="310.20193"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="14px"
+     font-weight="700"
+     fill="#28394f"
+     id="text12">REQ[6]</text>
+  <text
+     x="578.8772"
+     y="310.20193"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="14px"
+     font-weight="700"
+     fill="#28394f"
+     id="text13">ACK[6]</text>
+  <text
+     x="647.8772"
+     y="310.20193"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="13px"
+     font-weight="700"
+     fill="#28394f"
+     id="text14">PEND[6]</text>
+  <!-- One-hot tree -->
+  <rect
+     x="762"
+     y="55"
+     width="460"
+     height="355"
+     rx="22"
+     fill="#fafaff"
+     stroke="#8f94c8"
+     stroke-width="3"
+     id="rect14" />
+  <text
+     x="992"
+     y="105"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="25px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text15">One-Hot Top-down Tree</text>
+  <text
+     x="797"
+     y="145"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="18px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text16">16</text>
+  <text
+     x="887"
+     y="145"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="18px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text17">8</text>
+  <text
+     x="977"
+     y="145"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="18px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text18">4</text>
+  <text
+     x="1067"
+     y="145"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="18px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text19">2</text>
+  <text
+     x="1157"
+     y="145"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="18px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text20">1</text>
+  <!-- 16 to 8 -->
+  <g
+     fill="none"
+     stroke="#8397ac"
+     stroke-width="2.2"
+     id="g24"
+     transform="translate(-18)">
+    <path
+       d="m 815,160 90,6 m -90,6 90,-6 m -90,18 90,6 m -90,6 90,-6 m -90,18 90,6 m -90,6 90,-6 m -90,18 90,6 m -90,6 90,-6"
+       id="path20" />
+    <path
+       d="m 815,256 90,6 m -90,6 90,-6 m -90,18 90,6 m -90,6 90,-6 m -90,18 90,6 m -90,6 90,-6 m -90,18 90,6 m -90,6 90,-6"
+       id="path21" />
+    <path
+       d="m 905,166 90,12 m -90,12 90,-12 m -90,36 90,12 m -90,12 90,-12 m -90,36 90,12 m -90,12 90,-12 m -90,36 90,12 m -90,12 90,-12"
+       id="path22" />
+    <path
+       d="m 995,178 90,24 m -90,24 90,-24 m -90,72 90,24 m -90,24 90,-24"
+       id="path23" />
+    <path
+       d="m 1085,202 90,48 m -90,48 90,-48"
+       id="path24" />
+  </g>
+  <!-- Tree nodes; filled nodes show one selected path -->
+  <g
+     fill="#ffffff"
+     stroke="#2c3176"
+     stroke-width="2.5"
+     id="g49"
+     transform="translate(-18)">
+    <circle
+       cx="815"
+       cy="160"
+       r="5"
+       id="circle24" />
+    <circle
+       cx="815"
+       cy="172"
+       r="5"
+       id="circle25" />
+    <circle
+       cx="815"
+       cy="184"
+       r="5"
+       id="circle26" />
+    <circle
+       cx="815"
+       cy="196"
+       r="5"
+       id="circle27" />
+    <circle
+       cx="815"
+       cy="208"
+       r="5"
+       id="circle28" />
+    <circle
+       cx="815"
+       cy="220"
+       r="5"
+       id="circle29" />
+    <circle
+       cx="815"
+       cy="232"
+       r="5"
+       id="circle30" />
+    <circle
+       cx="815"
+       cy="244"
+       r="5"
+       id="circle31" />
+    <circle
+       cx="815"
+       cy="256"
+       r="5"
+       id="circle32" />
+    <circle
+       cx="815"
+       cy="268"
+       r="5"
+       id="circle33" />
+    <circle
+       cx="815"
+       cy="292"
+       r="5"
+       id="circle34" />
+    <circle
+       cx="815"
+       cy="304"
+       r="5"
+       id="circle35" />
+    <circle
+       cx="815"
+       cy="316"
+       r="5"
+       id="circle36" />
+    <circle
+       cx="815"
+       cy="328"
+       r="5"
+       id="circle37" />
+    <circle
+       cx="815"
+       cy="340"
+       r="5"
+       id="circle38" />
+    <circle
+       cx="905"
+       cy="166"
+       r="7"
+       id="circle39" />
+    <circle
+       cx="905"
+       cy="190"
+       r="7"
+       id="circle40" />
+    <circle
+       cx="905"
+       cy="214"
+       r="7"
+       id="circle41" />
+    <circle
+       cx="905"
+       cy="238"
+       r="7"
+       id="circle42" />
+    <circle
+       cx="905"
+       cy="262"
+       r="7"
+       id="circle43" />
+    <circle
+       cx="905"
+       cy="310"
+       r="7"
+       id="circle44" />
+    <circle
+       cx="905"
+       cy="334"
+       r="7"
+       id="circle45" />
+    <circle
+       cx="995"
+       cy="178"
+       r="10"
+       id="circle46" />
+    <circle
+       cx="995"
+       cy="226"
+       r="10"
+       id="circle47" />
+    <circle
+       cx="995"
+       cy="322"
+       r="10"
+       id="circle48" />
+    <circle
+       cx="1085"
+       cy="202"
+       r="13"
+       id="circle49" />
+  </g>
+  <g
+     fill="#2c3176"
+     stroke="#2c3176"
+     stroke-width="2.5"
+     id="g54"
+     transform="translate(-18)">
+    <circle
+       cx="815"
+       cy="280"
+       r="5"
+       id="circle50" />
+    <circle
+       cx="905"
+       cy="286"
+       r="7"
+       id="circle51" />
+    <circle
+       cx="995"
+       cy="274"
+       r="10"
+       id="circle52" />
+    <circle
+       cx="1085"
+       cy="298"
+       r="13"
+       id="circle53" />
+    <circle
+       cx="1175"
+       cy="250"
+       r="18"
+       id="circle54" />
+  </g>
+  <!-- Output register -->
+  <rect
+     x="1283.7573"
+     y="181.3923"
+     width="202.85353"
+     height="130.44643"
+     rx="19.403381"
+     fill="#eef1fb"
+     stroke="#2c3176"
+     stroke-width="2.71352"
+     id="rect55" />
+  <text
+     x="1388.538"
+     y="252.12891"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="24px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text56">Output Register</text>
+  <!-- Main flow -->
+  <!-- Early ACK -->
+  <path
+     d="m 557,375 v 45 H 99 V 320"
+     fill="none"
+     stroke="#088b94"
+     stroke-width="4"
+     marker-end="url(#arrowTeal)"
+     id="path63" />
+  <text
+     x="327"
+     y="447"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="17px"
+     font-weight="700"
+     fill="#088b94"
+     id="text64">저장 완료 → Early ACK</text>
+  <!-- Separate Gray epoch -->
+  <rect
+     x="847"
+     y="430"
+     width="290"
+     height="100"
+     rx="18"
+     fill="#eaf8f6"
+     stroke="#088b94"
+     stroke-width="3"
+     id="rect64" />
+  <text
+     x="992"
+     y="469"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="21px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text65">Gray Epoch[3:0]</text>
+  <text
+     x="994.65381"
+     y="379.44797"
+     text-anchor="middle"
+     font-family="Consolas, 'Malgun Gothic', monospace"
+     font-size="21px"
+     font-weight="700"
+     fill="#1e2c4f"
+     id="text65-0"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:21px;font-family:Consolas, 'Malgun Gothic', monospace;-inkscape-font-specification:'Consolas, Malgun Gothic, monospace, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:middle;fill:#1e2c4f"><tspan
+       sodipodi:role="line"
+       id="tspan72"
+       x="994.65381"
+       y="379.44797">Gray Epoch가 각 가지마다의 탐색 방향을 결정</tspan></text>
+  <text
+     x="992"
+     y="505"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="16px"
+     font-weight="700"
+     fill="#088b94"
+     id="text66">출력 적재마다 1 bit 전환</text>
+  <path
+     d="M 992,430 V 395"
+     fill="none"
+     stroke="#088b94"
+     stroke-width="5"
+     marker-end="url(#arrowTeal)"
+     id="path66" />
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#286b99;stroke-width:2.565;stroke-linejoin:bevel;stroke-opacity:1;marker-end:url(#arrowBlue)"
+     d="m 182.3231,248.1075 h 41.35703"
+     id="path67" />
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#286b99;stroke-width:2.565;stroke-linejoin:bevel;stroke-opacity:1;marker-end:url(#arrowBlue-4)"
+     d="m 397.21971,248.1075 h 41.35703"
+     id="path67-2" />
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#286b99;stroke-width:2.565;stroke-linejoin:bevel;stroke-opacity:1;marker-end:url(#arrowBlue)"
+     d="m 706.39418,248.1075 h 53.6349"
+     id="path68" />
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#286b99;stroke-width:2.565;stroke-linejoin:bevel;stroke-opacity:1;marker-end:url(#arrowBlue)"
+     d="m 1223.357,245.55735 h 54.9273"
+     id="path69" />
+  <text
+     x="1544.4501"
+     y="218.94035"
+     text-anchor="middle"
+     font-family="'Malgun Gothic', Arial, sans-serif"
+     font-size="18px"
+     font-weight="400"
+     fill="#28394f"
+     id="text16-9"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:'Malgun Gothic', Arial, sans-serif;-inkscape-font-specification:'Malgun Gothic, Arial, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-anchor:middle;fill:#000000"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:'Malgun Gothic', Arial, sans-serif;-inkscape-font-specification:'Malgun Gothic, Arial, sans-serif, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       id="tspan28">Receiver</tspan></text>
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#286b99;stroke-width:2.90543;stroke-linejoin:bevel;stroke-opacity:1;marker-end:url(#arrowBlue)"
+     d="m 1488.3005,248.1075 h 59.6965"
+     id="path70" />
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#088b94;stroke-width:2.55056;stroke-linejoin:bevel;stroke-opacity:1"
+     d="M 1504.2297,248.57259 V 476.28298"
+     id="path71" />
+  <path
+     style="fill:#286b99;fill-opacity:1;stroke:#088b94;stroke-width:2.565;stroke-linejoin:bevel;stroke-opacity:1;marker-end:url(#arrowTeal)"
+     d="M 1503.3159,476.12618 H 1142.3373"
+     id="path72" />
 </svg>
