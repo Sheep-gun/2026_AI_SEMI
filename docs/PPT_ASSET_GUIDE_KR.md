@@ -306,7 +306,7 @@ schedule을 한 단계 이동시켜 tree branch 선호도를 바꾼다.
 
 **그림:**
 
-- [기능 비교](figures/final_comparison.svg)
+- [전통형·GRR·OHT 최종 PPA 비교](figures/final_comparison.svg)
 - [GRR/OHT Pareto](figures/p9_pareto_comparison.svg)
 - [검증 흐름](figures/verification_flow.svg)
 

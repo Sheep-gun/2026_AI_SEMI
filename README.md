@@ -301,8 +301,6 @@ Source 6이 선택되면 GRR은 다음 동작을 수행한다.
 
     공통 상태 67 + out_rank 4 = 71 state points
 
-![Gray rank와 상태 구성](docs/figures/p9_state_and_rank.svg)
-
 ### 5.3 P9-OHT: 병렬 One-Hot Tree를 사용한 속도·전력 중심 구조
 
 OHT는 One-Hot Top-down Tree의 약자다.
@@ -390,6 +388,8 @@ OHT의 주소 bit 전환 합은 106회, GRR은 114회였다. 이 차이만으로
 | Core setup slack | Clockless | +6.824 ns | **+7.555 ns** |
 | P9 hold slack | N/A | +0.024 ns | +0.024 ns |
 
+![전통형 AER, GRR AER, OHT AER 최종 PPA 비교](docs/figures/final_comparison.svg)
+
 #### Innovus 물리 구현 결과
 
 아래 네 그림은 최종 발표자료에 사용한 Cadence Innovus 23.14 직접 출력 화면이다.
@@ -419,8 +419,6 @@ T0는 가장 작고 전력이 낮다. 그러나 2FF, 17-event 저장, 공정성,
 
 OHT는 별도 epoch 4 FF 때문에 sequential power가 증가했지만 combinational
 total이 약 45.3%, switching component가 약 37.2% 감소해 총전력이 낮아졌다.
-
-![GRR과 OHT PPA Pareto](docs/figures/p9_pareto_comparison.svg)
 
 최종 선택:
 
